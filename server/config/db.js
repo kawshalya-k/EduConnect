@@ -13,12 +13,12 @@ const db = mysql.createPool({
   queueLimit: 0
 });
 
-// Let's test if the "handshake" works
+
 db.getConnection((err, connection) => {
   if (err) {
-    console.error('❌ Connection to Railway failed:', err.message);
+    console.error(' Connection to Railway failed:', err.message);
   } else {
-    console.log('✅ EduConnect is successfully connected to the Railway Database!');
+    console.log(' EduConnect is successfully connected to the Railway Database!');
     connection.release();
   }
 });
