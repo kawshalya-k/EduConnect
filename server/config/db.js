@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// This creates a "Pool," which is better for a team of 5 people
+
 const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -23,4 +23,4 @@ db.getConnection((err, connection) => {
   }
 });
 
-module.exports = db.promise(); // Adding .promise() makes it easier to use later
+module.exports = db.promise(); 
