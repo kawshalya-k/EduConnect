@@ -1,22 +1,22 @@
 import React from 'react';
-import Hero from '../components/Hero'; // Double-check this path!
-import Footer from '../components/Footer';
 import Navbar from '../components/Navbar';
+import Hero from '../components/Hero';
 import Pillars from '../components/Pillars';
 import Leaderboard from '../components/Leaderboard';
+import CTA from '../components/CTA';
+import Footer from '../components/Footer';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-[#F8FAFC] min-h-screen">
       <Navbar />
-      <Hero />
-      <Pillars />
-      <Leaderboard />
+      <main>
+        <Hero />
+        <Pillars />
+        <Leaderboard />
+        <CTA />
+      </main>
       <Footer />
-
-      
-      
-      
     </div>
   );
 };
