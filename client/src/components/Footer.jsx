@@ -1,38 +1,59 @@
 import React from 'react';
 
-const Footer = () => (
-  <footer className="bg-slate-900 text-slate-400 py-16">
-    <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
-      <div className="col-span-2">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-6 h-6 bg-[#10B981] rounded" />
-          <span className="text-white font-bold text-lg">EduConnect</span>
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="bg-[#022C22] text-[#F8FAFC] py-20 px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        {/* Brand Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">E</span>
+            </div>
+            <span className="text-2xl font-bold tracking-tight">EduConnect</span>
+          </div>
+          <p className="text-emerald-100/60 leading-relaxed text-sm">
+            Empowering University students through peer-to-peer learning and community recognition.
+          </p>
+          <div className="flex gap-4">
+            {['f', 'g', '@'].map((icon, i) => (
+              <div key={i} className="w-10 h-10 rounded-full bg-emerald-900 flex items-center justify-center hover:bg-[#10B981] transition-colors cursor-pointer">
+                <span className="text-xs font-bold uppercase">{icon}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="max-w-xs leading-relaxed">
-          Building the future of peer-to-peer education at Sabaragamuwa University of Sri Lanka.
+
+        {/* Links Sections */}
+        {[
+          { title: "Student Center", links: ["Registration", "Search Mentors", "Skill Marketplace"] },
+          { title: "Mentorship", links: ["Mentor Onboarding", "Verification Center", "Mentor Guidelines"] },
+          { title: "Portal", links: ["About Us", "Privacy Policy", "Terms of Service", "Help Center"] }
+        ].map((column, i) => (
+          <div key={i} className="space-y-6">
+            <h4 className="text-[#10B981] font-bold uppercase tracking-wider text-xs">
+              {column.title}
+            </h4>
+            <ul className="space-y-4">
+              {column.links.map((link, j) => (
+                <li key={j} className="text-emerald-100/60 hover:text-white transition-colors cursor-pointer text-sm">
+                  {link}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-emerald-900/50">
+        <p className="text-emerald-100/40 text-xs">
+          © {currentYear} EduConnect. All rights reserved.
         </p>
       </div>
-      <div>
-        <h4 className="text-white font-bold mb-6">Platform</h4>
-        <ul className="space-y-4 text-sm">
-          <li><a href="#" className="hover:text-white transition">About Us</a></li>
-          <li><a href="#" className="hover:text-white transition">Gemini AI Integration</a></li>
-          <li><a href="#" className="hover:text-white transition">Skill Economy</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 className="text-white font-bold mb-6">Support</h4>
-        <ul className="space-y-4 text-sm">
-          <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
-          <li><a href="#" className="hover:text-white transition">Terms of Service</a></li>
-          <li><a href="#" className="hover:text-white transition">Contact Faculty</a></li>
-        </ul>
-      </div>
-    </div>
-    <div className="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-slate-800 text-center text-xs">
-      © 2026 EduConnect Project Team (22FIS0527). All Rights Reserved.
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 export default Footer;
