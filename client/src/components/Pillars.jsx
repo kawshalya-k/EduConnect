@@ -1,20 +1,21 @@
 import React from 'react';
+import { MapPin, ShieldCheck, Banknote } from 'lucide-react';
 
 const pillars = [
   { 
     title: "AI-Powered Discovery", 
-    desc: "Semantic matching powered by Gemini API connects you with the perfect peer mentor based on your style.", 
-    icon: "🔍" 
+    desc: "Semantic matching powered by Gemini API connects you with the perfect peer mentor based on your specific learning style and academic needs.", 
+    icon: <MapPin className="w-6 h-6" /> 
   },
   { 
     title: "Verification Gate", 
-    desc: "Automated leveling system ensures quality. Progress from Bronze to Gold through verified sessions.", 
-    icon: "🛡️" 
+    desc: "Automated leveling system ensures quality. Progress from Bronze to Gold through verified mentorship sessions and peer feedback.", 
+    icon: <ShieldCheck className="w-6 h-6" /> 
   },
   { 
     title: "Skill Economy", 
-    desc: "Earn Skill Coins for every session you teach. Spend rewards to unlock sessions with university experts.", 
-    icon: "💰" 
+    desc: "Earn Skill Coins for every session you teach. Spend your rewards to unlock learning sessions with university experts and Gold-tier mentors.", 
+    icon: <Banknote className="w-6 h-6" /> 
   }
 ];
 
@@ -30,11 +31,11 @@ const Pillars = () => (
       <div className="grid md:grid-cols-3 gap-8">
         {pillars.map((p, i) => (
           <div key={i} className="p-10 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
-            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-2xl mb-6">
+            <div className="w-14 h-14 bg-emerald-50 text-[#10B981] rounded-xl flex items-center justify-center mb-6">
               {p.icon}
             </div>
             <h3 className="text-xl font-bold mb-4 text-slate-800">{p.title}</h3>
-            <p className="text-slate-600 leading-relaxed">{p.desc}</p>
+            <p className="text-slate-600 leading-relaxed text-sm">{p.desc}</p>
           </div>
         ))}
       </div>

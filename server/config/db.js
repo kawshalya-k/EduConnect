@@ -1,26 +1,51 @@
-const mysql = require('mysql2');
-require('dotenv').config();
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
 
+let dbInstance = null;
 
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+async function initDB() {
+  dbInstance = await open({
+    filename: './educonnect.db',
+    driver: sqlite3.Database
+  });
+
+  // Create Users table
+  await dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS Users (
+      user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      full_name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      role TEXT DEFAULT 'Learner',
+      otp_code TEXT,
+      otp_expiry DATETIME,
+      is_verified BOOLEAN DEFAULT 0,
+      skill_coins INTEGER DEFAULT 0
+    )
+  `);
+
+  console.log('✅ EduConnect is successfully connected to the local SQLite Database!');
+}
+
+initDB().catch(err => {
+  console.error('❌ Failed to initialize local SQLite database:', err.message);
 });
 
-
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error(' Connection to Railway failed:', err.message);
-  } else {
-    console.log(' EduConnect is successfully connected to the Railway Database!');
-    connection.release();
+// Wrapper to mimic mysql2's API so we don't have to change controllers
+const db = {
+  query: async (sql, params = []) => {
+    if (!dbInstance) throw new Error('Database not initialized yet');
+    
+    // SQLite uses $1, $2 or ? but mysql2 uses ?
+    // Check if it's a SELECT query
+    if (sql.trim().toUpperCase().startsWith('SELECT')) {
+      const rows = await dbInstance.all(sql, params);
+      return [rows]; // mimic mysql2 returning [rows, fields]
+    } else {
+      const result = await dbInstance.run(sql, params);
+      return [result]; // For INSERT, UPDATE, DELETE
+    }
   }
-});
+};
 
-module.exports = db.promise(); 
+module.exports = db;
