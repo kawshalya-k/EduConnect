@@ -1,6 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
+import api from '../api/axios';
 
 const Login = () => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setError('');
+      const res = await api.post('/auth/login', {
+        email: formData.email,
+        password: formData.password
+      });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      setSuccessMsg('Logged in successfully!');
+      // TODO: Call a navigation method to move to dashboard or finish setup
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="flex flex-col min-h-screen w-full bg-white font-sans">
       <main className="flex flex-1 w-full">
@@ -52,11 +86,17 @@ const Login = () => {
             <p className="text-slate-500 mt-2">Log in with your university credentials.</p>
           </div>
 
-          <form className="space-y-6">
+          {error && <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium">{error}</div>}
+          {successMsg && <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-medium">{successMsg}</div>}
+
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">University Email</label>
               <input 
                 type="email" 
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
                 placeholder="student@university.ac.lk"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:border-transparent outline-none transition-all"
               />
@@ -70,6 +110,9 @@ const Login = () => {
               </div>
               <input 
                 type="password" 
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:border-transparent outline-none transition-all"
               />
@@ -80,9 +123,13 @@ const Login = () => {
               <span className="text-sm text-slate-500">Keep me logged in</span>
             </div>
 
-            <button className="w-full bg-[#10B981] text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-100 hover:bg-[#059669] transition-all flex items-center justify-center gap-2">
-              Log In 
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#10B981] text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-100 hover:bg-[#059669] disabled:bg-[#10B981]/50 transition-all flex items-center justify-center gap-2"
+            >
+              {loading ? 'Logging In...' : 'Log In'}
+              {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>}
             </button>
           </form>
 
