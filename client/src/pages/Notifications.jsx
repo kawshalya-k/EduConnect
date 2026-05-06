@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 
-type Tab = 'All' | 'Unread' | 'Archived';
 
-interface Notification {
-  id: number;
-  title: string;
-  description: string;
-  time: string;
-  isUnread?: boolean;
-  iconBg: string;
-  iconColor: string;
-  icon: React.ReactNode;
-}
 
 const CalendarIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +57,7 @@ const BookIcon = () => (
   </svg>
 );
 
-const allNotifications: Notification[] = [
+const allNotifications = [
   {
     id: 1,
     title: 'Session confirmed',
@@ -121,8 +110,8 @@ const allNotifications: Notification[] = [
   },
 ];
 
-const Notifications: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('All');
+const Notifications = () => {
+  const [activeTab, setActiveTab] = useState('All');
 
   const filteredNotifications = allNotifications.filter((n) => {
     if (activeTab === 'Unread') return n.isUnread;
@@ -145,7 +134,7 @@ const Notifications: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex gap-8 border-b border-gray-200 mb-8">
-        {(['All', 'Unread', 'Archived'] as Tab[]).map((tab) => (
+        {(['All', 'Unread', 'Archived']).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
