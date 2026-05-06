@@ -46,7 +46,7 @@ const rankData = [
   },
 ];
 
-const Leaderboard: React.FC = () => {
+const Leaderboard = () => {
   return (
     <div className="flex flex-1">
       {/* Sidebar */}
@@ -54,7 +54,7 @@ const Leaderboard: React.FC = () => {
         <nav className="space-y-2 flex-1">
           <a
             className="flex items-center space-x-3 p-3 rounded-lg text-gray-500 hover:bg-gray-50 transition"
-            href="#"
+            href="/dashboard"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -333,4 +333,3 @@ const Leaderboard: React.FC = () => {
 };
 
 export default Leaderboard;
-
