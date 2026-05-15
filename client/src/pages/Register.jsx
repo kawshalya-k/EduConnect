@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 
 const Register = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: Email/Name, 2: OTP
   
   const [formData, setFormData] = useState({
@@ -38,7 +40,7 @@ const Register = () => {
       setSuccessMsg(res.data.message || 'OTP sent to your email.');
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -76,14 +78,16 @@ const Register = () => {
         email: formData.email,
         otp: otpCode
       });
-      setSuccessMsg(res.data.message || 'Account verified successfully! You can now log in.');
-      // Optional: Inform user to switch to Login page
+      setSuccessMsg(res.data.message || 'Account verified successfully!');
+      setTimeout(() => navigate('/verify-otp'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'OTP verification failed');
+      setTimeout(() => navigate('/verification-failed'), 1000);
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#F8FAFC] font-sans overflow-hidden">
       <main className="flex flex-1 w-full">
@@ -159,6 +163,10 @@ const Register = () => {
                 <label className="text-sm font-bold text-slate-700">Password</label>
                 <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:bg-white outline-none transition-all" />
               </div>
+              
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                By clicking Continue, you agree to our <Link to="/terms-of-service" className="text-[#10B981] hover:underline">Terms of Service</Link>, <Link to="/privacy-policy" className="text-[#10B981] hover:underline">Privacy Policy</Link>, and <Link to="/community-standards" className="text-[#10B981] hover:underline">Community Standards</Link>.
+              </p>
               <button 
                 type="submit"
                 disabled={loading}
@@ -204,7 +212,7 @@ const Register = () => {
 
           <div className="pt-10 border-t border-slate-100 text-center">
             <p className="text-slate-500 font-medium text-sm">
-              Already have an account? <span className="text-[#10B981] font-black hover:underline ml-1 cursor-pointer">Log In</span>
+              Already have an account? <Link to="/login" className="text-[#10B981] font-black hover:underline ml-1 cursor-pointer">Log In</Link>
             </p>
           </div>
         </div>
@@ -216,9 +224,14 @@ const Register = () => {
         <p className="text-white/60 text-sm">
           © 2026 EduConnect. All rights reserved.
         </p>
-        <a href="#" className="text-white/60 hover:text-white transition-colors text-sm">
-          Help Center
-        </a>
+        <div className="flex gap-6 text-sm">
+          <Link to="/privacy-policy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
+          <Link to="/community-standards" className="text-white/60 hover:text-white transition-colors">Community Standards</Link>
+          <a href="#" className="text-white/60 hover:text-white transition-colors">
+            Help Center
+          </a>
+        </div>
       </footer>
     </div>
   );

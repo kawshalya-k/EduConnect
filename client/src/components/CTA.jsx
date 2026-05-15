@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const CTA = () => {
   return (
@@ -11,9 +12,9 @@ const CTA = () => {
           Join the largest student skill network at Universities of Sri Lanka.
         </p>
         <div className="pt-4">
-          <button className="bg-[#10B981] hover:bg-[#059669] text-white text-lg font-bold py-5 px-12 rounded-2xl shadow-xl shadow-emerald-200 transition-all transform hover:-translate-y-1 active:scale-95 cursor-pointer">
+          <Link to="/register" className="bg-[#10B981] hover:bg-[#059669] text-white text-lg font-bold py-5 px-12 rounded-2xl shadow-xl shadow-emerald-200 transition-all transform hover:-translate-y-1 active:scale-95 cursor-pointer inline-block text-center">
             Start Your Journey Now
-          </button>
+          </Link>
         </div>
       </div>
     </section>

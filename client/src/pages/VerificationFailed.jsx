@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const VerificationFailed = () => {
   return (
@@ -41,9 +42,9 @@ const VerificationFailed = () => {
               <span className="font-semibold text-[14px] leading-[20px] text-[#334155]">
                 Try Again with a Different Email
               </span>
-              <a href="#" className="font-bold text-[14px] leading-[16px] text-[#10B981] hover:underline">
+              <Link to="/register" className="font-bold text-[14px] leading-[16px] text-[#10B981] hover:underline">
                 Register Now
-              </a>
+              </Link>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -73,9 +74,9 @@ const VerificationFailed = () => {
             <span className="text-[16px] text-[#475569]">
               Already have an account?
             </span>
-            <a href="#" className="font-bold text-[16px] text-[#10B981] hover:underline">
+            <Link to="/login" className="font-bold text-[16px] text-[#10B981] hover:underline">
               Log In
-            </a>
+            </Link>
           </div>
 
         </div>
@@ -86,9 +87,14 @@ const VerificationFailed = () => {
         <p className="text-[#D1FAE5]/50 text-sm">
           © 2026 EduConnect. All rights reserved.
         </p>
-        <a href="#" className="text-[#D1FAE5]/50 hover:text-white transition-colors text-sm">
-          Help Center
-        </a>
+        <div className="flex gap-6 text-sm">
+          <Link to="/privacy-policy" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Terms of Service</Link>
+          <Link to="/community-standards" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Community Standards</Link>
+          <a href="#" className="text-[#D1FAE5]/50 hover:text-white transition-colors">
+            Help Center
+          </a>
+        </div>
       </footer>
     </div>
   );

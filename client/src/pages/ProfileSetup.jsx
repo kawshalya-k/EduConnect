@@ -10,8 +10,10 @@ import {
   User,
   Trash2
 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ProfileSetup = () => {
+  const navigate = useNavigate();
   const [learningSkills, setLearningSkills] = useState(["Data Science", "Digital Marketing", "Public Speaking"]);
   const [learnInput, setLearnInput] = useState("");
 
@@ -247,7 +249,10 @@ const ProfileSetup = () => {
             <button className="font-bold text-slate-900 px-6 py-3 hover:bg-slate-100 rounded-xl transition-colors">
               Back
             </button>
-            <button className="bg-[#10B981] hover:bg-[#059669] text-white font-bold px-8 py-3 rounded-xl shadow-[0px_10px_15px_-3px_rgba(16,185,129,0.2)] transition-all">
+            <button 
+              onClick={() => navigate('/privacy-policy')}
+              className="bg-[#10B981] hover:bg-[#059669] text-white font-bold px-8 py-3 rounded-xl shadow-[0px_10px_15px_-3px_rgba(16,185,129,0.2)] transition-all cursor-pointer"
+            >
               Complete Onboarding
             </button>
           </div>
@@ -260,9 +265,14 @@ const ProfileSetup = () => {
         <p className="text-[#D1FAE5]/50 text-sm">
           © 2026 EduConnect. All rights reserved.
         </p>
-        <a href="#" className="text-[#D1FAE5]/50 hover:text-white transition-colors text-sm">
-          Help Center
-        </a>
+        <div className="flex gap-6 text-sm">
+          <Link to="/privacy-policy" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Terms of Service</Link>
+          <Link to="/community-standards" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Community Standards</Link>
+          <a href="#" className="text-[#D1FAE5]/50 hover:text-white transition-colors">
+            Help Center
+          </a>
+        </div>
       </footer>
 
     </div>

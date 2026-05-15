@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Check, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const FinishSetup = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
 
@@ -104,14 +106,15 @@ const FinishSetup = () => {
                 />
               </div>
               <div className="ml-3 text-[14px] leading-[20px] text-[#475569]">
-                I agree to the <a href="#" className="text-[#10B981] hover:underline">Terms of Service</a> and <a href="#" className="text-[#10B981] hover:underline">Privacy Policy</a>.
+                I agree to the <Link to="/terms-of-service" className="text-[#10B981] hover:underline">Terms of Service</Link> and <Link to="/privacy-policy" className="text-[#10B981] hover:underline">Privacy Policy</Link>.
               </div>
             </div>
 
             {/* Submit Button */}
             <button 
               type="button"
-              className="mt-2 w-full h-[52px] bg-[#10B981] rounded-lg shadow-[0px_10px_15px_-3px_rgba(13,242,89,0.2),0px_4px_6px_-4px_rgba(13,242,89,0.2)] hover:bg-[#0EA5E9] hover:shadow-[0px_10px_15px_-3px_rgba(14,165,233,0.2)] transition-all flex items-center justify-center gap-2 group"
+              onClick={() => navigate('/profile-setup')}
+              className="mt-2 w-full h-[52px] bg-[#10B981] rounded-lg shadow-[0px_10px_15px_-3px_rgba(13,242,89,0.2),0px_4px_6px_-4px_rgba(13,242,89,0.2)] hover:bg-[#0EA5E9] hover:shadow-[0px_10px_15px_-3px_rgba(14,165,233,0.2)] transition-all flex items-center justify-center gap-2 group cursor-pointer"
               style={{ backgroundColor: '#10B981' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
@@ -129,9 +132,9 @@ const FinishSetup = () => {
             <span className="text-[16px] text-[#475569]">
               Already have an account?
             </span>
-            <a href="#" className="font-bold text-[16px] text-[#10B981] hover:underline">
+            <Link to="/login" className="font-bold text-[16px] text-[#10B981] hover:underline">
               Log In
-            </a>
+            </Link>
           </div>
 
         </div>
@@ -142,9 +145,14 @@ const FinishSetup = () => {
         <p className="text-white/60 text-sm">
           © 2026 EduConnect. All rights reserved.
         </p>
-        <a href="#" className="text-white/60 hover:text-white transition-colors text-sm">
-          Help Center
-        </a>
+        <div className="flex gap-6 text-sm">
+          <Link to="/privacy-policy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
+          <Link to="/community-standards" className="text-white/60 hover:text-white transition-colors">Community Standards</Link>
+          <a href="#" className="text-white/60 hover:text-white transition-colors">
+            Help Center
+          </a>
+        </div>
       </footer>
     </div>
   );
