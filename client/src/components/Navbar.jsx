@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => (
   <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
@@ -11,12 +12,12 @@ const Navbar = () => (
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="bg-[#10B981] text-white text-sm font-bold py-2.5 px-5 rounded-xl hover:bg-[#059669] transition-all cursor-pointer">
+        <Link to="/login" className="bg-[#10B981] text-white text-sm font-bold py-2.5 px-5 rounded-xl hover:bg-[#059669] transition-all cursor-pointer inline-block text-center">
           Log In
-        </button>
-        <button className="bg-[#10B981] text-white text-sm font-bold py-2.5 px-5 rounded-xl hover:bg-[#059669] transition-all cursor-pointer">
+        </Link>
+        <Link to="/register" className="bg-[#10B981] text-white text-sm font-bold py-2.5 px-5 rounded-xl hover:bg-[#059669] transition-all cursor-pointer inline-block text-center">
           Get Started
-        </button>
+        </Link>
       </div>
     </div>
   </nav>

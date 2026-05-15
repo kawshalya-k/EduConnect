@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -28,9 +29,32 @@ const Footer = () => {
 
         {/* Links Sections */}
         {[
-          { title: "Student Center", links: ["Registration", "Search Mentors", "Skill Marketplace"] },
-          { title: "Mentorship", links: ["Mentor Onboarding", "Verification Center", "Mentor Guidelines"] },
-          { title: "Portal", links: ["About Us", "Privacy Policy", "Terms of Service", "Help Center"] }
+          { 
+            title: "Student Center", 
+            links: [
+              { name: "Registration", path: "/register" }, 
+              { name: "Search Mentors", path: "#" }, 
+              { name: "Skill Marketplace", path: "#" }
+            ] 
+          },
+          { 
+            title: "Mentorship", 
+            links: [
+              { name: "Mentor Onboarding", path: "#" }, 
+              { name: "Verification Center", path: "#" }, 
+              { name: "Mentor Guidelines", path: "#" }
+            ] 
+          },
+          { 
+            title: "Portal", 
+            links: [
+              { name: "About Us", path: "#" }, 
+              { name: "Privacy Policy", path: "/privacy-policy" }, 
+              { name: "Terms of Service", path: "/terms-of-service" }, 
+              { name: "Community Standards", path: "/community-standards" },
+              { name: "Help Center", path: "#" }
+            ] 
+          }
         ].map((column, i) => (
           <div key={i} className="space-y-6">
             <h4 className="text-[#10B981] font-bold uppercase tracking-wider text-xs">
@@ -38,8 +62,10 @@ const Footer = () => {
             </h4>
             <ul className="space-y-4">
               {column.links.map((link, j) => (
-                <li key={j} className="text-emerald-100/60 hover:text-white transition-colors cursor-pointer text-sm">
-                  {link}
+                <li key={j}>
+                  <Link to={link.path} className="text-emerald-100/60 hover:text-white transition-colors cursor-pointer text-sm">
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>

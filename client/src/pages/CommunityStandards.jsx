@@ -6,8 +6,10 @@ import {
   Lock,
   Gavel
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const CommunityStandards = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900 flex flex-col">
       {/* Header - Top Navigation Bar */}
@@ -179,7 +181,10 @@ const CommunityStandards = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
-            <button className="bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all flex-1 md:flex-none">
+            <button 
+              onClick={() => navigate('/account-success')}
+              className="bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all flex-1 md:flex-none cursor-pointer"
+            >
               I Understand & Agree
             </button>
             <button className="bg-white border border-[#D1FAE5] hover:bg-slate-50 text-slate-700 font-bold py-3 px-8 rounded-xl transition-all flex-1 md:flex-none">

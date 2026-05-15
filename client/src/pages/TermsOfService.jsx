@@ -13,8 +13,10 @@ import {
   CheckSquare,
   TriangleAlert
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const TermsOfService = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-[#F0FDF4] min-h-screen font-sans text-slate-900 relative">
       {/* Header - Top Navigation Bar */}
@@ -273,7 +275,10 @@ const TermsOfService = () => {
                 By clicking 'I Accept the Terms', you acknowledge that you have read and understood our Terms of Service.
               </p>
             </div>
-            <button className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-900/50 transition-all shrink-0">
+            <button 
+              onClick={() => navigate('/community-standards')}
+              className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-900/50 transition-all shrink-0 cursor-pointer"
+            >
               I Accept the Terms
             </button>
           </div>

@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,10 +30,9 @@ const Login = () => {
         email: formData.email,
         password: formData.password
       });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      login(res.data.user, res.data.token);
       setSuccessMsg('Logged in successfully!');
-      // TODO: Call a navigation method to move to dashboard or finish setup
+      setTimeout(() => navigate('/'), 1000); // Redirect to dashboard or landing
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
@@ -106,7 +110,7 @@ const Login = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-semibold text-slate-700">Password</label>
-                <a href="#" className="text-xs font-bold text-[#10B981] hover:underline">Forgot Password?</a>
+                <Link to="/forgot-password" className="text-xs font-bold text-[#10B981] hover:underline">Forgot Password?</Link>
               </div>
               <input 
                 type="password" 
@@ -134,7 +138,7 @@ const Login = () => {
           </form>
 
           <div className="pt-8 border-t border-slate-100 text-center">
-            <p className="text-slate-500">New to the community? <a href="#" className="text-[#10B981] font-bold hover:underline">Join for Free</a></p>
+            <p className="text-slate-500">New to the community? <Link to="/register" className="text-[#10B981] font-bold hover:underline">Join for Free</Link></p>
           </div>
         </div>
       </div>
@@ -145,9 +149,14 @@ const Login = () => {
         <p className="text-white/60 text-sm">
           © 2026 EduConnect. All rights reserved.
         </p>
-        <a href="#" className="text-white/60 hover:text-white transition-colors text-sm">
-          Help Center
-        </a>
+        <div className="flex gap-6 text-sm">
+          <Link to="/privacy-policy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
+          <Link to="/community-standards" className="text-white/60 hover:text-white transition-colors">Community Standards</Link>
+          <a href="#" className="text-white/60 hover:text-white transition-colors">
+            Help Center
+          </a>
+        </div>
       </footer>
     </div>
   );

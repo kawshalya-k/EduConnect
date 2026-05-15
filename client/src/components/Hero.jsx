@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -11,12 +12,12 @@ const Hero = () => {
           The AI-powered skill-sharing ecosystem for University students. Turn your knowledge into recognition and rewards.
         </p>
         <div className="flex flex-wrap gap-4">
-          <button className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all cursor-pointer text-sm">
+          <Link to="/register" className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all cursor-pointer text-sm inline-block text-center">
             Get Started with Your Student Email
-          </button>
-          <button className="bg-white border-2 border-slate-200 hover:border-slate-300 font-bold py-4 px-8 rounded-xl transition-all cursor-pointer text-sm text-slate-700">
+          </Link>
+          <Link to="/register" className="bg-white border-2 border-slate-200 hover:border-slate-300 font-bold py-4 px-8 rounded-xl transition-all cursor-pointer text-sm text-slate-700 inline-block text-center">
             Explore Mentors
-          </button>
+          </Link>
         </div>
         
         <div className="flex items-center gap-4 pt-4">
