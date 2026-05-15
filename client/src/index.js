@@ -1,15 +1,10 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
-const authRoutes = require('./routes/authRoutes');
-const sessionRoutes = require('./routes/sessionRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
 
-app.use(cors());
-app.use(express.json());
-
-app.use('/api/auth', authRoutes);
-app.use('/api/sessions', sessionRoutes);
-app.use('/api/admin', adminRoutes);
-
-app.listen(5000, () => console.log("Server running on port 5000"));
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
