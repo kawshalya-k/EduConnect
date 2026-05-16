@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function BookingConfirmed() {
+  const navigate = useNavigate();
   const session = {
     mentor: "Dr. Sarah Mitchell",
     mentorImg: "https://i.pravatar.cc/80?img=47",
@@ -115,9 +118,11 @@ export default function BookingConfirmed() {
 
           {/* Buttons */}
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-            <button style={{ padding: "12px 24px", borderRadius: 10, border: "none", background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-              Go to My Sessions →
-            </button>
+            <button 
+  onClick={() => navigate('/my-sessions')}  // ✅ onClick as prop
+  style={{ padding: "12px 24px", borderRadius: 10, border: "none", background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+  Go to My Sessions →
+</button>
             <button style={{ padding: "12px 24px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", color: "#475569", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
               📥 Receipt
             </button>
