@@ -18,6 +18,7 @@ import SessionBooking from './pages/Sessions/SessionBooking';
 import BookingConfirmed from './pages/Sessions/BookingConfirmed';
 import MySessions from './pages/Sessions/MySessions';
 import SessionFeedback from './pages/Sessions/SessionFeedback';
+import SessionRoom from './pages/Sessions/SessionRoom';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         <Route path="/booking-confirmed" element={<BookingConfirmed />} />
         <Route path="/my-sessions" element={<MySessions />} />
         <Route path="/session-feedback" element={<SessionFeedback />} />
+        <Route path="/session-room" element={<SessionRoom />} />
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
