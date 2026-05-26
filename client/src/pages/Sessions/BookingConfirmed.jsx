@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../../components/Footer';
 
 
 export default function BookingConfirmed() {
@@ -130,6 +131,8 @@ export default function BookingConfirmed() {
 
         </div>
       </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
