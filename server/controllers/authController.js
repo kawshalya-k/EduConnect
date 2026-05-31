@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
         }
         
         // Check if user already exists
-        const [existing] = await db.query("SELECT * FROM Users WHERE email = ?", [email]);
+        const [existing] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
         if (existing.length > 0) return res.status(400).json({ message: "Email already registered" });
 
         // Generate OTP & Expiry (valid for 10 minutes)
@@ -25,9 +25,14 @@ exports.register = async (req, res) => {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Split full_name into First_Name and Last_Name
+        const nameParts = full_name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
         // Save to DB with OTP and Expiry
-        const sql = "INSERT INTO Users (full_name, email, password, role, otp_code, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        await db.query(sql, [full_name, email, hashedPassword, role || 'Learner', otp, otp_expiry, false]);
+        const sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role, otp_code, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, false]);
 
         // Send email via Mailtrap/Nodemailer
         await sendEmail(email, otp);
@@ -42,7 +47,7 @@ exports.register = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     const { email, otp } = req.body;
     try {
-        const [rows] = await db.query("SELECT * FROM Users WHERE email = ?", [email]);
+        const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
         const user = rows[0];
 
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -59,7 +64,7 @@ exports.verifyOTP = async (req, res) => {
 
         // Update User to Verified and clear OTP fields
         await db.query(
-            "UPDATE Users SET is_verified = 1, otp_code = NULL, otp_expiry = NULL WHERE email = ?", 
+            "UPDATE User SET is_verified = 1, otp_code = NULL, otp_expiry = NULL WHERE Email = ?", 
             [email]
         );
 
@@ -74,7 +79,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
         // Find user
-        const [rows] = await db.query("SELECT * FROM Users WHERE email = ?", [email]);
+        const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
         const user = rows[0];
 
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -87,16 +92,77 @@ exports.login = async (req, res) => {
         }
 
         // Check Password
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.Password);
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
         // Create Token
-        const token = jwt.sign({ id: user.user_id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ id: user.User_Id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
         res.json({
             token,
-            user: { id: user.user_id, name: user.full_name, coins: user.skill_coins }
+            user: { id: user.User_Id, name: `${user.First_Name} ${user.Last_Name}`, coins: user.skill_coins }
         });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+const crypto = require('crypto');
+
+// --- 4. FORGOT PASSWORD ---
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
+        const user = rows[0];
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Generate token and expiry
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = new Date(Date.now() + 15 * 60000); // 15 minutes
+
+        // Update DB
+        await db.query(
+            "UPDATE User SET reset_token = ?, reset_token_expiry = ? WHERE Email = ?",
+            [resetToken, resetTokenExpiry, email]
+        );
+
+        // Send email with link
+        // In a real app, this should be the frontend URL
+        const resetLink = `http://localhost:5173/set-new-password?token=${resetToken}`;
+        await sendEmail(email, `Your password reset link: ${resetLink}`);
+
+        res.status(200).json({ message: "Password reset link sent to your email." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// --- 5. RESET PASSWORD ---
+exports.resetPassword = async (req, res) => {
+    const { token, newPassword } = req.body;
+    try {
+        // Find user by token
+        const [rows] = await db.query("SELECT * FROM User WHERE reset_token = ?", [token]);
+        const user = rows[0];
+
+        if (!user) return res.status(400).json({ message: "Invalid or missing token" });
+
+        // Check expiry
+        if (new Date() > new Date(user.reset_token_expiry)) {
+            return res.status(400).json({ message: "Reset token has expired" });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update DB and clear token
+        await db.query(
+            "UPDATE User SET Password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE User_Id = ?",
+            [hashedPassword, user.User_Id]
+        );
+
+        res.status(200).json({ message: "Password updated successfully" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
