@@ -1,22 +1,29 @@
-// server/index.js
+require('dotenv').config();
 
 const express = require('express');
-const app = express();
+const cors    = require('cors');
+const app     = express();
+
+// ── Routes ──
 const authRoutes         = require('./routes/authRoutes');
+const sessionRoutes      = require('./routes/sessionRoutes');
+const adminRoutes        = require('./routes/adminRoutes');
 const gamificationRoutes = require('./routes/gamificationRoutes');
 const walletRoutes       = require('./routes/walletRoutes');
 const { startScheduler } = require('./utils/challengeScheduler');
 
+// ── Middleware ──
+app.use(cors());
 app.use(express.json());
 
-// Existing routes
-app.use('/api/auth', authRoutes);
-
-// Your new routes
+// ── API Routes ──
+app.use('/api/auth',         authRoutes);
+app.use('/api/sessions',     sessionRoutes);
+app.use('/api/admin',        adminRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/wallet',       walletRoutes);
 
-// Start weekly challenge scheduler
+// ── Weekly Challenge Scheduler ──
 startScheduler();
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(5000, () => console.log('Server running on port 5000'));
