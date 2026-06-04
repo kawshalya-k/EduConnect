@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../../components/Footer';
 
 const guidelines = [
   "Keep your microphone muted unless speaking.",
@@ -296,6 +297,8 @@ export default function SessionRoom() {
           </div>
         </div>
       </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
