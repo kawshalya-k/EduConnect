@@ -14,6 +14,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import CheckInbox from './pages/CheckInbox';
 import SetNewPassword from './pages/SetNewPassword';
 import PasswordResetSuccess from './pages/PasswordResetSuccess';
+import LearnerDashboard from './pages/LearnerDashboard';
+import FindMentor from './pages/FindMentor';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
         <Route path="/check-inbox" element={<CheckInbox />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+        <Route path="/dashboard" element={<LearnerDashboard />} />
+        <Route path="/find-mentor" element={<FindMentor />} />
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
