@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../../components/Footer';
 
 const tags = [
   "Clear Communication",
@@ -143,6 +144,8 @@ export default function SessionFeedback() {
 
         </div>
       </div>
+       {/* Footer */}
+      <Footer />
     </div>
   );
 }
