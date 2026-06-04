@@ -1,5 +1,6 @@
 const Session = require('../models/Session');
 const db = require('../config/db');
+const Notification = require('../models/Notification');
 
 // Book a session (Learner)
 exports.bookSession = async (req, res) => {
@@ -20,6 +21,22 @@ exports.bookSession = async (req, res) => {
       skill_id, learner_id, mentor_id,
       session_type, date, time, duration, cost
     });
+
+    // Notify mentor about new booking
+    await Notification.createNotification(
+      mentor_id,
+      'New Session Request!',
+      'You have a new session booking request. Please review and accept or reject it.',
+      'session'
+    );
+
+    // Notify learner about booking confirmation
+    await Notification.createNotification(
+      learner_id,
+      'Session Booked!',
+      'Your session has been booked successfully. Waiting for mentor confirmation.',
+      'session'
+    );
 
     res.status(201).json({ message: 'Session booked successfully!', sessionId: result.insertId });
 
@@ -52,9 +69,29 @@ exports.updateStatus = async (req, res) => {
 
     await Session.updateSessionStatus(sessionId, status);
 
-    // If completed — reward mentor, deduct from learner
+    // Get session details for notifications
+    const session = await Session.getSessionById(sessionId);
+
+    // Send notifications based on status
+    if (status === 'Scheduled') {
+      await Notification.createNotification(
+        session.Learner_Id,
+        'Session Accepted! 🎉',
+        'Your mentor has accepted your session request. Check your dashboard for details.',
+        'session'
+      );
+    }
+
+    if (status === 'Cancelled') {
+      await Notification.createNotification(
+        session.Learner_Id,
+        'Session Cancelled',
+        'Your session request has been cancelled by the mentor.',
+        'session'
+      );
+    }
+
     if (status === 'Completed') {
-      const session = await Session.getSessionById(sessionId);
       if (session) {
         await db.query(
           'UPDATE User SET Wallet_Balance = Wallet_Balance + ? WHERE User_Id = ?',
@@ -63,6 +100,20 @@ exports.updateStatus = async (req, res) => {
         await db.query(
           'UPDATE User SET Wallet_Balance = Wallet_Balance - ? WHERE User_Id = ?',
           [session.Cost, session.Learner_Id]
+        );
+
+        // Notify both parties
+        await Notification.createNotification(
+          session.Mentor_Id,
+          'Session Completed! 💰',
+          `Great job! You earned ${session.Reward || 10} Skill Coins for completing the session.`,
+          'payment'
+        );
+        await Notification.createNotification(
+          session.Learner_Id,
+          'Session Completed!',
+          'Your session has been completed. Please leave a review for your mentor.',
+          'session'
         );
       }
     }
@@ -81,12 +132,23 @@ exports.addMeetingLink = async (req, res) => {
     const { sessionId } = req.params;
     const { meeting_link } = req.body;
 
-    // Validate URL
     try { new URL(meeting_link); } catch {
       return res.status(400).json({ message: 'Invalid meeting link URL' });
     }
 
     await Session.addMeetingLink(sessionId, meeting_link);
+
+    // Notify learner about meeting link
+    const session = await Session.getSessionById(sessionId);
+    if (session) {
+      await Notification.createNotification(
+        session.Learner_Id,
+        'Meeting Link Ready! 🔗',
+        'Your mentor has added the meeting link. You can now join the session.',
+        'session'
+      );
+    }
+
     res.status(200).json({ message: 'Meeting link added successfully!' });
 
   } catch (err) {
