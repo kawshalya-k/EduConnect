@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 const upcomingSessions = [
   {
     id: 1,
@@ -90,7 +91,7 @@ export default function MySessions() {
       <div style={{ display: "flex" }}>
 
         {/* Sidebar */}
-        <div style={{ width: 220, background: "#fff", minHeight: "calc(100vh - 60px)", padding: "1.5rem 1rem", borderRight: "1px solid #eee", flexShrink: 0 }}>
+        <div style={{ width: 300, background: "#fff", minHeight: "calc(100vh - 60px)", padding: "1.5rem 1rem", borderRight: "1px solid #eee", flexShrink: 0 }}>
           {[
             { icon: "🏠", label: "Dashboard", path: "/" },
             { icon: "👥", label: "Mentors", path: "/" },
@@ -131,7 +132,7 @@ export default function MySessions() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {upcomingSessions.map(session => (
                 <div key={session.id} style={{ background: "#fff", borderRadius: 12, padding: "1.25rem", display: "flex", alignItems: "center", gap: "1.25rem", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                  <img src={session.image} alt={session.mentor} style={{ width: 80, height: 80, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+                  <img src={session.image} alt={session.mentor} style={{ width: 120, height: 120, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                       <span style={{ background: "#e8f5ee", color: "#1a7a4a", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{session.status}</span>
@@ -158,7 +159,7 @@ export default function MySessions() {
               <p style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", letterSpacing: 1, textTransform: "uppercase", marginTop: "0.5rem" }}>Past Sessions Preview</p>
               {pastSessions.map(session => (
                 <div key={session.id} style={{ background: "#fff", borderRadius: 12, padding: "1.25rem", display: "flex", alignItems: "center", gap: "1.25rem", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                  <img src={session.image} alt={session.mentor} style={{ width: 80, height: 80, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+                  <img src={session.image} alt={session.mentor} style={{ width: 120, height: 120, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                       <span style={{ background: session.status === "COMPLETED" ? "#eff6ff" : "#fef2f2", color: statusColors[session.status], fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{session.status}</span>
@@ -200,6 +201,8 @@ export default function MySessions() {
           )}
         </div>
       </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

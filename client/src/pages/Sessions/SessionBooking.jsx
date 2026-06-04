@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../../components/Footer';
 
 const topics = [
   "Advanced UI Prototyping in Figma",
@@ -175,6 +176,8 @@ export default function Sessions() {
 
         </div>
       </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
