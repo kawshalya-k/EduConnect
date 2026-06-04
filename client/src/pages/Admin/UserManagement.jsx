@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { getAllUsers, updateUserStatus, deleteUser } from '../../services/adminService';
 
 const users = [
   { id: "482109", name: "Sarah Jenkins", email: "s.jenkins@stanford.edu", role: "Mentor", university: "Stanford University", coins: 2450, status: "ACTIVE", avatar: "https://i.pravatar.cc/40?img=47" },
@@ -35,7 +35,44 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [activePage, setActivePage] = useState('User Management');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (userId, status) => {
+    try {
+      await updateUserStatus(userId, status);
+      fetchUsers();
+    } catch (err) {
+      console.error('Error updating status:', err);
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await deleteUser(userId);
+        fetchUsers();
+      } catch (err) {
+        console.error('Error deleting user:', err);
+      }
+    }
+  };
 
   const filtered = users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -45,6 +82,7 @@ export default function UserManagement() {
     return matchSearch && matchRole && matchStatus;
   });
 
+  if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#16a34a" }}>Loading users...</div>;
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
@@ -140,41 +178,47 @@ export default function UserManagement() {
 
               {/* Table Rows */}
               {filtered.map((user, i) => (
-                <div key={user.id}
+                <div key={User_Id}
                   style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 2fr 1fr 1fr 1fr", padding: "1rem 1.5rem", borderBottom: i < filtered.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center", transition: "background 0.15s", cursor: "pointer" }}
                   onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                   onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
 
                   {/* User */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <img src={user.avatar} alt={user.name} style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0", flexShrink: 0 }} />
-                    <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{user.name}</p>
-                      <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>ID: {user.id}</p>
+  <img src={user.avatar || 'https://i.pravatar.cc/40'} alt={user.First_Name} style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0", flexShrink: 0 }} />
+  <div>
+    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{user.First_Name} {user.Last_Name}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>ID: {User_Id}</p>
                     </div>
                   </div>
 
                   {/* Email */}
-                  <span style={{ fontSize: 13, color: "#475569" }}>{user.email}</span>
+                  <span style={{ fontSize: 13, color: "#475569" }}>{user.Email}</span>
 
                   {/* Role */}
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: roleColors[user.role]?.bg, color: roleColors[user.role]?.color, display: "inline-block" }}>{user.role}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: roleColors[user.Role]?.bg, color: roleColors[user.Role]?.color, display: "inline-block" }}>{user.Role}</span>
 
                   {/* University */}
-                  <span style={{ fontSize: 13, color: "#475569" }}>{user.university}</span>
+                  <span style={{ fontSize: 13, color: "#475569" }}>{user.University}</span>
 
                   {/* Coins */}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>💰 {user.coins.toLocaleString()}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>💰 {(user.Wallet_Balance || 0).toLocaleString()}</span>
 
                   {/* Status */}
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: statusColors[user.status]?.bg, color: statusColors[user.status]?.color, display: "inline-block" }}>{user.status}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: statusColors[user.status]?.bg, color: statusColors[user.Status]?.color, display: "inline-block" }}>{user.Status}</span>
 
                   {/* Actions */}
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", fontSize: 12, cursor: "pointer", color: "#475569", fontWeight: 600 }}>Edit</button>
-                    <button style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", fontSize: 12, cursor: "pointer", color: "#ef4444", fontWeight: 600 }}>
-                      {user.status === 'SUSPENDED' ? 'Restore' : 'Suspend'}
-                    </button>
+                    <button 
+  onClick={() => handleStatusUpdate(user.User_Id, user.Status === 'Suspended' ? 'Active' : 'Suspended')}
+  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", fontSize: 12, cursor: "pointer", color: "#ef4444", fontWeight: 600 }}>
+  {user.Status === 'Suspended' ? 'Restore' : 'Suspend'}
+</button>
+<button
+  onClick={() => handleDelete(user.User_Id)}
+  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", fontSize: 12, cursor: "pointer", color: "#ef4444", fontWeight: 600 }}>
+  Delete
+</button>
                   </div>
                 </div>
               ))}

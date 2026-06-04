@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getDashboardStats } from '../../services/adminService';
 
 const stats = [
-  { label: "Total Active Users", value: "12,482", change: "+12%", icon: "👥", color: "#3b82f6", bg: "#eff6ff", positive: true },
-  { label: "Pending Verifications", value: "158", change: "! High", icon: "⚠️", color: "#f59e0b", bg: "#fffbeb", positive: false },
-  { label: "Sessions Today", value: "2,104", change: "+5%", icon: "📅", color: "#22c55e", bg: "#f0fdf4", positive: true },
-  { label: "Skill Coins Circulation", value: "1.2M", change: "+8%", icon: "💰", color: "#8b5cf6", bg: "#f5f3ff", positive: true },
+  { label: "Total Active Users", value: "dashboardData.totalUsers", change: "+12%", icon: "👥", color: "#3b82f6", bg: "#eff6ff", positive: true },
+  { label: "Pending Verifications", value: "dashboardData.pendingVerifications", change: "! High", icon: "⚠️", color: "#f59e0b", bg: "#fffbeb", positive: false },
+  { label: "Sessions Today", value: "dashboardData.sessionsToday", change: "+5%", icon: "📅", color: "#22c55e", bg: "#f0fdf4", positive: true },
+  { label: "Skill Coins Circulation", value: "dashboardData.skillCoinsCirculation", change: "+8%", icon: "💰", color: "#8b5cf6", bg: "#f5f3ff", positive: true },
 ];
 
 const disputes = [
@@ -20,7 +21,26 @@ const activityData = [30, 45, 35, 60, 55, 75, 65, 80, 70, 90, 85, 95, 88, 92, 98
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('Monthly');
   const [activePage, setActivePage] = useState('Dashboard');
+  const [dashboardData, setDashboardData] = useState({
+    totalUsers: 0,
+    sessionsToday: 0,
+    pendingVerifications: 0,
+    skillCoinsCirculation: 0
+  });
+ 
   const navigate = useNavigate();
+
+   useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getDashboardStats();
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const maxVal = Math.max(...activityData);
 
