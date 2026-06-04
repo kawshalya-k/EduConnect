@@ -32,7 +32,7 @@ const Login = () => {
       });
       login(res.data.user, res.data.token);
       setSuccessMsg('Logged in successfully!');
-      setTimeout(() => navigate('/'), 1000); // Redirect to dashboard or landing
+      setTimeout(() => navigate('/dashboard'), 1000); // Redirect to dashboard
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
