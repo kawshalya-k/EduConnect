@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useInsertionEffect, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { getMySessions, updateSessionStatus } from '../../services/sessionService';
+import Footer from '../../components/Footer';
 
 const upcomingSessions = [
   {
@@ -50,7 +51,41 @@ const pastSessions = [
 
 export default function MySessions() {
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const data = await getMySessions();
+      setSessions(data);
+    } catch (err) {
+      console.error('Error fetching sessions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (sessionId, status) => {
+    try {
+      await updateSessionStatus(sessionId, status);
+      fetchSessions();
+    } catch (err) {
+      console.error('Error updating status:', err);
+    }
+  };
+
+  const upcomingSessions = sessions.filter(s => 
+    ['Pending', 'Scheduled', 'In-Session'].includes(s.Status)
+  );
+  
+  const pastSessions = sessions.filter(s => 
+    ['Completed', 'Cancelled'].includes(s.Status)
+  );
 
   const statusColors = {
     SCHEDULED: "#22c55e",
@@ -58,6 +93,7 @@ export default function MySessions() {
     CANCELLED: "#ef4444",
   };
 
+  if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#16a34a" }}>Loading sessions...</div>;
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", background: "#f5f6fa", minHeight: "100vh" }}>
 
