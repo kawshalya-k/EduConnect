@@ -24,6 +24,7 @@ import UserManagement from './pages/Admin/UserManagement';
 import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
+import Notifications from './pages/Notifications';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
         <Route path="/admin/analytics" element={<Analytics />} />
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/verifications" element={<SkillVerifications />} />
+        <Route path="/notifications" element={<Notifications />} />
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { getMyNotifications, markAllAsRead, markAsRead, deleteNotification } from '../services/notificationService';
 
 
 const CalendarIcon = () => (
@@ -112,12 +112,57 @@ const allNotifications = [
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState('All');
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredNotifications = allNotifications.filter((n) => {
-    if (activeTab === 'Unread') return n.isUnread;
-    if (activeTab === 'Archived') return false; // No archived items in this demo
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await getMyNotifications();
+      setNotifications(data);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllAsRead();
+      fetchNotifications();
+    } catch (err) {
+      console.error('Error marking all as read:', err);
+    }
+  };
+
+  const handleMarkRead = async (id) => {
+    try {
+      await markAsRead(id);
+      fetchNotifications();
+    } catch (err) {
+      console.error('Error marking as read:', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteNotification(id);
+      fetchNotifications();
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+    }
+  };
+
+  const filteredNotifications = notifications.filter((n) => {
+    if (activeTab === 'Unread') return !n.Is_Read;
     return true;
   });
+
+
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-12 min-h-[calc(100vh-400px)]">
@@ -127,7 +172,9 @@ const Notifications = () => {
           <h1 className="text-4xl font-extrabold text-slate-900 mb-2">Notifications</h1>
           <p className="text-slate-500 text-lg">Stay updated with your learning progress</p>
         </div>
-        <button className="bg-emerald-50 text-[#004231] font-semibold py-2.5 px-6 rounded-full text-sm hover:bg-emerald-100 transition-colors border border-teal-100">
+        <button 
+        onClick={handleMarkAllRead}
+        className="bg-emerald-50 text-[#004231] font-semibold py-2.5 px-6 rounded-full text-sm hover:bg-emerald-100 transition-colors border border-teal-100">
           Mark all as read
         </button>
       </div>
