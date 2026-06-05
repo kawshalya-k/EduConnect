@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/Footer';
+import { bookSession } from '../../services/sessionService';
+import axiosInstance from '../../services/axiosConfig';
 
 const topics = [
   "Advanced UI Prototyping in Figma",
@@ -18,18 +20,51 @@ const timeSlots = [
   "04:00 PM - 05:00 PM",
 ];
 
-export default function Sessions() {
-  const [topic, setTopic] = useState(topics[0]);
+export default function SessionBooking() {
+  const [topics, setTopics] = useState([]);
+  const [topic, setTopic] = useState('');
   const [date, setDate] = useState("");
   const [time, setTime] = useState(timeSlots[0]);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const walletBalance = 850;
   const sessionCost = 50;
   const remaining = walletBalance - sessionCost;
   const navigate = useNavigate();
 
-  const handleBook = () => {
-  navigate('/booking-confirmed');
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const res = await axiosInstance.get('/admin/skills');
+        setTopics(res.data);
+        if (res.data.length > 0) setTopic(res.data[0].Skill_Name);
+      } catch (err) {
+        console.error('Error fetching skills:', err);
+      }
+    };
+    fetchSkills();
+  }, []);
+
+  const handleBook = async () => {
+  setLoading(true);
+  setError('');
+  try {
+    await bookSession({
+      skill_id: topics.find(t => t.Skill_Name === topic)?.Skill_Id || 1,
+      mentor_id: 2, // will be dynamic later
+      session_type: "Online-Video",
+      date: date,
+      time: time,
+      duration: 60,
+      cost: sessionCost
+    });
+    navigate('/booking-confirmed');
+  } catch (err) {
+    setError(err.response?.data?.message || 'Booking failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
 };
 
   return (
@@ -91,9 +126,9 @@ export default function Sessions() {
               <label style={{ fontSize: 11, fontWeight: 600, color: "#999", letterSpacing: 1, textTransform: "uppercase", display: "block", marginBottom: 8 }}>Session Topic</label>
               <div style={{ position: "relative" }}>
                 <select value={topic} onChange={e => setTopic(e.target.value)}
-                  style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #e0e0e0", fontSize: 14, appearance: "none", background: "#fff", cursor: "pointer", outline: "none" }}>
-                  {topics.map(t => <option key={t}>{t}</option>)}
-                </select>
+  style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #e0e0e0", fontSize: 14, appearance: "none", background: "#fff", cursor: "pointer", outline: "none" }}>
+  {topics.map(t => <option key={t.Skill_Id} value={t.Skill_Name}>{t.Skill_Name}</option>)}
+</select>
                 <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#999" }}>▼</span>
               </div>
             </div>
@@ -156,10 +191,11 @@ export default function Sessions() {
                 The external meeting link (Zoom/Google Meet) will be generated and shared via email and your dashboard immediately after confirmation.
               </p>
             </div>
-            <button onClick={handleBook}
-              style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-              Confirm and Book →
-            </button>
+            <button onClick={handleBook} disabled={loading}
+  style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: loading ? "#94a3b8" : "#22c55e", color: "#fff", fontWeight: 700, fontSize: 15, cursor: loading ? "not-allowed" : "pointer" }}>
+  {loading ? "Booking..." : "Confirm and Book →"}
+</button>
+            {error && <p style={{ color: "#ef4444", fontSize: 13, textAlign: "center", marginBottom: "0.5rem" }}>{error}</p>}
             <p style={{ textAlign: "center", fontSize: 11, color: "#6b9e7e", margin: "10px 0 0" }}>
               100% REFUNDABLE UP TO 24H BEFORE SESSION
             </p>
