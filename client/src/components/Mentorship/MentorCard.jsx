@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const MentorCard = ({ mentor }) => {
   const getBadgeColors = (level) => {
@@ -63,9 +64,9 @@ const MentorCard = ({ mentor }) => {
 
         {/* Action */}
         <div>
-          <button className="px-6 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-base font-bold rounded-2xl shadow-[0_4px_6px_-4px_rgba(16,185,129,0.2),0_10px_15px_-3px_rgba(16,185,129,0.2)] transition-all">
+          <Link to="/session-booking" className="inline-flex px-6 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-base font-bold rounded-2xl shadow-[0_4px_6px_-4px_rgba(16,185,129,0.2),0_10px_15px_-3px_rgba(16,185,129,0.2)] transition-all">
             Book Session
-          </button>
+          </Link>
         </div>
       </div>
     </div>

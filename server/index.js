@@ -13,8 +13,8 @@ const authRoutes         = require('./routes/authRoutes');
 const sessionRoutes      = require('./routes/sessionRoutes');
 const adminRoutes        = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-const gamificationRoutes = require('./routes/gamificationRoutes');
-const walletRoutes       = require('./routes/walletRoutes');
+const gamificationRoutes = require('./routes/GamificationRoutes');
+const walletRoutes       = require('./routes/WalletRoutes');
 const { startScheduler } = require('./utils/challengeScheduler');
 
 // ── API Routes ──

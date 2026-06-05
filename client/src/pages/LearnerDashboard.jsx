@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
 
@@ -85,11 +86,11 @@ const LearnerDashboard = () => {
                     <span className="font-normal text-sm leading-5 flex items-center text-[#94A3B8]">
                       Meeting link will activate 5m before
                     </span>
-                    <button className="relative flex flex-col justify-center items-center py-2.5 px-6 w-[147px] h-11 bg-[#10B77F] rounded-3xl hover:bg-[#059669] transition-colors shadow-[0_4px_6px_-4px_rgba(16,183,127,0.2),0_10px_15px_-3px_rgba(16,183,127,0.2)]">
+                    <Link to="/session-room" className="relative flex flex-col justify-center items-center py-2.5 px-6 w-[147px] h-11 bg-[#10B77F] rounded-3xl hover:bg-[#059669] transition-colors shadow-[0_4px_6px_-4px_rgba(16,183,127,0.2),0_10px_15px_-3px_rgba(16,183,127,0.2)]">
                       <span className="font-bold text-base leading-6 text-center text-white z-10">
                         Join Session
                       </span>
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -104,7 +105,7 @@ const LearnerDashboard = () => {
               <div className="flex flex-row items-start gap-4 w-full h-[134px]">
                 
                 {/* Find Mentor Button */}
-                <button className="box-border flex flex-col items-center py-6 px-[80px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
+                <Link to="/find-mentor" className="box-border flex flex-col items-center py-6 px-[80px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[18px] h-[18px]">
                       <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
@@ -114,10 +115,10 @@ const LearnerDashboard = () => {
                   <span className="font-bold text-base leading-6 text-center text-[#0F172A]">
                     Find Mentor
                   </span>
-                </button>
+                </Link>
 
                 {/* My Sessions Button */}
-                <button className="box-border flex flex-col items-center py-6 px-[77px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
+                <Link to="/my-sessions" className="box-border flex flex-col items-center py-6 px-[77px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-4">
                       <path d="M4 4H16C17.1 4 18 4.9 18 6V18C18 19.1 17.1 20 16 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -127,10 +128,10 @@ const LearnerDashboard = () => {
                   <span className="font-bold text-base leading-6 text-center text-[#0F172A]">
                     My Sessions
                   </span>
-                </button>
+                </Link>
 
                 {/* My Badges Button */}
-                <button className="box-border flex flex-col items-center py-6 px-[83px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
+                <Link to="/badges" className="box-border flex flex-col items-center py-6 px-[83px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[10px] h-[20px]">
                       <path d="M12 15C15.866 15 19 11.866 19 8C19 4.13401 15.866 1 12 1C8.13401 1 5 4.13401 5 8C5 11.866 8.13401 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -140,7 +141,7 @@ const LearnerDashboard = () => {
                   <span className="font-bold text-base leading-6 text-center text-[#0F172A]">
                     My Badges
                   </span>
-                </button>
+                </Link>
 
               </div>
             </div>
