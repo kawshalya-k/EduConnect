@@ -30,8 +30,8 @@ const DashboardNavbar = () => {
                 Dashboard
               </span>
             </Link>
-            <Link to="/sessions" className={`flex flex-col items-start pb-1 ${currentPath === '/sessions' ? 'border-b-2 border-[#10B981]' : ''}`}>
-              <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/sessions' ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+            <Link to="/my-sessions" className={`flex flex-col items-start pb-1 ${currentPath === '/my-sessions' || currentPath.startsWith('/session') ? 'border-b-2 border-[#10B981]' : ''}`}>
+              <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/my-sessions' || currentPath.startsWith('/session') ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
                 Sessions
               </span>
             </Link>

@@ -162,7 +162,7 @@ async function initDB() {
 const dbPromise = initDB();
 
 const db = {
-  query: async (sqitl, params = []) => {
+  query: async (sql, params = []) => {
     await dbPromise;
     if (!dbInstance) throw new Error('Database not initialized yet');
     const [rows, fields] = await dbInstance.query(sql, params);

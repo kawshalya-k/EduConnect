@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
 
 const tags = [
@@ -10,10 +11,10 @@ const tags = [
 ];
 
 export default function SessionFeedback() {
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(4);
   const [hovered, setHovered] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState(["Clear Communication", "Deep Expertise"]);
   const navigate = useNavigate();
 
   const toggleTag = (tag) => {
@@ -24,127 +25,161 @@ export default function SessionFeedback() {
 
   const handleSubmit = () => {
     alert('Feedback submitted! Thank you 🎉');
-    navigate('/');
+    navigate('/my-sessions');
+  };
+
+  const getRatingText = () => {
+    const val = hovered || rating;
+    if (val === 1) return "Needs Improvement";
+    if (val === 2) return "Fair session";
+    if (val === 3) return "Good session";
+    if (val === 4) return "Great session!";
+    if (val === 5) return "Excellent session! 🎉";
+    return "";
   };
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', sans-serif", background: "#f5f6fa", minHeight: "100vh" }}>
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter'] relative">
+      <DashboardNavbar />
 
-      {/* Navbar */}
-      <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60, borderBottom: "1px solid #eee" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ background: "#1a7a4a", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>E</span>
-          </div>
-          <span style={{ fontWeight: 700, fontSize: 16 }}>EduConnect</span>
-        </div>
-        <div style={{ display: "flex", gap: 32 }}>
-          {["Dashboard", "Sessions", "Messages"].map(n => (
-            <span key={n} style={{ cursor: "pointer", fontWeight: n === "Sessions" ? 700 : 400, color: n === "Sessions" ? "#1a7a4a" : "#555", borderBottom: n === "Sessions" ? "2px solid #1a7a4a" : "none", paddingBottom: 4, fontSize: 14 }}>
-              {n}
-            </span>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button style={{ padding: "6px 14px", borderRadius: 20, border: "1px solid #ccc", background: "#fff", fontSize: 12, cursor: "pointer" }}>Mentor</button>
-          <button style={{ padding: "6px 14px", borderRadius: 20, border: "none", background: "#1a7a4a", color: "#fff", fontSize: 12, cursor: "pointer" }}>Learner Mode</button>
-          <div style={{ background: "#e8f5ee", borderRadius: 20, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#1a7a4a" }}>💰</span>
-            <span style={{ fontWeight: 700, fontSize: 13, color: "#1a7a4a" }}>100 Skill Coins</span>
-          </div>
-          <span style={{ fontSize: 20, cursor: "pointer" }}>🔔</span>
-          <img src="https://i.pravatar.cc/40?img=12" alt="avatar" style={{ width: 36, height: 36, borderRadius: "50%" }} />
-        </div>
-      </nav>
+      <main className="flex flex-col items-center flex-grow py-12 px-6">
+        <div className="w-full max-w-[640px] bg-white border border-[#10B77F]/5 shadow-[0_20px_25px_-5px_rgba(16,183,127,0.05),0_8px_10px_-6px_rgba(16,183,127,0.05)] rounded-[24px] p-12">
+          
+          {/* Mentor Profile Section */}
+          <div className="flex flex-col items-center mb-10">
+            {/* Avatar Container */}
+            <div className="relative mb-6">
+              <div className="w-[128px] h-[128px] rounded-full border-4 border-[#10B77F]/20 p-1 flex items-center justify-center">
+                <img 
+                  src="https://i.pravatar.cc/250?img=47" 
+                  alt="Dr. Sarah Mitchell" 
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+              <div className="absolute bottom-1 right-1 w-8 h-8 bg-[#10B77F] border-4 border-white rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="none" className="w-3 h-3 text-white stroke-2 stroke-current">
+                  <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
 
-      {/* Main Content */}
-      <div style={{ maxWidth: 500, margin: "3rem auto", padding: "0 1.5rem" }}>
-        <div style={{ background: "#fff", borderRadius: 16, padding: "2.5rem 2rem", boxShadow: "0 2px 16px rgba(0,0,0,0.07)", textAlign: "center" }}>
-
-          {/* Mentor Avatar */}
-          <div style={{ position: "relative", display: "inline-block", marginBottom: "1rem" }}>
-            <img src="https://i.pravatar.cc/80?img=47" alt="mentor"
-              style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #e2e8f0" }} />
-            <div style={{ position: "absolute", bottom: 4, right: 4, width: 16, height: 16, background: "#22c55e", borderRadius: "50%", border: "2px solid #fff" }} />
-          </div>
-
-          {/* Mentor Info */}
-          <h2 style={{ margin: "0 0 0.25rem", fontSize: 20, fontWeight: 700, color: "#1e293b" }}>Dr. Sarah Mitchell</h2>
-          <p style={{ margin: "0 0 0.25rem", fontSize: 14, color: "#22c55e", fontWeight: 600 }}>UX Strategy Expert</p>
-          <p style={{ margin: "0 0 1.5rem", fontSize: 12, color: "#94a3b8" }}>Mentored for 45 mins on Oct 24, 2023</p>
-
-          {/* Rating */}
-          <h3 style={{ margin: "0 0 0.5rem", fontSize: 16, fontWeight: 700, color: "#1e293b" }}>How was your session?</h3>
-          <p style={{ margin: "0 0 1rem", fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>
-            Your feedback helps Sarah improve and helps others find the right mentor.
-          </p>
-
-          {/* Stars */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: "0.5rem" }}>
-            {[1, 2, 3, 4, 5].map(star => (
-              <span key={star}
-                onClick={() => setRating(star)}
-                onMouseEnter={() => setHovered(star)}
-                onMouseLeave={() => setHovered(0)}
-                style={{ fontSize: 32, cursor: "pointer", color: star <= (hovered || rating) ? "#f59e0b" : "#e2e8f0", transition: "color 0.1s" }}>
-                ★
-              </span>
-            ))}
-          </div>
-          {rating > 0 && (
-            <p style={{ margin: "0 0 1.5rem", fontSize: 12, color: "#22c55e", fontWeight: 600 }}>
-              {rating === 1 ? "Poor session" : rating === 2 ? "Fair session" : rating === 3 ? "Good session" : rating === 4 ? "Great session!" : "Excellent session! 🎉"}
-            </p>
-          )}
-
-          {/* Feedback Textarea */}
-          <div style={{ textAlign: "left", marginBottom: "1.25rem" }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", display: "block", marginBottom: 8 }}>
-              Would you like to share more details? (Optional)
-            </label>
-            <textarea
-              value={feedback}
-              onChange={e => setFeedback(e.target.value)}
-              placeholder="What did you learn? How can Sarah improve?"
-              rows={4}
-              style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 13, resize: "none", outline: "none", boxSizing: "border-box", fontFamily: "inherit", color: "#475569" }}
-            />
-          </div>
-
-          {/* Tags */}
-          <div style={{ textAlign: "left", marginBottom: "1.5rem" }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "#475569", display: "block", marginBottom: 10 }}>
-              What did Sarah excel at?
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {tags.map(tag => (
-                <button key={tag} onClick={() => toggleTag(tag)}
-                  style={{
-                    padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer",
-                    border: selectedTags.includes(tag) ? "2px solid #1a7a4a" : "2px solid #e2e8f0",
-                    background: selectedTags.includes(tag) ? "#e8f5ee" : "#fff",
-                    color: selectedTags.includes(tag) ? "#1a7a4a" : "#475569",
-                    transition: "all 0.2s"
-                  }}>
-                  {tag}
-                </button>
-              ))}
+            <div className="text-center flex flex-col items-center gap-1">
+              <h1 className="text-[#0F172A] font-extrabold text-[30px] leading-[36px] tracking-[-0.75px]">Dr. Sarah Mitchell</h1>
+              <h2 className="text-[#10B77F] font-semibold text-[18px] leading-[28px]">UX Strategy Expert</h2>
+              <p className="text-[#64748B] font-normal text-[14px] leading-[20px]">Mentored for 45 mins on Oct 24, 2023</p>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button onClick={handleSubmit}
-            style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", background: "#22c55e", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-            Submit Feedback →
-          </button>
+          <div className="w-full h-[1px] bg-[#F1F5F9] mb-10"></div>
 
-          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#94a3b8" }}>
-            By submitting, you agree to our <span style={{ color: "#1a7a4a", cursor: "pointer" }}>Community Guidelines</span>
-          </p>
+          {/* Feedback Form */}
+          <div className="flex flex-col gap-8">
+            
+            {/* Rating Component */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-center">
+                <h3 className="text-[#1E293B] font-bold text-[20px] leading-[28px] mb-1">How was your session?</h3>
+                <p className="text-[#64748B] font-normal text-[14px] leading-[20px] max-w-[384px]">
+                  Your feedback helps Sarah improve and helps others find the right mentor.
+                </p>
+              </div>
+
+              <div className="flex justify-center items-center gap-2 mt-2">
+                {[1, 2, 3, 4, 5].map(star => {
+                  const isActive = star <= (hovered || rating);
+                  return (
+                    <button 
+                      key={star}
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHovered(star)}
+                      onMouseLeave={() => setHovered(0)}
+                      className="focus:outline-none transition-transform hover:scale-110"
+                    >
+                      <svg 
+                        viewBox="0 0 24 24" 
+                        fill={isActive ? "transparent" : "none"} 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className={`w-8 h-8 ${isActive ? 'text-[#10B77F] stroke-[2.5px]' : 'text-[#E2E8F0] stroke-2'}`}
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="h-5">
+                {(rating > 0 || hovered > 0) && (
+                  <p className="text-[#10B77F] font-medium text-[14px] leading-[20px]">
+                    {getRatingText()}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Written Feedback */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[#334155] font-semibold text-[14px] leading-[20px] ml-1">
+                Would you like to share more details? (Optional)
+              </label>
+              <textarea
+                value={feedback}
+                onChange={e => setFeedback(e.target.value)}
+                placeholder="What did you learn? How can Sarah improve?"
+                className="w-full h-[160px] resize-none bg-[#F8FAFC] border border-[#E2E8F0] rounded-[16px] p-4 text-[#475569] text-[16px] placeholder:text-[#94A3B8] outline-none focus:border-[#10B77F]/50 focus:ring-1 focus:ring-[#10B77F]/50 transition-all"
+              ></textarea>
+            </div>
+
+            {/* Tags Selection */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[#334155] font-semibold text-[14px] leading-[20px] ml-1">
+                What did Sarah excel at?
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {tags.map(tag => {
+                  const isSelected = selectedTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      className={`px-4 py-2 rounded-full font-medium text-[14px] leading-[20px] transition-all border ${
+                        isSelected 
+                          ? 'bg-[#10B77F]/5 border-[#10B77F]/20 text-[#10B77F]' 
+                          : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-[#F8FAFC]'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Submit Actions */}
+            <div className="flex flex-col items-center gap-4 mt-2">
+              <button 
+                onClick={handleSubmit}
+                className="w-full h-[56px] bg-[#10B77F] text-white rounded-[16px] flex justify-center items-center gap-2 font-bold text-[16px] shadow-[0_10px_15px_-3px_rgba(16,183,127,0.2),0_4px_6px_-4px_rgba(16,183,127,0.2)] hover:bg-[#0ea873] transition-colors"
+              >
+                Submit Feedback
+                <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 stroke-2 stroke-current">
+                  <path d="M5 12H19M19 12L12 5M19 12L12 19" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              
+              <p className="text-[#94A3B8] font-normal text-[12px] leading-[16px]">
+                By submitting, you agree to our <span className="underline cursor-pointer hover:text-[#10B77F] transition-colors">Community Guidelines</span>
+              </p>
+            </div>
+
+          </div>
 
         </div>
-      </div>
-       {/* Footer */}
+      </main>
+
       <Footer />
     </div>
   );

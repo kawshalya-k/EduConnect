@@ -27,8 +27,8 @@ const MentorNav = () => {
               Dashboard
             </Link>
             <Link
-              to="/sessions"
-              className={`pb-1 ${location.pathname === '/sessions' ? 'text-[#10B981] border-b-2 border-[#10B981]' : 'text-slate-500 hover:text-slate-800'}`}
+              to="/my-sessions"
+              className={`pb-1 ${location.pathname === '/my-sessions' || location.pathname.startsWith('/session') ? 'text-[#10B981] border-b-2 border-[#10B981]' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Sessions
             </Link>

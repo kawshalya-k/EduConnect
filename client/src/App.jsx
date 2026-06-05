@@ -21,15 +21,18 @@ import BookingConfirmed from './pages/Sessions/BookingConfirmed';
 import MySessions from './pages/Sessions/MySessions';
 import SessionFeedback from './pages/Sessions/SessionFeedback';
 import SessionRoom from './pages/Sessions/SessionRoom';
+import BadgesPage from './pages/BadgesPage';
 import AdminDashboard from './pages/Admin/Dashboard';
 import UserManagement from './pages/Admin/UserManagement';
 import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
+import DevMenu from './components/DevMenu';
 
 function App() {
   return (
     <div className="App">
+      <DevMenu />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -52,6 +55,7 @@ function App() {
         <Route path="/my-sessions" element={<MySessions />} />
         <Route path="/session-feedback" element={<SessionFeedback />} />
         <Route path="/session-room" element={<SessionRoom />} />
+        <Route path="/badges" element={<BadgesPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<UserManagement />} />
         <Route path="/admin/analytics" element={<Analytics />} />
