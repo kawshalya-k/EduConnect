@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAllSkills } from '../../services/adminService';
 
 const sidebarItems = [
   { icon: "⊞", label: "Dashboard", path: "/admin/dashboard" },
@@ -24,8 +25,21 @@ const pendingRequests = [
 
 export default function SkillVerifications() {
   const [activePage, setActivePage] = useState('Skill Verifications');
+  const [skills, setSkills] = useState([]);
   const [requests, setRequests] = useState(pendingRequests);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const data = await getAllSkills();
+        setSkills(data);
+      } catch (err) {
+        console.error('Error fetching skills:', err);
+      }
+    };
+    fetchSkills();
+  }, []);
 
   const handleApprove = (i) => {
     const updated = [...requests];
@@ -143,42 +157,39 @@ export default function SkillVerifications() {
                 </div>
 
                 {skills.map((skill, i) => (
-                  <div key={i}
-                    style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", padding: "1rem 1.5rem", borderBottom: i < skills.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center", transition: "background 0.15s", cursor: "pointer" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-                    onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
+  <div key={i}
+    style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", padding: "1rem 1.5rem", borderBottom: i < skills.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center", transition: "background 0.15s", cursor: "pointer" }}
+    onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+    onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 38, height: 38, background: `${skill.color}20`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{skill.icon}</div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{skill.name}</p>
-                        <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{skill.category}</p>
-                      </div>
-                    </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: 38, height: 38, background: "#f0fdf4", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🎯</div>
+      <div>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{skill.Skill_Name}</p>
+        <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{skill.Category}</p>
+      </div>
+    </div>
 
-                    <a href={`https://${skill.link}`} target="_blank" rel="noreferrer"
-                      style={{ fontSize: 12, color: "#16a34a", textDecoration: "none", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      🔗 {skill.link}
-                    </a>
+    <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 500 }}>🔗 educonnect.com/skills</span>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 3 }}>
-                        <div style={{ height: "100%", width: `${skill.threshold}%`, background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 3 }} />
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a", flexShrink: 0 }}>{skill.threshold}%</span>
-                    </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 3 }}>
+        <div style={{ height: "100%", width: "75%", background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 3 }} />
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a", flexShrink: 0 }}>75%</span>
+    </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>{skill.quizzes}</span>
-                      <span style={{ fontSize: 11, color: "#94a3b8" }}>Active</span>
-                    </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <span style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>10</span>
+      <span style={{ fontSize: 11, color: "#94a3b8" }}>Active</span>
+    </div>
 
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #bbf7d0", background: "#f0fdf4", fontSize: 11, cursor: "pointer", color: "#16a34a", fontWeight: 700 }}>Update</button>
-                      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", fontSize: 11, cursor: "pointer", color: "#64748b", fontWeight: 600 }}>Link</button>
-                    </div>
-                  </div>
-                ))}
+    <div style={{ display: "flex", gap: 6 }}>
+      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #bbf7d0", background: "#f0fdf4", fontSize: 11, cursor: "pointer", color: "#16a34a", fontWeight: 700 }}>Update</button>
+      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", fontSize: 11, cursor: "pointer", color: "#64748b", fontWeight: 600 }}>Link</button>
+    </div>
+  </div>
+))}
 
                 <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 12, color: "#94a3b8" }}>Showing 4 of 42 Skills</span>
