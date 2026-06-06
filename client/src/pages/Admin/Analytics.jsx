@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAnalytics } from '../../services/adminService';
 
 const sidebarItems = [
   { icon: "⊞", label: "Dashboard", path: "/admin/dashboard" },
@@ -10,9 +11,9 @@ const sidebarItems = [
 ];
 
 const stats = [
-  { label: "Total Active Users", value: "12.4k", change: "+12.4%", icon: "👥", positive: true },
-  { label: "Sessions This Month", value: "2.1k", change: "+5.2%", icon: "📅", positive: true },
-  { label: "Skill Coins Circulation", value: "1.2M", change: "+2.1M", icon: "💰", positive: true },
+  { label: "Total Active Users", value: "analyticsData.totalUsers", change: "+12.4%", icon: "👥", positive: true },
+  { label: "Sessions This Month", value: "analyticsData.totalSessions", change: "+5.2%", icon: "📅", positive: true },
+  { label: "Skill Coins Circulation", value: "analyticsData.skillCoinsCirculation", change: "+2.1M", icon: "💰", positive: true },
   { label: "Mentor Satisfaction", value: "4.8★", change: "Top Tier", icon: "⭐", positive: true },
 ];
 
@@ -39,8 +40,26 @@ const mentors = [
 
 export default function Analytics() {
   const [activePage, setActivePage] = useState('Analytics');
+  const [analyticsData, setAnalyticsData] = useState({
+    totalUsers: 0,
+    totalSessions: 0,
+    completedSessions: 0,
+    skillCoinsCirculation: 0,
+    topMentors: []
+  });
   const navigate = useNavigate();
-  const maxBar = 100;
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const data = await getAnalytics();
+        setAnalyticsData(data);
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+      }
+    };
+    fetchAnalytics();
+  }, []);
 
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -200,24 +219,24 @@ export default function Analytics() {
                 ))}
               </div>
 
-              {mentors.map((m, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1fr", padding: "1rem", borderBottom: i < mentors.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-                  onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <img src={m.avatar} alt={m.name} style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-                    <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{m.name}</p>
-                      <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Joined {m.joined}</p>
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", display: "inline-block" }}>{m.skill}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{m.sessions}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b" }}>★ {m.rating}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>💰 {m.earnings.toLocaleString()}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: m.status === "Active" ? "#f0fdf4" : "#fffbeb", color: m.status === "Active" ? "#16a34a" : "#d97706", display: "inline-block" }}>{m.status}</span>
+             {analyticsData.topMentors.map((m, i) => (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1fr", padding: "1rem", borderBottom: i < analyticsData.topMentors.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center" }}
+                onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                 <img src={m.avatar || 'https://i.pravatar.cc/40'} alt={m.First_Name} style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
+                <div>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{m.First_Name} {m.Last_Name}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{m.Email}</p>
                 </div>
-              ))}
+               </div>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", display: "inline-block" }}>Mentor</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{m.total_sessions}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b" }}>★ {Number(m.avg_rating || 0).toFixed(1)}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>💰 {(m.total_earnings || 0).toLocaleString()}</span>
+               <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", display: "inline-block" }}>Active</span>
+            </div>
+            ))}
 
               <div style={{ textAlign: "center", marginTop: "1rem" }}>
                 <button style={{ padding: "10px 24px", borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", color: "#475569", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
