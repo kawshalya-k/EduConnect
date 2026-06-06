@@ -39,6 +39,7 @@ const mentors = [
 ];
 
 export default function Analytics() {
+  const maxBar = 100;
   const [activePage, setActivePage] = useState('Analytics');
   const [analyticsData, setAnalyticsData] = useState({
     totalUsers: 0,
