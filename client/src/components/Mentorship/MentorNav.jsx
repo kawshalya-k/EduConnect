@@ -66,13 +66,13 @@ const MentorNav = () => {
           </button>
 
           {/* Profile */}
-          <div className="w-9 h-9 rounded-full border-2 border-emerald-200 overflow-hidden cursor-pointer">
+          <Link to="/profile" className="w-9 h-9 rounded-full border-2 border-emerald-200 overflow-hidden cursor-pointer">
             <img 
               src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=E2E8F0" 
               alt="Profile" 
               className="w-full h-full object-cover"
             />
-          </div>
+          </Link>
         </div>
       </div>
     </nav>

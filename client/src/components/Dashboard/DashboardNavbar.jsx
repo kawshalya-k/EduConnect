@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import RoleSwitcher from './RoleSwitcher';
 import WalletWidget from '../Gamification/WalletWidget';
+import logo from '../../assets/educonnect-logo.svg';
 
 const DashboardNavbar = () => {
   const location = useLocation();
@@ -12,9 +13,7 @@ const DashboardNavbar = () => {
       <div className="flex flex-row justify-between items-center w-full max-w-[1216px] h-16 mx-auto">
         {/* Logo */}
         <Link to="/" className="flex flex-row items-center gap-[7px] w-[127px] h-[26px]">
-          <div className="w-[26px] h-[26px] bg-[#10B981] rounded-sm flex items-center justify-center">
-             <span className="text-white font-bold text-xs">E</span>
-          </div>
+          <img src={logo} alt="EduConnect Logo" className="w-[26px] h-[26px]" />
           <span className="font-['Lexend'] font-bold text-base leading-7 flex items-center tracking-[-0.5px] text-[#0F172A]">
             EduConnect
           </span>
@@ -60,14 +59,14 @@ const DashboardNavbar = () => {
           </div>
 
           {/* Profile */}
-          <div className="flex flex-col items-start w-9 h-9 cursor-pointer">
+          <Link to="/profile" className="flex flex-col items-start w-9 h-9 cursor-pointer">
             <div className="box-border flex flex-col justify-center items-start w-9 h-9 bg-[#E2E8F0] border-2 border-[#10B981]/30 rounded-full overflow-hidden">
                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mt-2 text-slate-400">
                 <circle cx="16" cy="12" r="6" fill="currentColor"/>
                 <path d="M6 28C6 22.4772 10.4772 18 16 18C21.5228 18 26 22.4772 26 28" fill="currentColor"/>
               </svg>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </nav>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/educonnect-logo.svg';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -10,9 +11,7 @@ const Footer = () => {
         {/* Brand Section */}
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">E</span>
-            </div>
+            <img src={logo} alt="EduConnect Logo" className="w-8 h-8" />
             <span className="text-2xl font-bold tracking-tight">EduConnect</span>
           </div>
           <p className="text-emerald-100/60 leading-relaxed text-sm">
