@@ -151,6 +151,16 @@ async function initDB() {
       FOREIGN KEY (User_Id) REFERENCES User(User_Id) ON DELETE CASCADE
     )`);
 
+    // Schema updates
+    try {
+      await connection.query('ALTER TABLE User ADD COLUMN Avatar VARCHAR(500)');
+      console.log('✅ Added Avatar column to User table.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('Error adding Avatar column:', e.message);
+      }
+    }
+
     connection.release();
     console.log('✅ All 10 MySQL tables are verified and ready.');
 
@@ -162,7 +172,7 @@ async function initDB() {
 const dbPromise = initDB();
 
 const db = {
-  query: async (sqitl, params = []) => {
+  query: async (sql, params = []) => {
     await dbPromise;
     if (!dbInstance) throw new Error('Database not initialized yet');
     const [rows, fields] = await dbInstance.query(sql, params);
