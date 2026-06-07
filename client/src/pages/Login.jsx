@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
+import logo from '../assets/educonnect-logo.svg';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ const Login = () => {
         
         <div className="max-w-md w-full space-y-12 z-10">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-[#10B981] rounded-xl flex items-center justify-center text-white font-bold text-xl">E</div>
+            <img src={logo} alt="EduConnect Logo" className="w-10 h-10" />
             <span className="text-2xl font-bold text-slate-900">EduConnect</span>
           </div>
 

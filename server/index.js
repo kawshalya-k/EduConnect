@@ -10,6 +10,8 @@ app.use(express.json());
 
 // ── Routes ──
 const authRoutes         = require('./routes/authRoutes');
+const userRoutes         = require('./routes/userRoutes');
+const mentorRoutes       = require('./routes/mentorRoutes');
 const sessionRoutes      = require('./routes/sessionRoutes');
 const adminRoutes        = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -19,6 +21,8 @@ const { startScheduler } = require('./utils/challengeScheduler');
 
 // ── API Routes ──
 app.use('/api/auth',         authRoutes);
+app.use('/api/users',        userRoutes);
+app.use('/api/mentors',      mentorRoutes);
 app.use('/api/sessions',     sessionRoutes);
 app.use('/api/admin',        adminRoutes);
 app.use('/api/notifications', notificationRoutes);

@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import FinishSetup from './pages/FinishSetup';
 import VerificationFailed from './pages/VerificationFailed';
 import ProfileSetup from './pages/ProfileSetup';
+import Profile from './pages/Profile';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CommunityStandards from './pages/CommunityStandards';
@@ -40,6 +41,7 @@ function App() {
         <Route path="/verify-otp" element={<FinishSetup />} />
         <Route path="/verification-failed" element={<VerificationFailed />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/community-standards" element={<CommunityStandards />} />
