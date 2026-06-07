@@ -168,3 +168,50 @@ exports.getSessionById = async (req, res) => {
     res.status(500).json({ message: 'Error fetching session' });
   }
 };
+
+// Rate a session (Learner)
+exports.rateSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { rating, feedback } = req.body;
+    const learner_id = req.user.id;
+
+    // Check if session exists and belongs to learner
+    const session = await Session.getSessionById(sessionId);
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    if (session.Learner_Id !== learner_id) return res.status(403).json({ message: 'Unauthorized' });
+    if (session.Status !== 'Completed') return res.status(400).json({ message: 'Can only rate completed sessions' });
+
+    // Update session
+    await db.query(
+      'UPDATE Session SET Rating = ?, Feedback = ? WHERE Session_Id = ?',
+      [rating, feedback, sessionId]
+    );
+
+    // Update mentor levelling data
+    const [mentorLevels] = await db.query(
+      'SELECT Record_Id, Total_Sessions, Average_Rating FROM Levelling_Data WHERE Mentor_Id = ? AND Skill_Id = ?',
+      [session.Mentor_Id, session.Skill_Id]
+    );
+
+    if (mentorLevels.length > 0) {
+      const current = mentorLevels[0];
+      const newTotal = current.Total_Sessions + 1;
+      const newAvg = ((Number(current.Average_Rating) * current.Total_Sessions) + rating) / newTotal;
+      await db.query(
+        'UPDATE Levelling_Data SET Average_Rating = ?, Total_Sessions = ? WHERE Record_Id = ?',
+        [newAvg, newTotal, current.Record_Id]
+      );
+    } else {
+      await db.query(
+        'INSERT INTO Levelling_Data (Mentor_Id, Skill_Id, Average_Rating, Total_Sessions) VALUES (?, ?, ?, 1)',
+        [session.Mentor_Id, session.Skill_Id, rating]
+      );
+    }
+
+    res.status(200).json({ message: 'Session rated successfully' });
+  } catch (err) {
+    console.error('rateSession error:', err);
+    res.status(500).json({ message: 'Server error rating session' });
+  }
+};
