@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
+import logo from '../assets/educonnect-logo.svg';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ const Register = () => {
         {/* Content Container */}
         <div className="relative z-10 max-w-md space-y-12">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-[#10B981] rounded-xl flex items-center justify-center text-white font-bold text-xl">E</div>
+            <img src={logo} alt="EduConnect Logo" className="w-10 h-10" />
             <span className="text-2xl font-bold text-white tracking-tight">EduConnect</span>
           </div>
           <h1 className="text-5xl font-black text-white leading-tight">
