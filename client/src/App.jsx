@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import FinishSetup from './pages/FinishSetup';
 import VerificationFailed from './pages/VerificationFailed';
 import ProfileSetup from './pages/ProfileSetup';
+import Profile from './pages/Profile';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CommunityStandards from './pages/CommunityStandards';
@@ -14,21 +15,26 @@ import ForgotPassword from './pages/ForgotPassword';
 import CheckInbox from './pages/CheckInbox';
 import SetNewPassword from './pages/SetNewPassword';
 import PasswordResetSuccess from './pages/PasswordResetSuccess';
+import LearnerDashboard from './pages/LearnerDashboard';
+import FindMentor from './pages/FindMentor';
 import SessionBooking from './pages/Sessions/SessionBooking';
 import BookingConfirmed from './pages/Sessions/BookingConfirmed';
 import MySessions from './pages/Sessions/MySessions';
 import SessionFeedback from './pages/Sessions/SessionFeedback';
 import SessionRoom from './pages/Sessions/SessionRoom';
+import BadgesPage from './pages/BadgesPage';
 import AdminDashboard from './pages/Admin/Dashboard';
 import UserManagement from './pages/Admin/UserManagement';
 import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
 import Notifications from './pages/Notifications';
+import DevMenu from './components/DevMenu';
 
 function App() {
   return (
     <div className="App">
+      <DevMenu />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -36,6 +42,7 @@ function App() {
         <Route path="/verify-otp" element={<FinishSetup />} />
         <Route path="/verification-failed" element={<VerificationFailed />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/community-standards" element={<CommunityStandards />} />
@@ -44,11 +51,14 @@ function App() {
         <Route path="/check-inbox" element={<CheckInbox />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+        <Route path="/dashboard" element={<LearnerDashboard />} />
+        <Route path="/find-mentor" element={<FindMentor />} />
         <Route path="/session-booking" element={<SessionBooking />} />
         <Route path="/booking-confirmed" element={<BookingConfirmed />} />
         <Route path="/my-sessions" element={<MySessions />} />
         <Route path="/session-feedback" element={<SessionFeedback />} />
         <Route path="/session-room" element={<SessionRoom />} />
+        <Route path="/badges" element={<BadgesPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<UserManagement />} />
         <Route path="/admin/analytics" element={<Analytics />} />

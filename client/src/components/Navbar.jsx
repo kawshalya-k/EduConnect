@@ -1,13 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/educonnect-logo.svg';
 
 const Navbar = () => (
   <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
     <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
       <div className="flex items-center gap-2 cursor-pointer">
-        <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-sm">E</span>
-        </div>
+        <img src={logo} alt="EduConnect Logo" className="w-8 h-8" />
         <span className="text-xl font-black tracking-tight text-slate-900">EduConnect</span>
       </div>
 

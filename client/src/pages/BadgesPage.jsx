@@ -1,397 +1,286 @@
-import React, { useMemo, useState } from "react";
-import {
-  Layout,
-  Menu,
-  Breadcrumb,
-  Tabs,
-  Card,
-  Progress,
-  Avatar,
-  Button,
-  Typography,
-  Row,
-  Col,
-  Tag
-} from "antd";
-import {
-  BellOutlined,
-  UserOutlined,
-  ThunderboltFilled,
-  TrophyFilled,
-  RocketFilled,
-  LockOutlined,
-  CheckCircleFilled,
-  DollarCircleFilled,
-  StarFilled,
-  TeamOutlined,
-  CrownOutlined
-} from "@ant-design/icons";
-import "./BadgesPage.css";
+import React, { useState } from "react";
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
+import Footer from '../components/Footer';
+import { Link } from 'react-router-dom';
 
-const { Header, Content, Footer } = Layout;
-const { Title, Text } = Typography;
+const badges = [
+  {
+    id: "first-session",
+    title: "First Session",
+    description: "Completed your very first learning session on EduConnect.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+        <path d="M12 2L15 8L22 9L17 14L18 21L12 17L6 21L7 14L2 9L9 8L12 2Z" />
+      </svg>
+    ),
+    state: "completed",
+    stateLabel: "Completed",
+    percent: 100
+  },
+  {
+    id: "fast-learner",
+    title: "Fast Learner",
+    description: "Finished a full course module in under 24 hours.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
+      </svg>
+    ),
+    state: "completed",
+    stateLabel: "Completed",
+    percent: 100
+  },
+  {
+    id: "top-student",
+    title: "Top Student",
+    description: "Reached the #1 spot on the weekly leaderboard.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+        <path d="M12 15L8 18V22L12 20L16 22V18L12 15Z"/><circle cx="12" cy="8" r="6"/>
+      </svg>
+    ),
+    state: "completed",
+    stateLabel: "Completed",
+    percent: 100
+  },
+  {
+    id: "streak",
+    title: "7-Day Streak",
+    description: "Study for 7 consecutive days to earn this badge.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>
+      </svg>
+    ),
+    state: "inprogress",
+    stateLabel: "5 / 7 Days",
+    percent: 71
+  },
+  {
+    id: "collaborator",
+    title: "Collaborator",
+    description: "Contribute to 5 community discussions or Q&As.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+    ),
+    state: "locked",
+    stateLabel: "1 / 5 contributions",
+    percent: 20
+  },
+  {
+    id: "course-master",
+    title: "Course Master",
+    description: "Complete 10 full courses with an average score of 90%.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+      </svg>
+    ),
+    state: "locked",
+    stateLabel: "Locked",
+    percent: 0
+  },
+  {
+    id: "olympian",
+    title: "Olympian",
+    description: "Earn all 3 gold medals in the monthly championship.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M8 21h8M12 17v4M7 4h10M5 4v6c0 3.866 3.134 7 7 7s7-3.134 7-7V4"></path>
+      </svg>
+    ),
+    state: "locked",
+    stateLabel: "Locked",
+    percent: 0
+  },
+  {
+    id: "hidden",
+    variant: "hidden"
+  }
+];
 
 function BadgeCard({ badge }) {
+  if (badge.variant === "hidden") {
+    return (
+      <div className="bg-[#10B77F]/5 border border-dashed border-[#10B981] shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] flex flex-col items-center justify-center h-[262px] p-6">
+        <div className="bg-[#10B981] w-16 h-16 rounded-full mb-4 shrink-0 flex items-center justify-center"></div>
+        <h3 className="text-[#10B981] font-bold text-[16px] leading-[24px] text-center mb-1">Hidden Badge</h3>
+        <p className="text-[#10B77F]/70 text-[12px] leading-[16px] text-center px-2">Keep exploring to discover the requirements for this mysterious achievement.</p>
+      </div>
+    );
+  }
+
+  const isCompleted = badge.state === "completed";
   const isLocked = badge.state === "locked";
-  const isHidden = badge.variant === "hidden";
+  const isInProgress = badge.state === "inprogress";
+
+  let containerClass = "bg-white border shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] p-6 relative h-[262px] flex flex-col";
+  if (isCompleted) containerClass += " border-[#10B981]";
+  else if (isInProgress) containerClass += " border-[#E2E8F0]";
+  else if (isLocked) containerClass += " border-[#E2E8F0] opacity-60"; 
+
+  let iconContainerClass = "w-16 h-16 rounded-full flex items-center justify-center mb-6 shrink-0 ";
+  if (isCompleted) {
+    iconContainerClass += "bg-[#10B77F]/10 text-[#10B981]";
+  } else {
+    iconContainerClass += "bg-gradient-to-t from-[#F1F5F9] to-white text-[#94A3B8]";
+  }
+
+  let labelColorClass = isCompleted ? "text-[#10B981]" : (isInProgress ? "text-[#64748B]" : "text-[#94A3B8]");
+  
+  // Progress bar background changes based on completion status
+  let trackColorClass = isCompleted ? "bg-[#10B981]/10" : "bg-[#F1F5F9]";
 
   return (
-    <Card
-      className={[
-        "badgeCard",
-        isLocked ? "isLocked" : "",
-        isHidden ? "isHidden" : ""
-      ].join(" ")}
-      bordered={false}
-    >
-      {!isHidden && (
-        <div className="badgeTopRight">
-          {isLocked ? (
-            <span className="badgeTopRightIcon lock">
-              <LockOutlined />
-            </span>
-          ) : (
-            <span className="badgeTopRightIcon ok">
-              <CheckCircleFilled />
-            </span>
-          )}
+    <div className={containerClass}>
+      {isCompleted && (
+        <div className="absolute top-[25px] right-[25px] bg-[#10B981] text-white rounded-full p-0.5">
+          <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 stroke-2 stroke-current">
+            <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
       )}
 
-      {!isHidden && (
-        <div className="badgeIconWrap">
-          <div className="badgeIconCircle">{badge.icon}</div>
+      <div className={iconContainerClass}>
+        {badge.icon}
+      </div>
+
+      <div className="flex items-center gap-1.5 mb-1">
+        <h3 className="text-[#0F172A] font-bold text-[16px] leading-[24px]">{badge.title}</h3>
+        {!isCompleted && (
+          <svg viewBox="0 0 24 24" fill="none" className="w-[14px] h-[14px] text-[#94A3B8] stroke-2 stroke-current shrink-0">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path>
+          </svg>
+        )}
+      </div>
+
+      <p className="text-[#64748B] text-[14px] leading-[20px] mb-4 flex-grow line-clamp-3 pr-2">{badge.description}</p>
+
+      <div className="absolute bottom-6 left-6 right-6">
+        <div className="flex justify-between items-center mb-[4px]">
+          <span className={`font-bold text-[12px] leading-[16px] ${labelColorClass}`}>{badge.stateLabel}</span>
+          <span className={`font-bold text-[12px] leading-[16px] ${labelColorClass}`}>{badge.percent}%</span>
         </div>
-      )}
-
-      {!isHidden && (
-        <>
-          <Title level={5} className="badgeTitle">
-            {badge.title}
-          </Title>
-
-          <Text className="badgeDesc">{badge.description}</Text>
-
-          <div className="badgeMetaRow">
-            <Text className={["badgeState", isLocked ? "muted" : ""].join(" ")}>
-              {badge.stateLabel}
-            </Text>
-            <Text className={["badgePct", isLocked ? "muted" : ""].join(" ")}>
-              {badge.percent}%
-            </Text>
-          </div>
-
-          <Progress
-            percent={badge.percent}
-            showInfo={false}
-            strokeColor={isLocked ? "rgba(22, 119, 255, 0.0)" : "var(--green)"}
-            trailColor={
-              isLocked
-                ? "rgba(17, 24, 39, 0.08)"
-                : "rgba(16, 185, 129, 0.12)"
-            }
-            className="badgeProgress"
-          />
-
-          {badge.subNote ? <Text className="badgeSubNote">{badge.subNote}</Text> : null}
-        </>
-      )}
-
-      {isHidden && (
-        <div className="hiddenBody">
-          <div className="hiddenDot" />
-          <Title level={5} className="hiddenTitle">
-            Hidden Badge
-          </Title>
-          <Text className="hiddenDesc">
-            Keep exploring to discover the requirements for this mysterious
-            achievement.
-          </Text>
+        <div className={`h-[8px] w-full rounded-full overflow-hidden ${trackColorClass}`}>
+          <div 
+            className={`h-full rounded-full ${isCompleted ? 'bg-[#10B981]' : (isInProgress ? 'bg-[#10B981]' : 'bg-transparent')}`} 
+            style={{ width: `${badge.percent}%` }}
+          ></div>
         </div>
-      )}
-    </Card>
+      </div>
+    </div>
   );
 }
 
 export default function BadgesPage() {
   const [activeTab, setActiveTab] = useState("all");
-  const [mode, setMode] = useState("learner");
 
-  const stats = { badges: "12/25", xp: "1,250" };
-
-  const allBadges = useMemo(
-    () => [
-      {
-        key: "first-session",
-        title: "First Session",
-        description: "Completed your very first learning session on EduConnect.",
-        icon: <RocketFilled style={{ color: "var(--green)" }} />,
-        state: "completed",
-        stateLabel: "Completed",
-        percent: 100
-      },
-      {
-        key: "fast-learner",
-        title: "Fast Learner",
-        description: "Finished a full course module in under 24 hours.",
-        icon: <ThunderboltFilled style={{ color: "var(--green)" }} />,
-        state: "completed",
-        stateLabel: "Completed",
-        percent: 100
-      },
-      {
-        key: "top-student",
-        title: "Top Student",
-        description: "Reached the #1 spot on the weekly leaderboard.",
-        icon: <TrophyFilled style={{ color: "var(--green)" }} />,
-        state: "completed",
-        stateLabel: "Completed",
-        percent: 100
-      },
-      {
-        key: "streak",
-        title: "7-Day Streak",
-        description: "Study for 7 consecutive days to earn this badge.",
-        icon: <StarFilled style={{ color: "rgba(17,24,39,0.45)" }} />,
-        state: "inprogress",
-        stateLabel: "5 / 7 Days",
-        percent: 71
-      },
-      {
-        key: "collaborator",
-        title: "Collaborator",
-        description: "Contribute to 5 community discussions or Q&As.",
-        icon: <TeamOutlined style={{ color: "rgba(17,24,39,0.35)" }} />,
-        state: "locked",
-        stateLabel: "1 / 5 contributions",
-        percent: 20
-      },
-      {
-        key: "course-master",
-        title: "Course Master",
-        description: "Complete 10 full courses with an average score of 90%.",
-        icon: <CrownOutlined style={{ color: "rgba(17,24,39,0.25)" }} />,
-        state: "locked",
-        stateLabel: "Locked",
-        percent: 0
-      },
-      {
-        key: "olympian",
-        title: "Olympian",
-        description: "Earn all 3 gold medals in the monthly championship.",
-        icon: <TrophyFilled style={{ color: "rgba(17,24,39,0.20)" }} />,
-        state: "locked",
-        stateLabel: "Locked",
-        percent: 0
-      },
-      {
-        key: "hidden",
-        variant: "hidden",
-        state: "hidden",
-        percent: 0
-      }
-    ],
-    []
-  );
-
-  const filtered = useMemo(() => {
-    if (activeTab === "all") return allBadges;
-    if (activeTab === "earned") return allBadges.filter((b) => b.state === "completed");
-    if (activeTab === "inprogress") return allBadges.filter((b) => b.state === "inprogress");
-    if (activeTab === "locked") return allBadges.filter((b) => b.state === "locked");
-    return allBadges;
-  }, [activeTab, allBadges]);
+  const filteredBadges = React.useMemo(() => {
+    if (activeTab === "all") return badges;
+    if (activeTab === "earned") return badges.filter(b => b.state === "completed");
+    if (activeTab === "inprogress") return badges.filter(b => b.state === "inprogress");
+    if (activeTab === "locked") return badges.filter(b => b.state === "locked" || b.variant === "hidden");
+    return badges;
+  }, [activeTab]);
 
   return (
-    <Layout className="pageShell">
-      <Header className="topNav">
-        <div className="navLeft">
-          <div className="brand">
-            <div className="brandMark">🎓</div>
-            <div className="brandName">EduConnect</div>
-          </div>
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter'] relative">
+      <DashboardNavbar />
 
-          <Menu
-            mode="horizontal"
-            className="navMenu"
-            selectable
-            defaultSelectedKeys={["dashboard"]}
-            items={[
-              { key: "dashboard", label: "Dashboard" },
-              { key: "sessions", label: "Sessions" },
-              { key: "messages", label: "Messages" }
-            ]}
-          />
+      <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
+        
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-2 mb-4">
+          <Link to="/dashboard" className="text-[#64748B] font-normal text-[14px] leading-[20px] hover:underline">Dashboard</Link>
+          <svg viewBox="0 0 24 24" fill="none" className="w-[10px] h-[10px] text-[#64748B] stroke-2 stroke-current">
+            <path d="M9 18L15 12L9 6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="text-[#0F172A] font-medium text-[14px] leading-[20px]">My Badges</span>
         </div>
 
-        <div className="navRight">
-          <div className="modePill">
+        {/* Header Section */}
+        <div className="flex justify-between items-end mb-10">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[#0F172A] font-black text-[36px] leading-[40px] tracking-[-0.9px]">Badges & Achievements</h1>
+            <p className="text-[#475569] text-[16px] leading-[24px] max-w-[512px]">
+              Track your learning journey, unlock unique milestones, and showcase your expertise to the community.
+            </p>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-14 min-w-[140px]">
+              <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">Badges</p>
+              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">12/25</p>
+            </div>
+            <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-12 min-w-[140px]">
+              <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">XP Points</p>
+              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">1,250</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-8 border-b border-[#10B77F]/10 mb-[32px]">
+          {[
+            { id: "all", label: "All Badges" },
+            { id: "earned", label: "Earned (12)" },
+            { id: "inprogress", label: "In Progress (4)" },
+            { id: "locked", label: "Locked (9)" }
+          ].map(tab => (
             <button
-              className={["pillBtn", mode === "mentor" ? "active" : ""].join(" ")}
-              onClick={() => setMode("mentor")}
-              type="button"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-4 px-1 -mb-[1px] ${activeTab === tab.id 
+                ? 'border-b-2 border-[#10B981] text-[#10B981] font-bold text-[14px]' 
+                : 'text-[#64748B] font-medium text-[14px] hover:text-[#0F172A]'
+              }`}
             >
-              Mentor
+              {tab.label}
             </button>
-            <button
-              className={["pillBtn", mode === "learner" ? "active" : ""].join(" ")}
-              onClick={() => setMode("learner")}
-              type="button"
-            >
-              Learner Mode
-            </button>
-          </div>
-
-          <Button className="coinsBtn" icon={<DollarCircleFilled />}>
-            <strong>100</strong>&nbsp;Skill Coins
-          </Button>
-
-          <Button className="iconBtn" icon={<BellOutlined />} />
-          <Avatar size={34} icon={<UserOutlined />} />
+          ))}
         </div>
-      </Header>
 
-      <Content className="contentArea">
-        <div className="container">
-          <Breadcrumb
-            className="crumb"
-            items={[{ title: "Dashboard" }, { title: <strong>My Badges</strong> }]}
-          />
-
-          <div className="titleRow">
-            <div>
-              <Title className="pageTitle">Badges & Achievements</Title>
-              <Text className="pageSubtitle">
-                Track your learning journey, unlock unique milestones, and
-                showcase your expertise to the community.
-              </Text>
-            </div>
-
-            <div className="stats">
-              <Card className="statCard" bordered={false}>
-                <Text className="statLabel">BADGES</Text>
-                <div className="statValue">{stats.badges}</div>
-              </Card>
-              <Card className="statCard" bordered={false}>
-                <Text className="statLabel">XP POINTS</Text>
-                <div className="statValue">{stats.xp}</div>
-              </Card>
-            </div>
-          </div>
-
-          <Tabs
-            className="tabs"
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={[
-              { key: "all", label: "All Badges" },
-              { key: "earned", label: "Earned (12)" },
-              { key: "inprogress", label: "In Progress (4)" },
-              { key: "locked", label: "Locked (9)" }
-            ]}
-          />
-
-          <Row gutter={[16, 16]}>
-            {filtered.map((b) => (
-              <Col key={b.key} xs={24} sm={12} lg={6}>
-                <BadgeCard badge={b} />
-              </Col>
-            ))}
-          </Row>
-
-          <Card className="milestoneCard" bordered={false}>
-            <div className="milestoneInner">
-              <div className="milestoneIconBox">
-                <StarFilled style={{ color: "var(--green)", fontSize: 26 }} />
-              </div>
-
-              <div className="milestoneBody">
-                <div className="milestoneTop">
-                  <Tag className="milestoneTag">NEXT MILESTONE</Tag>
-                  <Title level={4} className="milestoneTitle">
-                    Master Scholar
-                  </Title>
-                </div>
-
-                <Text className="milestoneDesc">
-                  You&apos;re only 250 XP away from achieving the Master Scholar
-                  rank! This will unlock exclusive advanced workshops and a
-                  profile spotlight.
-                </Text>
-
-                <div className="milestoneProgressRow">
-                  <Text className="milestoneXpText">
-                    <strong>1,250</strong> / 1,500 XP
-                  </Text>
-                  <Text className="milestonePct">83%</Text>
-                </div>
-
-                <Progress
-                  percent={83}
-                  showInfo={false}
-                  strokeColor="var(--green)"
-                  trailColor="rgba(16, 185, 129, 0.14)"
-                  className="milestoneProgress"
-                />
-              </div>
-            </div>
-          </Card>
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {filteredBadges.map((badge, idx) => (
+            <BadgeCard key={badge.id || idx} badge={badge} />
+          ))}
         </div>
-      </Content>
 
-      <Footer className="siteFooter">
-        <div className="footerContainer">
-          <Row gutter={[24, 24]}>
-            <Col xs={24} md={6}>
-              <div className="footerBrand">
-                <div className="footerBrandName">EduConnect</div>
-                <Text className="footerText">
-                  Empowering University students through peer-to-peer learning
-                  and community recognition.
-                </Text>
-
-                <div className="footerSocial">
-                  <Button className="footerIconBtn" shape="circle" />
-                  <Button className="footerIconBtn" shape="circle" />
-                  <Button className="footerIconBtn" shape="circle" />
-                </div>
-              </div>
-            </Col>
-
-            <Col xs={24} md={6}>
-              <div className="footerColTitle">Student Center</div>
-              <a className="footerLink" href="#">Student Registration</a>
-              <a className="footerLink" href="#">Search Mentors</a>
-              <a className="footerLink" href="#">Skill Marketplace</a>
-            </Col>
-
-            <Col xs={24} md={6}>
-              <div className="footerColTitle">Mentorship</div>
-              <a className="footerLink" href="#">Mentor Onboarding</a>
-              <a className="footerLink" href="#">Verification Center</a>
-              <a className="footerLink" href="#">Teaching Tools</a>
-              <a className="footerLink" href="#">Mentor Guidelines</a>
-            </Col>
-
-            <Col xs={24} md={6}>
-              <div className="footerColTitle">Portal</div>
-              <a className="footerLink" href="#">About Us</a>
-              <a className="footerLink" href="#">Privacy Policy</a>
-              <a className="footerLink" href="#">Terms of Service</a>
-              <a className="footerLink" href="#">Community Guidelines</a>
-              <a className="footerLink" href="#">Contact Support</a>
-              <a className="footerLink" href="#">Help Center</a>
-            </Col>
-          </Row>
-
-          <div className="footerBottom">
-            <div className="footerDivider" />
-            <Text className="footerCopyright">
-              © 2026 EduConnect. All rights reserved.
-            </Text>
+        {/* Next Milestone */}
+        <div className="mt-12 bg-gradient-to-r from-[#10B77F]/10 to-[#10B77F]/5 border border-[#10B981] rounded-[24px] p-8 flex items-center gap-8">
+          <div className="relative w-[128px] h-[128px] bg-white border border-[#10B77F]/30 rounded-[16px] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] shrink-0 flex items-center justify-center">
+             <svg viewBox="0 0 24 24" fill="currentColor" className="w-[55px] h-[55px] text-[#10B981]">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+             </svg>
+          </div>
+          <div className="flex flex-col flex-grow">
+             <div className="flex items-center gap-2 mb-2">
+                <span className="bg-[#10B981] text-white font-black text-[10px] leading-[15px] tracking-[1px] uppercase py-[2px] px-2 rounded-full">
+                  Next Milestone
+                </span>
+                <h3 className="text-[#0F172A] font-extrabold text-[20px] leading-[28px]">Master Scholar</h3>
+             </div>
+             <p className="text-[#475569] text-[16px] leading-[24px] max-w-[672px] mb-4">
+                You're only 250 XP away from achieving the Master Scholar rank! This will unlock exclusive advanced workshops and a profile spotlight.
+             </p>
+             <div className="w-full max-w-[448px]">
+               <div className="flex justify-between items-center mb-[8px]">
+                 <span className="text-[#0F172A] font-bold text-[14px] leading-[20px]">1,250 / 1,500 XP</span>
+                 <span className="text-[#10B981] font-bold text-[14px] leading-[20px]">83%</span>
+               </div>
+               <div className="w-full h-3 bg-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] rounded-full overflow-hidden">
+                 <div className="h-full bg-[#10B981] rounded-full w-[83%]"></div>
+               </div>
+             </div>
           </div>
         </div>
-      </Footer>
-    </Layout>
+
+      </main>
+
+      <Footer />
+    </div>
   );
 }
