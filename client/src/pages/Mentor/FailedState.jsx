@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageLayout from '../../components/Layout/PageLayout';
-<<<<<<< Updated upstream
 import failureHero from '../../Assets/FailedStateImage.jpg';
-=======
-import failureHero from '../../../images/FailedStateImage.jpg';
->>>>>>> Stashed changes
+
 import './FailedState.css';
 
 const RETRY_HOURS = 24; // 24 hour cooldown
