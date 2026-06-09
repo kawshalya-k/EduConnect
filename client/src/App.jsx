@@ -42,8 +42,6 @@ import MentorSessions from './pages/Mentor/MentorSessions';
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
 
-import './App.css';
-
 function App() {
   return (
     <div className="App">
