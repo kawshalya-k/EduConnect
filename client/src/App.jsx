@@ -30,6 +30,19 @@ import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
 import Notifications from './pages/Notifications';
 import DevMenu from './components/DevMenu';
+//Mentor
+import MentorDashboard from './pages/Mentor/MentorDashboard';
+import VerificationCenter from './pages/Mentor/VerificationCenter';
+import AddSkill from './pages/Mentor/AddSkill';
+import VerifySkill from './pages/Mentor/VerifySkill';
+import SuccessState from './pages/Mentor/SuccessState';
+import FailedState from './pages/Mentor/FailedState';
+import MentorSessions from './pages/Mentor/MentorSessions';
+// Discovery
+import MentorDiscovery from './pages/MentorDiscovery';
+import MentorProfile from './pages/MentorProfile';
+
+import './App.css';
 
 function App() {
   return (
@@ -65,6 +78,22 @@ function App() {
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/verifications" element={<SkillVerifications />} />
         <Route path="/notifications" element={<Notifications />} />
+        {/* Mentor routes */}
+        <Route path="/dashboard" element={<MentorDashboard />} />
+        <Route path="/verification" element={<VerificationCenter />} />
+        <Route path="/verification/add" element={<AddSkill />} />
+        <Route path="/verification/verify" element={<VerifySkill />} />
+        <Route path="/verification/skill/:skillId/start" element={<VerifySkill />} />
+        <Route path="/verification/success" element={<SuccessState />} />
+        <Route path="/verification/failed" element={<FailedState />} />
+        {/* Learner / Discovery routes */}
+        <Route path="/discovery" element={<MentorDiscovery />} />
+        <Route path="/mentor/:mentorId" element={<MentorProfile />} />
+        {/* Shared routes */}
+        <Route path="/sessions" element={<MentorSessions />} />
+        {/* Redirects */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
