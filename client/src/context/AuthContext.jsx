@@ -1,8 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
-// Dummy user for local dev — replace with real auth later
 const DUMMY_USER = {
   id: 1,
   name: 'Alex Rivera',
@@ -19,9 +18,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load from localStorage
     const savedMode = localStorage.getItem('educonnect_mode') || 'mentor';
     const savedUser = localStorage.getItem('educonnect_user');
+    const token = localStorage.getItem('token');
 
     setMode(savedMode);
 
@@ -32,8 +31,8 @@ export function AuthProvider({ children }) {
         setUser(DUMMY_USER);
         localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
       }
-    } else {
-      // Auto-login with dummy user in dev
+    } else if (!token) {
+      // Auto-login with dummy user 
       setUser(DUMMY_USER);
       localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
     }
@@ -41,12 +40,29 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  // Real login
+  const login = (userData, token) => {
+    setUser(userData);
+    localStorage.setItem('educonnect_user', JSON.stringify(userData));
+    localStorage.setItem('token', token);
+  };
+
+  // Logout 
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('educonnect_user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('educonnect_mode');
+  };
+
+  // Toggle mentor/learner mode 
   const toggleMode = () => {
     const newMode = mode === 'mentor' ? 'learner' : 'mentor';
     setMode(newMode);
     localStorage.setItem('educonnect_mode', newMode);
   };
 
+  //Update skill coins balance 
   const updateSkillCoins = (amount) => {
     setUser((prev) => {
       const updated = { ...prev, skillCoins: prev.skillCoins + amount };
@@ -56,7 +72,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, mode, loading, toggleMode, updateSkillCoins, setUser }}>
+    <AuthContext.Provider
+      value={{ user, mode, loading, login, logout, toggleMode, updateSkillCoins, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,10 +1,49 @@
+require('dotenv').config();
+
 const express = require('express');
-const app = express();
-const authRoutes = require('./routes/authRoutes');
+const cors    = require('cors');
+const app     = express();
 
-app.use(express.json()); // Essential to read form data
+// ── Middleware ──
+app.use(cors());
+app.use(express.json());
 
-// Use the routes
-app.use('/api/auth', authRoutes);
+// ── Routes ──
+const authRoutes         = require('./routes/authRoutes');
+const userRoutes         = require('./routes/userRoutes');
+const mentorRoutes       = require('./routes/mentorRoutes');
+const sessionRoutes      = require('./routes/sessionRoutes');
+const adminRoutes        = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const gamificationRoutes = require('./routes/GamificationRoutes');
+const walletRoutes       = require('./routes/WalletRoutes');
+const { startScheduler } = require('./utils/challengeScheduler');
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+// ── API Routes ──
+app.use('/api/auth',         authRoutes);
+app.use('/api/users',        userRoutes);
+app.use('/api/mentors',      mentorRoutes);
+app.use('/api/sessions',     sessionRoutes);
+app.use('/api/admin',        adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/wallet',       walletRoutes);
+
+// ── Weekly Challenge Scheduler ──
+startScheduler();
+
+// Only start server after DB is ready
+const db = require('./config/db');
+
+async function startServer() {
+  try {
+    // Test DB connection first
+    await db.query('SELECT 1');
+    app.listen(5000, () => console.log('Server running on port 5000'));
+  } catch (err) {
+    console.error('Failed to start server:', err.message);
+    setTimeout(startServer, 1000); // retry after 1 second
+  }
+}
+
+startServer();
