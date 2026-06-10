@@ -1,12 +1,5 @@
-# Dependencies
 node_modules/
-client/node_modules/
-
-# Build files
-build/
-dist/
-dist-ssr/
-
-# Environment variables
+node_modules/
 .env
-*.local
+build/
+.DS_Store
