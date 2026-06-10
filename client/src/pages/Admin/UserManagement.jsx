@@ -11,7 +11,7 @@ const users = [
 ];
 
 const statusColors = {
-  ACTIVE: { bg: "#f0fdf4", color: "#16a34a" },
+  ACTIVE: { bg: "#f0fdf4", color: "#10b981" },
   SUSPENDED: { bg: "#fef2f2", color: "#ef4444" },
   PENDING: { bg: "#fffbeb", color: "#d97706" },
 };
@@ -82,7 +82,7 @@ export default function UserManagement() {
     return matchSearch && matchRole && matchStatus;
   });
 
-  if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#16a34a" }}>Loading users...</div>;
+  if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#10b981" }}>Loading users...</div>;
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
@@ -97,7 +97,7 @@ export default function UserManagement() {
         {/* Sidebar */}
         <div style={{ width: 220, background: "#fff", borderRight: "1px solid #f1f5f9", display: "flex", flexDirection: "column", minHeight: "calc(100vh - 40px)", flexShrink: 0 }}>
           <div style={{ padding: "1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: "#16a34a", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 32, height: 32, background: "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>E</span>
             </div>
             <span style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>EduConnect</span>
@@ -105,7 +105,7 @@ export default function UserManagement() {
           <div style={{ padding: "1rem 0.75rem", flex: 1 }}>
             {sidebarItems.map(item => (
               <div key={item.label} onClick={() => { setActivePage(item.label); navigate(item.path); }}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#16a34a" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #16a34a" : "3px solid transparent" }}>
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#10b981" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #10b981" : "3px solid transparent" }}>
                 <span style={{ fontSize: 16 }}>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
@@ -131,7 +131,7 @@ export default function UserManagement() {
               <p style={{ margin: 0, fontSize: 13, color: "#94a3b8", marginTop: 2 }}>Manage and audit platform users</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}>
+              <button style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}>
                 👤+ Add New User
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -202,7 +202,7 @@ export default function UserManagement() {
                   <span style={{ fontSize: 13, color: "#475569" }}>{user.University}</span>
 
                   {/* Coins */}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>💰 {(user.Wallet_Balance || 0).toLocaleString()}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#10b981" }}>💰 {(user.Wallet_Balance || 0).toLocaleString()}</span>
 
                   {/* Status */}
                   <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: statusColors[user.status]?.bg, color: statusColors[user.Status]?.color, display: "inline-block" }}>{user.Status}</span>
@@ -228,7 +228,7 @@ export default function UserManagement() {
                 <span style={{ fontSize: 12, color: "#94a3b8" }}>Showing 1 to {filtered.length} of 12,482 users</span>
                 <div style={{ display: "flex", gap: 4 }}>
                   {['←', '1', '2', '3', '...', '2497', '→'].map((p, i) => (
-                    <button key={i} style={{ width: 32, height: 32, borderRadius: 8, border: p === '1' ? "none" : "1px solid #e2e8f0", background: p === '1' ? "#16a34a" : "#fff", color: p === '1' ? "#fff" : "#475569", fontSize: 13, fontWeight: p === '1' ? 700 : 400, cursor: "pointer" }}>{p}</button>
+                    <button key={i} style={{ width: 32, height: 32, borderRadius: 8, border: p === '1' ? "none" : "1px solid #e2e8f0", background: p === '1' ? "#10b981" : "#fff", color: p === '1' ? "#fff" : "#475569", fontSize: 13, fontWeight: p === '1' ? 700 : 400, cursor: "pointer" }}>{p}</button>
                   ))}
                 </div>
               </div>
