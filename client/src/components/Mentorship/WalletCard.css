@@ -1,0 +1,91 @@
+.wallet-card {
+  background: linear-gradient(135deg, #1a9e6e 0%, #0d7a54 100%);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 150px;
+}
+
+.wallet-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wallet-label {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+}
+
+.wallet-icon {
+  opacity: 0.8;
+}
+
+.wallet-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wallet-number {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.wallet-unit {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.wallet-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.wallet-skeleton {
+  height: 36px;
+  width: 120px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  animation: pulse 1.4s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.wallet-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.wallet-btn {
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.wallet-btn-outline {
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  background: transparent;
+}
+
+.wallet-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.8);
+}

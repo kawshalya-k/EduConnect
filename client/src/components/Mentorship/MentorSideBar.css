@@ -1,0 +1,115 @@
+.dash-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 60px);
+  padding: 16px 0 0;
+}
+
+.dash-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+  flex: 1;
+}
+
+.dash-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gray-600);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.dash-sidebar-item:hover {
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+.dash-sidebar-item.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.dash-sidebar-item.active .dash-sidebar-icon {
+  color: var(--primary);
+}
+
+.dash-sidebar-icon {
+  display: flex;
+  align-items: center;
+  color: var(--gray-400);
+  flex-shrink: 0;
+}
+
+.dash-sidebar-item.active .dash-sidebar-icon {
+  color: var(--primary);
+}
+
+.dash-sidebar-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* User section at bottom */
+.dash-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 20px;
+  border-top: 1px solid var(--gray-100);
+  margin-top: auto;
+}
+
+.sidebar-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-user-avatar span {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.sidebar-user-info {
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-dept {
+  font-size: 11px;
+  color: var(--gray-500);
+}
