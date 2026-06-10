@@ -26,7 +26,7 @@ const barData = [
 ];
 
 const skillDist = [
-  { label: "Programming", pct: 42, color: "#16a34a" },
+  { label: "Programming", pct: 42, color: "#10b981" },
   { label: "Design", pct: 28, color: "#22c55e" },
   { label: "Business", pct: 18, color: "#4ade80" },
   { label: "Others", pct: 12, color: "#bbf7d0" },
@@ -76,7 +76,7 @@ export default function Analytics() {
         {/* Sidebar */}
         <div style={{ width: 220, background: "#fff", borderRight: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: "#16a34a", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 32, height: 32, background: "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>E</span>
             </div>
             <span style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>EduConnect</span>
@@ -84,7 +84,7 @@ export default function Analytics() {
           <div style={{ padding: "1rem 0.75rem", flex: 1 }}>
             {sidebarItems.map(item => (
               <div key={item.label} onClick={() => { setActivePage(item.label); navigate(item.path); }}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#16a34a" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #16a34a" : "3px solid transparent" }}>
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#10b981" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #10b981" : "3px solid transparent" }}>
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
@@ -130,7 +130,7 @@ export default function Analytics() {
                 <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
                     <span style={{ fontSize: 22 }}>{s.icon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a" }}>{s.change}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: "#f0fdf4", color: "#10b981" }}>{s.change}</span>
                   </div>
                   <p style={{ margin: "0 0 0.25rem", fontSize: 11, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{s.label}</p>
                   <p style={{ margin: 0, fontSize: 28, fontWeight: 900, color: "#0f172a" }}>{s.value}</p>
@@ -150,7 +150,7 @@ export default function Analytics() {
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {['300', '600'].map(v => (
-                      <span key={v} style={{ fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a" }}>{v}</span>
+                      <span key={v} style={{ fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#10b981" }}>{v}</span>
                     ))}
                   </div>
                 </div>
@@ -158,7 +158,7 @@ export default function Analytics() {
                   {barData.map((d, i) => (
                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                       <div style={{ width: "100%", display: "flex", gap: 4, alignItems: "flex-end", height: 140 }}>
-                        <div style={{ flex: 1, background: "linear-gradient(180deg, #16a34a, #4ade80)", borderRadius: "6px 6px 0 0", height: `${(d.v1 / maxBar) * 140}px`, opacity: 0.8 }} />
+                        <div style={{ flex: 1, background: "linear-gradient(180deg, #10b981, #4ade80)", borderRadius: "6px 6px 0 0", height: `${(d.v1 / maxBar) * 140}px`, opacity: 0.8 }} />
                         <div style={{ flex: 1, background: "linear-gradient(180deg, #4ade80, #bbf7d0)", borderRadius: "6px 6px 0 0", height: `${(d.v2 / maxBar) * 140}px` }} />
                       </div>
                       <span style={{ fontSize: 10, color: "#94a3b8", whiteSpace: "nowrap" }}>{d.label}</span>
@@ -177,7 +177,7 @@ export default function Analytics() {
                   <div style={{ position: "relative", width: 120, height: 120 }}>
                     <svg viewBox="0 0 36 36" style={{ width: 120, height: 120, transform: "rotate(-90deg)" }}>
                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f1f5f9" strokeWidth="3" />
-                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#16a34a" strokeWidth="3" strokeDasharray="42 58" />
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="42 58" />
                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#22c55e" strokeWidth="3" strokeDasharray="28 72" strokeDashoffset="-42" />
                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#4ade80" strokeWidth="3" strokeDasharray="18 82" strokeDashoffset="-70" />
                       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#bbf7d0" strokeWidth="3" strokeDasharray="12 88" strokeDashoffset="-88" />
@@ -208,7 +208,7 @@ export default function Analytics() {
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Top-Performing Mentors</h3>
                   <p style={{ margin: "0.25rem 0 0", fontSize: 12, color: "#94a3b8" }}>Leading growth by session volume and rating</p>
                 </div>
-                <button style={{ padding: "10px 18px", borderRadius: 12, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}>
+                <button style={{ padding: "10px 18px", borderRadius: 12, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}>
                   View All Reports →
                 </button>
               </div>
@@ -231,11 +231,11 @@ export default function Analytics() {
                   <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{m.Email}</p>
                 </div>
                </div>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", display: "inline-block" }}>Mentor</span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#10b981", display: "inline-block" }}>Mentor</span>
               <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{m.total_sessions}</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b" }}>★ {Number(m.avg_rating || 0).toFixed(1)}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>💰 {(m.total_earnings || 0).toLocaleString()}</span>
-               <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", display: "inline-block" }}>Active</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#10b981" }}>💰 {(m.total_earnings || 0).toLocaleString()}</span>
+               <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: "#f0fdf4", color: "#10b981", display: "inline-block" }}>Active</span>
             </div>
             ))}
 
