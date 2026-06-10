@@ -1,0 +1,191 @@
+.success-page {
+  padding: 32px 24px;
+  min-height: calc(100vh - 60px - 300px);
+  background: var(--primary-lighter);
+}
+
+.success-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 65vh;
+}
+
+.success-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 44px 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  gap: 18px;
+}
+
+/* Badge Icon */
+.success-badge-icon {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 4px;
+}
+
+.badge-medal {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medal-icon {
+  font-size: 36px;
+}
+
+.badge-check {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.success-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--gray-900);
+}
+
+.success-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-top: -8px;
+}
+
+/* Reward Box */
+.success-reward-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  width: 100%;
+}
+
+.reward-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gray-500);
+  margin-bottom: 8px;
+}
+
+.reward-coins {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--gray-900);
+}
+
+.reward-coin-icon {
+  font-size: 22px;
+}
+
+.success-message {
+  font-size: 13.5px;
+  color: var(--gray-600);
+  line-height: 1.65;
+  text-align: center;
+}
+
+.success-message strong {
+  color: var(--gray-900);
+  font-weight: 700;
+}
+
+.go-dashboard-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.go-dashboard-btn:hover {
+  background: var(--primary-dark);
+}
+
+.share-achievement-btn {
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* Community */
+.success-community-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-100);
+  gap: 12px;
+}
+
+.community-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.community-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: var(--gray-300);
+  margin-right: -8px;
+}
+
+.community-avatar.c1 { background: #9ca3af; }
+.community-avatar.c2 { background: #6b7280; }
+
+.community-plus {
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-600);
+  margin-left: 12px;
+}
+
+.community-label {
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 500;
+}

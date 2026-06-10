@@ -1,0 +1,334 @@
+.add-skill-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.add-skill-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.add-skill-sub {
+  font-size: 13.5px;
+  color: var(--primary);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+/* Search Box */
+.add-skill-box {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 32px;
+}
+
+.add-skill-box-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+.skill-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  margin-bottom: 14px;
+  transition: var(--transition);
+}
+
+.skill-search-input-wrap:focus-within {
+  border-color: var(--primary);
+  background: var(--white);
+}
+
+.skill-search-icon {
+  color: var(--gray-400);
+  flex-shrink: 0;
+}
+
+.skill-search-input {
+  flex: 1;
+  height: 44px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--gray-800);
+}
+
+.skill-search-input::placeholder {
+  color: var(--gray-400);
+}
+
+/* Selected Tags */
+.selected-skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.selected-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--primary);
+  color: white;
+}
+
+.tag-remove-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.tag-remove-btn:hover {
+  color: white;
+}
+
+.add-more-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid var(--gray-300);
+  background: transparent;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.add-more-tag:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Suggested */
+.suggested-section {
+  margin-top: 4px;
+}
+
+.suggested-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.suggested-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggested-tag {
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.suggested-tag:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.suggested-tag.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Confidence Section */
+.confidence-section {
+  margin-bottom: 48px;
+}
+
+.confidence-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 16px;
+}
+
+.confidence-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px 22px;
+}
+
+.confidence-skill-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.confidence-skill-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.confidence-skill-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+/* Slider */
+.confidence-slider-wrap {
+  margin-bottom: 10px;
+}
+
+.confidence-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.confidence-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(26, 158, 110, 0.2);
+}
+
+.confidence-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: none;
+}
+
+/* Level Labels */
+.confidence-levels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.confidence-level-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-400);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: color 0.15s;
+  text-transform: uppercase;
+}
+
+.confidence-level-label.active {
+  color: var(--primary);
+}
+
+/* Actions */
+.add-skill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.back-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.add-skill-right-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.save-draft-btn {
+  padding: 11px 24px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  background: white;
+  border: 1.5px solid var(--gray-300);
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.save-draft-btn:hover:not(:disabled) {
+  border-color: var(--gray-400);
+  color: var(--gray-900);
+}
+
+.save-draft-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.continue-btn {
+  padding: 11px 32px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.continue-btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.continue-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
