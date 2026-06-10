@@ -11,7 +11,7 @@ const sidebarItems = [
 
 const Toggle = ({ value, onChange }) => (
   <div onClick={() => onChange(!value)}
-    style={{ width: 48, height: 26, borderRadius: 13, background: value ? "linear-gradient(135deg, #16a34a, #22c55e)" : "#e2e8f0", cursor: "pointer", position: "relative", transition: "all 0.25s", flexShrink: 0, boxShadow: value ? "0 2px 8px rgba(22,163,74,0.4)" : "none" }}>
+    style={{ width: 48, height: 26, borderRadius: 13, background: value ? "linear-gradient(135deg, #10b981, #22c55e)" : "#e2e8f0", cursor: "pointer", position: "relative", transition: "all 0.25s", flexShrink: 0, boxShadow: value ? "0 2px 8px rgba(22,163,74,0.4)" : "none" }}>
     <div style={{ position: "absolute", top: 3, left: value ? 25 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.25s", boxShadow: "0 2px 4px rgba(0,0,0,0.15)" }} />
   </div>
 );
@@ -32,7 +32,7 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
 
   const themes = [
-    { color: "#16a34a", name: "Forest" },
+    { color: "#10b981", name: "Forest" },
     { color: "#0f172a", name: "Dark" },
     { color: "#1d4ed8", name: "Ocean" },
     { color: "#d97706", name: "Amber" },
@@ -61,7 +61,7 @@ export default function Settings() {
         {/* Sidebar */}
         <div style={{ width: 220, background: "#fff", borderRight: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: "#16a34a", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 32, height: 32, background: "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>E</span>
             </div>
             <span style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>EduConnect</span>
@@ -69,7 +69,7 @@ export default function Settings() {
           <div style={{ padding: "1rem 0.75rem", flex: 1 }}>
             {sidebarItems.map(item => (
               <div key={item.label} onClick={() => { setActivePage(item.label); navigate(item.path); }}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#16a34a" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #16a34a" : "3px solid transparent" }}>
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#10b981" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #10b981" : "3px solid transparent" }}>
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
@@ -93,7 +93,7 @@ export default function Settings() {
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "0.5rem" }}>
                 <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>ADMIN</span>
                 <span style={{ color: "#cbd5e1" }}>/</span>
-                <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 700 }}>SETTINGS</span>
+                <span style={{ fontSize: 12, color: "#10b981", fontWeight: 700 }}>SETTINGS</span>
               </div>
               <h1 style={{ margin: "0 0 0.25rem", fontSize: 24, fontWeight: 900, color: "#0f172a" }}>Platform Configuration & Rules</h1>
               <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>Manage core economic parameters, security protocols, and visual identity.</p>
@@ -103,7 +103,7 @@ export default function Settings() {
                 Discard Changes
               </button>
               <button onClick={handleSave}
-                style={{ padding: "10px 24px", borderRadius: 12, border: "none", background: saved ? "#166534" : "#16a34a", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(22,163,74,0.35)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8 }}>
+                style={{ padding: "10px 24px", borderRadius: 12, border: "none", background: saved ? "#166534" : "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(22,163,74,0.35)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8 }}>
                 {saved ? "✓ Saved!" : "Save Changes"}
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -138,7 +138,7 @@ export default function Settings() {
                         <input type="number" value={coinRate} onChange={e => setCoinRate(e.target.value)}
                           style={{ flex: 1, padding: "12px 14px", border: "none", background: "transparent", fontSize: 20, fontWeight: 800, color: "#0f172a", outline: "none", width: "80px" }} />
                         <div style={{ padding: "0 14px", background: "#f0fdf4", height: "100%", display: "flex", alignItems: "center", borderLeft: "1px solid #e2e8f0" }}>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: "#16a34a", whiteSpace: "nowrap" }}>COINS/HR</span>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: "#10b981", whiteSpace: "nowrap" }}>COINS/HR</span>
                         </div>
                       </div>
                     </div>
@@ -152,7 +152,7 @@ export default function Settings() {
                       <input type="number" value={sessionCost} onChange={e => setSessionCost(e.target.value)}
                         style={{ flex: 1, padding: "12px 14px", border: "none", background: "transparent", fontSize: 20, fontWeight: 800, color: "#0f172a", outline: "none", width: "80px" }} />
                       <div style={{ padding: "0 14px", background: "#f0fdf4", height: "100%", display: "flex", alignItems: "center", borderLeft: "1px solid #e2e8f0" }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: "#16a34a" }}>CREDITS</span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: "#10b981" }}>CREDITS</span>
                       </div>
                     </div>
                     <p style={{ margin: "6px 0 0", fontSize: 11, color: "#94a3b8" }}>Minimum cost to initiate a skill swap</p>
@@ -162,15 +162,15 @@ export default function Settings() {
                   <div style={{ marginBottom: "1.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5 }}>Verification Cooldown</label>
-                      <div style={{ background: "linear-gradient(135deg, #16a34a, #22c55e)", borderRadius: 20, padding: "4px 12px" }}>
+                      <div style={{ background: "linear-gradient(135deg, #10b981, #22c55e)", borderRadius: 20, padding: "4px 12px" }}>
                         <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>{cooldown} Days</span>
                       </div>
                     </div>
                     <div style={{ position: "relative", height: 6, background: "#e2e8f0", borderRadius: 3, marginBottom: 8 }}>
-                      <div style={{ position: "absolute", left: 0, width: `${(cooldown / 30) * 100}%`, height: "100%", background: "linear-gradient(90deg, #16a34a, #22c55e)", borderRadius: 3 }} />
+                      <div style={{ position: "absolute", left: 0, width: `${(cooldown / 30) * 100}%`, height: "100%", background: "linear-gradient(90deg, #10b981, #22c55e)", borderRadius: 3 }} />
                     </div>
                     <input type="range" min={1} max={30} value={cooldown} onChange={e => setCooldown(e.target.value)}
-                      style={{ width: "100%", accentColor: "#16a34a", cursor: "pointer", margin: 0 }} />
+                      style={{ width: "100%", accentColor: "#10b981", cursor: "pointer", margin: 0 }} />
                     <p style={{ margin: "6px 0 0", fontSize: 11, color: "#94a3b8" }}>Days users must wait between badge verification attempts</p>
                   </div>
 
@@ -229,7 +229,7 @@ export default function Settings() {
 
               {/* Notifications */}
               <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
-                <div style={{ background: "linear-gradient(135deg, #15803d 0%, #16a34a 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ background: "linear-gradient(135deg, #15803d 0%, #10b981 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🔔</div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#fff" }}>Notifications</h3>
@@ -259,7 +259,7 @@ export default function Settings() {
 
               {/* Branding */}
               <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
-                <div style={{ background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ background: "linear-gradient(135deg, #10b981 0%, #22c55e 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎨</div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#fff" }}>Branding</h3>
@@ -272,7 +272,7 @@ export default function Settings() {
                   <div style={{ marginBottom: "1.5rem" }}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569", display: "block", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>Platform Logo</label>
                     <div style={{ border: "2px dashed #e2e8f0", borderRadius: 14, padding: "1.5rem", textAlign: "center", background: "#f8fafc", cursor: "pointer", transition: "all 0.2s" }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = "#16a34a"; e.currentTarget.style.background = "#f0fdf4"; }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "#10b981"; e.currentTarget.style.background = "#f0fdf4"; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#f8fafc"; }}>
                       <div style={{ fontSize: 32, marginBottom: 8 }}>☁️</div>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#475569" }}>Drop your logo here</p>
