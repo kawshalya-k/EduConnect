@@ -1,119 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMyNotifications, markAllAsRead, markAsRead, deleteNotification } from '../services/notificationService';
+import Footer from '../components/Footer';
 
+const typeConfig = {
+  session: { icon: "📅", bg: "#ecfdf5", color: "#10b981", label: "Session" },
+  payment: { icon: "💰", bg: "#fffbeb", color: "#f59e0b", label: "Payment" },
+  achievement: { icon: "🏆", bg: "#f5f3ff", color: "#8b5cf6", label: "Achievement" },
+  system: { icon: "🔔", bg: "#eff6ff", color: "#3b82f6", label: "System" },
+  admin: { icon: "⚙️", bg: "#fef2f2", color: "#ef4444", label: "Admin" },
+};
 
-const CalendarIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
-const ClockIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path
-      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
-const LightbulbIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path
-      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
-const CoinIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path
-      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
-const BookIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path
-      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
-const allNotifications = [
-  {
-    id: 1,
-    title: 'Session confirmed',
-    description: 'Your tutoring session with Dr. Smith is confirmed for 4 PM today.',
-    time: '2m ago',
-    isUnread: true,
-    iconBg: 'bg-teal-50',
-    iconColor: 'text-teal-500',
-    icon: <CalendarIcon />,
-  },
-  {
-    id: 2,
-    title: 'Reminder: Homework Due',
-    description: 'Advanced Algebra Module 4 homework is due in 3 hours.',
-    time: '45m ago',
-    isUnread: false,
-    iconBg: 'bg-orange-50',
-    iconColor: 'text-orange-400',
-    icon: <ClockIcon />,
-  },
-  {
-    id: 3,
-    title: 'New Badge Earned!',
-    description: 'Congratulations! You\'ve earned the "Consistent Learner" badge for a 7-day streak.',
-    time: '3h ago',
-    isUnread: false,
-    iconBg: 'bg-indigo-50',
-    iconColor: 'text-indigo-400',
-    icon: <LightbulbIcon />,
-  },
-  {
-    id: 4,
-    title: 'EduCoins Received',
-    description: "You've just received 50 EduCoins for completing the Physics Quiz with 100% score.",
-    time: 'Yesterday',
-    isUnread: false,
-    iconBg: 'bg-yellow-50',
-    iconColor: 'text-yellow-500',
-    icon: <CoinIcon />,
-  },
-  {
-    id: 5,
-    title: 'Course Update',
-    description: 'Introduction to UI Design has been updated with new video lessons.',
-    time: '2 days ago',
-    isUnread: false,
-    iconBg: 'bg-emerald-50',
-    iconColor: 'text-emerald-500',
-    icon: <BookIcon />,
-  },
-];
-
-const Notifications = () => {
+export default function Notifications() {
   const [activeTab, setActiveTab] = useState('All');
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotifications();
@@ -157,95 +59,147 @@ const Notifications = () => {
     }
   };
 
-  const filteredNotifications = notifications.filter((n) => {
+  const filteredNotifications = notifications.filter(n => {
     if (activeTab === 'Unread') return !n.Is_Read;
     return true;
   });
 
+  const unreadCount = notifications.filter(n => !n.Is_Read).length;
 
+  const formatTime = (dateStr) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-12 min-h-[calc(100vh-400px)]">
-      {/* Title Section */}
-      <div className="flex items-end justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-extrabold text-slate-900 mb-2">Notifications</h1>
-          <p className="text-slate-500 text-lg">Stay updated with your learning progress</p>
+    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+
+      {/* Navbar */}
+      <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 36, height: 36, background: "#10b981", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>E</span>
+          </div>
+          <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
         </div>
-        <button 
-        onClick={handleMarkAllRead}
-        className="bg-emerald-50 text-[#004231] font-semibold py-2.5 px-6 rounded-full text-sm hover:bg-emerald-100 transition-colors border border-teal-100">
-          Mark all as read
-        </button>
-      </div>
+        <div style={{ display: "flex", gap: 32 }}>
+          {["Dashboard", "Sessions", "Messages"].map(n => (
+            <span key={n} style={{ cursor: "pointer", fontWeight: 500, color: "#64748b", fontSize: 14 }}>{n}</span>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ position: "relative" }}>
+            <span style={{ fontSize: 20, cursor: "pointer" }}>🔔</span>
+            {unreadCount > 0 && (
+              <div style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, background: "#ef4444", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>{unreadCount}</div>
+            )}
+          </div>
+          <img src="https://i.pravatar.cc/40?img=12" alt="avatar" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
+        </div>
+      </nav>
 
-      {/* Tabs */}
-      <div className="flex gap-8 border-b border-gray-200 mb-8">
-        {(['All', 'Unread', 'Archived']).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-3 px-1 text-sm transition ${
-              activeTab === tab
-                ? 'active-tab'
-                : 'text-slate-500 hover:text-slate-700 font-medium'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {/* Main Content */}
+      <div style={{ flex: 1, maxWidth: 800, width: "100%", margin: "0 auto", padding: "2rem 1.5rem" }}>
 
-      {/* Notification List */}
-      <div className="space-y-4">
-        {filteredNotifications.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
-            <p className="text-lg font-medium">No notifications here</p>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+          <div>
+            <h1 style={{ margin: "0 0 0.25rem", fontSize: 28, fontWeight: 900, color: "#0a1628" }}>Notifications</h1>
+            <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>Stay updated with your learning progress</p>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {unreadCount > 0 && (
+              <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 8, height: 8, background: "#10b981", borderRadius: "50%" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#065f46" }}>{unreadCount} unread</span>
+              </div>
+            )}
+            <button onClick={handleMarkAllRead}
+              style={{ padding: "8px 18px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#fff", color: "#10b981", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+              ✓ Mark all as read
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, background: "#f1f5f9", borderRadius: 12, padding: 4, marginBottom: "1.5rem", width: "fit-content" }}>
+          {['All', 'Unread'].map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              style={{ padding: "8px 20px", borderRadius: 10, border: "none", background: activeTab === tab ? "#fff" : "transparent", color: activeTab === tab ? "#0a1628" : "#64748b", fontWeight: activeTab === tab ? 700 : 500, fontSize: 13, cursor: "pointer", boxShadow: activeTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.15s" }}>
+              {tab}
+              {tab === 'Unread' && unreadCount > 0 && (
+                <span style={{ marginLeft: 6, background: "#10b981", color: "#fff", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 10 }}>{unreadCount}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Notifications List */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "4rem", color: "#10b981" }}>
+            <div style={{ fontSize: 32, marginBottom: "1rem" }}>⏳</div>
+            <p style={{ fontSize: 14, color: "#64748b" }}>Loading notifications...</p>
+          </div>
+        ) : filteredNotifications.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "4rem", background: "#fff", borderRadius: 20, border: "1px solid #e2e8f0" }}>
+            <div style={{ fontSize: 48, marginBottom: "1rem" }}>🔔</div>
+            <h3 style={{ margin: "0 0 0.5rem", fontSize: 18, fontWeight: 700, color: "#0a1628" }}>No notifications yet</h3>
+            <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>You're all caught up! Check back later for updates.</p>
           </div>
         ) : (
-          filteredNotifications.map((notification) => (
-            <div
-              key={notification.id}
-              className="bg-white p-5 rounded-2xl flex items-start gap-4 border border-gray-50 shadow-sm relative notification-card transition-all cursor-pointer"
-            >
-              <div
-                className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${notification.iconBg} ${notification.iconColor}`}
-              >
-                {notification.icon}
-              </div>
-              <div className="flex-grow">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-slate-800">{notification.title}</h3>
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs text-slate-400 mb-2">{notification.time}</span>
-                    {notification.isUnread && (
-                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
-                    )}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {filteredNotifications.map((notif, i) => {
+              const config = typeConfig[notif.Type] || typeConfig.system;
+              return (
+                <div key={notif.Notification_Id || i}
+                  style={{ background: "#fff", borderRadius: 16, padding: "1.25rem 1.5rem", display: "flex", alignItems: "flex-start", gap: "1rem", boxShadow: notif.Is_Read ? "0 1px 3px rgba(0,0,0,0.04)" : "0 2px 8px rgba(16,185,129,0.1)", border: notif.Is_Read ? "1px solid #e2e8f0" : "1px solid #a7f3d0", transition: "all 0.2s", cursor: "pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+
+                  {/* Icon */}
+                  <div style={{ width: 48, height: 48, background: config.bg, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                    {config.icon}
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.375rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <h4 style={{ margin: 0, fontSize: 14, fontWeight: notif.Is_Read ? 600 : 700, color: "#0a1628" }}>{notif.Title}</h4>
+                        {!notif.Is_Read && (
+                          <div style={{ width: 8, height: 8, background: "#10b981", borderRadius: "50%", flexShrink: 0 }} />
+                        )}
+                      </div>
+                      <span style={{ fontSize: 11, color: "#94a3b8", whiteSpace: "nowrap", marginLeft: 8 }}>{formatTime(notif.Created_At)}</span>
+                    </div>
+                    <p style={{ margin: "0 0 0.75rem", fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>{notif.Message}</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: config.bg, color: config.color }}>{config.label}</span>
+                      {!notif.Is_Read && (
+                        <button onClick={() => handleMarkRead(notif.Notification_Id)}
+                          style={{ fontSize: 11, fontWeight: 600, color: "#10b981", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                          Mark as read
+                        </button>
+                      )}
+                      <button onClick={() => handleDelete(notif.Notification_Id)}
+                        style={{ fontSize: 11, fontWeight: 600, color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "auto" }}>
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <p className="text-slate-500 text-sm mt-0.5">{notification.description}</p>
-              </div>
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* View Older Button */}
-      <div className="mt-10 text-center">
-        <button className="inline-flex items-center gap-2 text-[#00c38b] font-semibold hover:text-[#004231] transition-colors">
-          View older notifications
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              d="M19 9l-7 7-7-7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </svg>
-        </button>
-      </div>
-    </main>
+      <Footer />
+    </div>
   );
-};
-
-export default Notifications;
+}
