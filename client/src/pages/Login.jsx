@@ -9,6 +9,7 @@ const Login = () => {
   const { login } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -29,7 +30,8 @@ const Login = () => {
       setError('');
       const res = await api.post('/auth/login', {
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        rememberMe
       });
       login(res.data.user, res.data.token);
       setSuccessMsg('Logged in successfully!');
@@ -100,6 +102,8 @@ const Login = () => {
               <input 
                 type="email" 
                 name="email"
+                id="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="student@university.ac.lk"
@@ -116,6 +120,8 @@ const Login = () => {
               <input 
                 type="password" 
                 name="password"
+                id="password"
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="••••••••"
@@ -124,8 +130,14 @@ const Login = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <input type="checkbox" className="rounded text-[#10B981] focus:ring-[#10B981]" />
-              <span className="text-sm text-slate-500">Keep me logged in</span>
+              <input 
+                type="checkbox" 
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="rounded text-[#10B981] focus:ring-[#10B981] cursor-pointer" 
+              />
+              <label htmlFor="rememberMe" className="text-sm text-slate-500 cursor-pointer">Keep me logged in</label>
             </div>
 
             <button 
