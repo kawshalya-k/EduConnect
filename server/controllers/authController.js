@@ -76,7 +76,7 @@ exports.verifyOTP = async (req, res) => {
 
 // --- 3. LOGIN ---
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     try {
         // Find user
         const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
@@ -96,7 +96,8 @@ exports.login = async (req, res) => {
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
         // Create Token
-        const token = jwt.sign({ id: user.User_Id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const expiresIn = rememberMe ? '30d' : '1d';
+        const token = jwt.sign({ id: user.User_Id }, process.env.JWT_SECRET, { expiresIn });
 
         res.json({
             token,
