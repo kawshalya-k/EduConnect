@@ -1,5 +1,3 @@
-const db = require('../config/db');
-
 const WEIGHTS = {
   SESSION_COMPLETED:  5,    // per completed session
   AVG_RATING:        10,    // multiplied by 1–5 star rating

@@ -41,6 +41,9 @@ import MentorSessions from './pages/Mentor/MentorSessions';
 // Discovery
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
+//common
+import SkillWallet from './pages/SkillWallet';
+import Messages    from './pages/Messages';
 
 function App() {
   return (
@@ -62,7 +65,7 @@ function App() {
         <Route path="/check-inbox" element={<CheckInbox />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
-        <Route path="/dashboard" element={<LearnerDashboard />} />
+        <Route path="/learner-dashboard" element={<LearnerDashboard />} />
         <Route path="/find-mentor" element={<FindMentor />} />
         <Route path="/session-booking" element={<SessionBooking />} />
         <Route path="/booking-confirmed" element={<BookingConfirmed />} />
@@ -77,7 +80,7 @@ function App() {
         <Route path="/admin/verifications" element={<SkillVerifications />} />
         <Route path="/notifications" element={<Notifications />} />
         {/* Mentor routes */}
-        <Route path="/dashboard" element={<MentorDashboard />} />
+        <Route path="/mentor-dashboard" element={<MentorDashboard />} />
         <Route path="/verification" element={<VerificationCenter />} />
         <Route path="/verification/add" element={<AddSkill />} />
         <Route path="/verification/verify" element={<VerifySkill />} />
@@ -88,10 +91,12 @@ function App() {
         <Route path="/discovery" element={<MentorDiscovery />} />
         <Route path="/mentor/:mentorId" element={<MentorProfile />} />
         {/* Shared routes */}
-        <Route path="/sessions" element={<MentorSessions />} />
+        <Route path="/mentor-sessions" element={<MentorSessions />} />
         {/* Redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/learner-dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/learner-dashboard" replace />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/wallet"   element={<SkillWallet />} />  
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
