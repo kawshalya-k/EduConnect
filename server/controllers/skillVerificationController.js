@@ -1,5 +1,44 @@
 const db = require('../config/db');
 const path = require('path');
+const crypto = require('crypto');
+
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+
+// Your React dev server (change to production URL when deploying)
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+// HackerRank test URL — swap this for a real HackerRank Test invite link when ready
+const HACKERRANK_TEST_URL = process.env.HACKERRANK_TEST_URL || 'https://www.hackerrank.com/';
+
+// Base URL of THIS backend (so HackerRank can redirect back after the quiz)
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+
+// In-memory token store { token -> { userId, skillId, expiresAt } }
+// ⚠️  Replace with Redis or a DB table in production
+const pendingQuizTokens = new Map();
+
+// ─────────────────────────────────────────────
+// HELPER: generate a short-lived quiz token
+// ─────────────────────────────────────────────
+function createQuizToken(userId, skillId) {
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+    pendingQuizTokens.set(token, { userId, skillId, expiresAt });
+    return token;
+}
+
+// ─────────────────────────────────────────────
+// HELPER: validate and consume a quiz token
+// ─────────────────────────────────────────────
+function consumeQuizToken(token) {
+    const data = pendingQuizTokens.get(token);
+    if (!data) return null;
+    pendingQuizTokens.delete(token); // one-time use
+    if (Date.now() > data.expiresAt) return null; // expired
+    return data;
+}
 
 // ─────────────────────────────────────────────
 // GET /api/mentor/skills/all
@@ -46,7 +85,8 @@ exports.getMySkills = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // POST /api/mentor/skills/add
-// Submit a new skill for verification (with certificate upload)
+// Instead of inserting directly, redirect the mentor to HackerRank.
+// The skill is only saved after they pass the quiz.
 // Body: { skill_id }  File: certificate (multipart)
 // ─────────────────────────────────────────────
 exports.addSkill = async (req, res) => {
@@ -72,21 +112,96 @@ exports.addSkill = async (req, res) => {
             });
         }
 
-        // Certificate file path (if uploaded via multer)
+        // Store certificate path temporarily (if uploaded)
+        // We'll persist it once they pass the quiz via the callback
         const certificatePath = req.file ? req.file.path : null;
+
+        // Generate a one-time token that encodes who is taking the quiz and for which skill
+        const token = createQuizToken(userId, skill_id);
+
+        // If a certificate was uploaded, stash it in the token data so the callback can use it
+        if (certificatePath) {
+            const tokenData = pendingQuizTokens.get(token);
+            tokenData.certificatePath = certificatePath;
+        }
+
+        // Build the callback URL that HackerRank will redirect back to
+        // ?result=pass|fail  &token=<token>
+        // ⚠️  Real HackerRank Tests use a fixed redirect URL set in their dashboard.
+        //     Replace the callback_url param with whatever HackerRank supports.
+        const callbackUrl = encodeURIComponent(
+            `${BACKEND_URL}/api/mentor/skills/quiz-callback?token=${token}`
+        );
+
+        // Redirect the mentor to the HackerRank test
+        // When HackerRank is properly configured it will append ?result=pass/fail
+        // and redirect back to callbackUrl automatically.
+        const redirectUrl = `${HACKERRANK_TEST_URL}?callback_url=${callbackUrl}`;
+
+        return res.json({
+            message: "Please complete the skill assessment on HackerRank to proceed.",
+            redirect_url: redirectUrl  // Frontend should window.location.href to this
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// ─────────────────────────────────────────────
+// GET /api/mentor/skills/quiz-callback
+// HackerRank redirects back here after the quiz.
+// Query params: token=<token>  &result=pass|fail
+// ─────────────────────────────────────────────
+exports.quizCallback = async (req, res) => {
+    const { token, result } = req.query;
+
+    // --- validate token ---
+    if (!token) {
+        return res.redirect(`${FRONTEND_URL}/quiz/failed?reason=missing_token`);
+    }
+
+    const tokenData = consumeQuizToken(token);
+    if (!tokenData) {
+        return res.redirect(`${FRONTEND_URL}/quiz/failed?reason=invalid_or_expired_token`);
+    }
+
+    const { userId, skillId, certificatePath } = tokenData;
+
+    // --- handle fail ---
+    if (result !== 'pass') {
+        return res.redirect(
+            `${FRONTEND_URL}/quiz/failed?skill_id=${skillId}&reason=quiz_not_passed`
+        );
+    }
+
+    // --- handle pass: persist the skill submission ---
+    try {
+        // Guard against a race condition where the user somehow passes twice
+        const [existing] = await db.query(
+            `SELECT * FROM User_Skill WHERE User_Id = ? AND Skill_Id = ? AND Role = 'Mentor'`,
+            [userId, skillId]
+        );
+        if (existing.length > 0) {
+            return res.redirect(
+                `${FRONTEND_URL}/quiz/success?skill_id=${skillId}&note=already_submitted`
+            );
+        }
 
         await db.query(
             `INSERT INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status, Certificates)
              VALUES (?, ?, 'Mentor', 'Pending', ?)`,
-            [userId, skill_id, certificatePath]
+            [userId, skillId, certificatePath || null]
         );
 
-        res.status(201).json({
-            message: "Skill submitted for verification. You will be notified once reviewed.",
-            status: "Pending"
-        });
+        return res.redirect(
+            `${FRONTEND_URL}/quiz/success?skill_id=${skillId}`
+        );
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('quizCallback DB error:', err);
+        return res.redirect(
+            `${FRONTEND_URL}/quiz/failed?skill_id=${skillId}&reason=server_error`
+        );
     }
 };
 
@@ -143,7 +258,7 @@ exports.getPendingVerifications = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.verifySkill = async (req, res) => {
     const { userSkillId } = req.params;
-    const { action } = req.body; // 'approve' | 'reject'
+    const { action } = req.body;
 
     if (!['approve', 'reject'].includes(action)) {
         return res.status(400).json({ message: "action must be 'approve' or 'reject'." });
@@ -165,7 +280,6 @@ exports.verifySkill = async (req, res) => {
             [newStatus, userSkillId]
         );
 
-        // If approved then seed Levelling_Data row (score starts at 0)
         if (newStatus === 'Verified') {
             const { User_Id, Skill_Id } = rows[0];
             await db.query(
@@ -173,7 +287,6 @@ exports.verifySkill = async (req, res) => {
                  VALUES (?, ?, 0.00, 0, 'Bronze')`,
                 [User_Id, Skill_Id]
             );
-            // Sync back to User_Skill
             await db.query(
                 `UPDATE User_Skill SET Mentor_Level = 'Bronze' WHERE User_Skill_Id = ?`,
                 [userSkillId]

@@ -7,7 +7,7 @@ import {
 import './MentorSidebar.css';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/dashboard', icon: <FiGrid size={17} /> },
+  { label: 'Dashboard', path: '/MentorDashboard', icon: <FiGrid size={17} /> },
   { label: 'Upcoming Sessions', path: '/sessions', icon: <FiCalendar size={17} /> },
   { label: 'Verified Skills', path: '/verification', icon: <FiCheckSquare size={17} /> },
   { label: 'Skills & Quizzes', path: '/verification/add', icon: <FiBookOpen size={17} /> },
