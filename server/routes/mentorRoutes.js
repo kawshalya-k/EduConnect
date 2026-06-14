@@ -6,5 +6,6 @@ const mentorController = require('../controllers/mentorController');
 const auth = require('../middleware/auth');
 
 router.get('/', auth, mentorController.getMentors);
+router.post('/skills/verify', auth, mentorController.verifySkill);
 
 module.exports = router;

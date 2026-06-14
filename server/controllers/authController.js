@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
 
         // Save to DB with OTP and Expiry
         const sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role, otp_code, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, false]);
+        await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, 1]); // Set is_verified to 1 to bypass OTP temporarily
 
         // Send email via Mailtrap/Nodemailer
         await sendEmail(email, otp);
