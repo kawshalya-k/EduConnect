@@ -10,18 +10,34 @@ import {
   User,
   Trash2
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [learningSkills, setLearningSkills] = useState(["Data Science", "Digital Marketing", "Public Speaking"]);
   const [learnInput, setLearnInput] = useState("");
 
   const [teachingSkills, setTeachingSkills] = useState([
-    { name: "UX Design & Research", confidence: 8 },
-    { name: "Python Development", confidence: 6 }
+    { name: "UX Design & Research", confidence: 8, isVerified: false },
+    { name: "Python Development", confidence: 6, isVerified: false }
   ]);
   const [teachInput, setTeachInput] = useState("");
+
+  // Check URL for verified skills
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const verifiedSkill = params.get('verified_skill');
+    if (verifiedSkill) {
+      setTeachingSkills(prev => 
+        prev.map(skill => 
+          skill.name === verifiedSkill ? { ...skill, isVerified: true } : skill
+        )
+      );
+      // Remove query param without reloading to clean up URL
+      navigate('/profile-setup', { replace: true });
+    }
+  }, [location.search, navigate]);
 
   // Handlers for Learning Skills
   const handleLearnKeyDown = (e) => {
@@ -40,8 +56,12 @@ const ProfileSetup = () => {
   const handleTeachKeyDown = (e) => {
     if (e.key === 'Enter' && teachInput.trim() !== '') {
       e.preventDefault();
-      setTeachingSkills([...teachingSkills, { name: teachInput.trim(), confidence: 5 }]);
+      const newSkillName = teachInput.trim();
+      setTeachingSkills([...teachingSkills, { name: newSkillName, confidence: 5, isVerified: false }]);
       setTeachInput('');
+      
+      // Automatically jump to verification quiz right after entering the skill
+      navigate(`/verification/skill/${encodeURIComponent(newSkillName)}/start?from=onboarding`);
     }
   };
 
@@ -177,10 +197,20 @@ const ProfileSetup = () => {
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-base text-[#0F172A] truncate pr-4">{skill.name}</h3>
                       <div className="flex items-center gap-3 shrink-0">
-                        <button className="flex items-center gap-1.5 text-[#10B981] hover:text-[#059669] transition-colors">
-                          <ShieldCheck className="w-4 h-4" />
-                          <span className="font-semibold text-sm hidden sm:inline">Verify Skill</span>
-                        </button>
+                        {skill.isVerified ? (
+                          <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                            <ShieldCheck className="w-4 h-4" />
+                            <span className="font-semibold text-xs uppercase tracking-wider">Verified</span>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => navigate(`/verification/skill/${encodeURIComponent(skill.name)}/start?from=onboarding`)}
+                            className="flex items-center gap-1.5 text-[#10B981] hover:text-[#059669] transition-colors"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            <span className="font-semibold text-sm hidden sm:inline">Verify Skill</span>
+                          </button>
+                        )}
                         <button onClick={() => removeTeachingSkill(idx)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Remove Skill">
                           <Trash2 className="w-4 h-4" />
                         </button>

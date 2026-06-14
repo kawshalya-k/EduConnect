@@ -38,8 +38,10 @@ const Register = () => {
         email: formData.email,
         password: formData.password
       });
-      setSuccessMsg(res.data.message || 'OTP sent to your email.');
-      setStep(2);
+      setSuccessMsg(res.data.message || 'Account created successfully!');
+      
+      // Bypass OTP for now: go straight to the success page instead of setStep(2)
+      setTimeout(() => navigate('/verify-otp'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Registration failed');
     } finally {
