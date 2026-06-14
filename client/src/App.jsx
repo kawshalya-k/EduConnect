@@ -41,8 +41,10 @@ import MentorSessions from './pages/Mentor/MentorSessions';
 // Discovery
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
+import { useAuth } from './context/AuthContext';
 
 function App() {
+  const { mode } = useAuth();
   return (
     <div className="App">
       <DevMenu />
@@ -62,7 +64,7 @@ function App() {
         <Route path="/check-inbox" element={<CheckInbox />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
-        <Route path="/dashboard" element={<LearnerDashboard />} />
+        <Route path="/dashboard" element={mode === 'mentor' ? <MentorDashboard /> : <LearnerDashboard />} />
         <Route path="/find-mentor" element={<FindMentor />} />
         <Route path="/session-booking" element={<SessionBooking />} />
         <Route path="/booking-confirmed" element={<BookingConfirmed />} />
@@ -77,7 +79,6 @@ function App() {
         <Route path="/admin/verifications" element={<SkillVerifications />} />
         <Route path="/notifications" element={<Notifications />} />
         {/* Mentor routes */}
-        <Route path="/dashboard" element={<MentorDashboard />} />
         <Route path="/verification" element={<VerificationCenter />} />
         <Route path="/verification/add" element={<AddSkill />} />
         <Route path="/verification/verify" element={<VerifySkill />} />

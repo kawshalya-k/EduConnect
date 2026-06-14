@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PageLayout from '../../components/Layout/PageLayout';
 import failureHero from '../../Assets/FailedStateImage.jpg';
 
@@ -9,6 +9,9 @@ const RETRY_HOURS = 24; // 24 hour cooldown
 
 export default function VerificationFailed() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from');
   // Countdown: start from 23:59:58 for demo
   const [timeLeft, setTimeLeft] = useState(RETRY_HOURS * 3600 - 2);
 
@@ -70,6 +73,16 @@ export default function VerificationFailed() {
           <button className="visit-help-btn" onClick={() => navigate('/help')}>
             ❓ Visit Help Center
           </button>
+
+          {from === 'onboarding' && (
+            <button 
+              className="review-materials-btn" 
+              onClick={() => navigate('/profile-setup')} 
+              style={{marginTop: '10px', backgroundColor: '#64748b', color: 'white', border: 'none'}}
+            >
+              Return to Profile Setup
+            </button>
+          )}
 
           {/* Progress dots */}
           <div className="progress-dots">
