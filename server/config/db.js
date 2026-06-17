@@ -175,7 +175,7 @@ async function initDB() {
     console.log('✅ All 10 MySQL tables are verified and ready.');
 
   } catch (err) {
-    console.error('❌ Failed to initialize MySQL database:', err.message);
+    console.error('❌ Failed to initialize MySQL database:', err);
   }
 }
 

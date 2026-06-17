@@ -1,7 +1,6 @@
 // client/src/pages/MentorWallet.jsx
 
 import { useState } from "react";
-import { Link } from 'react-router-dom';
 
 const mentorTransactions = [
   { id: 1, learner: "Alex Chen",    avatar: "AC", skill: "PYTHON",       skillColor: "#3B82F6", skillBg: "#EFF6FF", amount: +20, status: "done"    },
@@ -75,19 +74,14 @@ export default function MentorWallet() {
 
         {/* Nav links */}
         <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-          {[
-            { label: "Dashboard", path: "/dashboard" },
-            { label: "Sessions", path: "/MySessions" },
-            { label: "Messages", path: "/session-room#messages" }
-          ].map(link => (
-            <Link key={link.label} to={link.path} style={{
+          {["Dashboard", "Sessions", "Messages"].map(link => (
+            <span key={link} style={{
               fontSize: "14px", cursor: "pointer",
-              color: link.label === "Sessions" ? "#1D9E75" : "#666",
-              fontWeight: link.label === "Sessions" ? "600" : "400",
-              borderBottom: link.label === "Sessions" ? "2px solid #1D9E75" : "none",
+              color: link === "Sessions" ? "#1D9E75" : "#666",
+              fontWeight: link === "Sessions" ? "600" : "400",
+              borderBottom: link === "Sessions" ? "2px solid #1D9E75" : "none",
               paddingBottom: "4px",
-              textDecoration: 'none'
-            }}>{link.label}</Link>
+            }}>{link}</span>
           ))}
         </div>
 

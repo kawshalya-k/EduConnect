@@ -1,9 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
-import Footer from '../../components/Footer';
-import { getMySessions } from '../../services/sessionService';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+
+const upcomingSessions = [
+  {
+    id: 1,
+    mentor: "Sarah Jenkins",
+    image: "https://i.pravatar.cc/250?img=47",
+    skill: "UI/UX Design",
+    topic: "Design Fundamentals & Portfolio Review",
+    date: "Oct 24, 2023",
+    time: "10:00 AM - 11:00 AM",
+    status: "SCHEDULED",
+    meetingType: "Zoom Meeting",
+  },
+  {
+    id: 2,
+    mentor: "Michael Chen",
+    image: "https://i.pravatar.cc/250?img=11",
+    skill: "Frontend Dev",
+    topic: "Advanced React Patterns & Performance",
+    date: "Oct 26, 2023",
+    time: "02:00 PM - 03:30 PM",
+    status: "SCHEDULED",
+    meetingType: "Google Meet",
+  },
+];
+
+const pastSessionsData = [
+  {
+    id: 3,
+    mentor: "Elena Rodriguez",
+    image: "https://i.pravatar.cc/250?img=25",
+    skill: "Product Mgmt",
+    date: "Oct 15, 2023 • 60 mins",
+    status: "COMPLETED",
+  },
+  {
+    id: 4,
+    mentor: "David Park",
+    image: "https://i.pravatar.cc/250?img=13",
+    skill: "Python Basics",
+    date: "Oct 10, 2023 • 30 mins",
+    status: "CANCELLED",
+  },
+];
 
 const SidebarItem = ({ icon, label, active, onClick }) => (
   <div
@@ -24,65 +65,9 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
 
 export default function MySessions() {
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [upcomingSessions, setUpcomingSessions] = useState([]);
-  const [pastSessions, setPastSessions] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        setLoading(true);
-        const data = await getMySessions();
-        
-        // Separate sessions into upcoming and past
-        const now = new Date();
-        const upcoming = [];
-        const past = [];
-        
-        if (data && Array.isArray(data)) {
-          data.forEach(session => {
-            // Transform backend fields to match component structure
-            const transformedSession = {
-              id: session.Session_Id,
-              mentor: `${session.Mentor_First || ''} ${session.Mentor_Last || ''}`.trim(),
-              image: `https://i.pravatar.cc/250?img=${Math.floor(Math.random() * 70)}`,
-              skill: session.Skill_Name || 'Unknown Skill',
-              topic: `Session with ${session.Mentor_First || 'Mentor'}`,
-              date: session.Date ? new Date(session.Date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'TBD',
-              time: session.Time ? `${session.Time}` : 'TBD',
-              status: session.Status || 'Pending',
-              meetingType: session.Meeting_Type || 'Video Call',
-              sessionDate: session.Date
-            };
-            
-            // Check if session is in the future or is scheduled/ongoing
-            if (session.Status === 'Scheduled' || new Date(session.Date) > now) {
-              upcoming.push(transformedSession);
-            } else {
-              past.push(transformedSession);
-            }
-          });
-        }
-        
-        setUpcomingSessions(upcoming);
-        setPastSessions(past);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching sessions:', err);
-        setError('Failed to load sessions');
-        // Fallback to empty arrays
-        setUpcomingSessions([]);
-        setPastSessions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSessions();
-  }, []);
 
   const statusColors = {
     SCHEDULED: "#22c55e",
@@ -91,9 +76,6 @@ export default function MySessions() {
   };
 
   if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#16a34a" }}>Loading sessions...</div>;
-  
-  if (error) return <div style={{ padding: "3rem", textAlign: "center", color: "#ef4444" }}>{error}</div>;
-  
   return (
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7]">
       <DashboardNavbar />
@@ -168,13 +150,7 @@ export default function MySessions() {
             {/* Content List */}
             <div className="flex flex-col items-start gap-6 w-full max-w-[960px]">
 
-              {activeTab === 'upcoming' && upcomingSessions.length === 0 && (
-                <div style={{ padding: "3rem", textAlign: "center", color: "#94A3B8", width: "100%" }}>
-                  No upcoming sessions. Book a session with a mentor to get started!
-                </div>
-              )}
-
-              {activeTab === 'upcoming' && upcomingSessions.map(session => (
+              {activeTab === 'upcoming' && upcomingSessionsData.map(session => (
                 <div key={session.id} className="box-border flex flex-col items-start w-full bg-white border border-[#10B77F]/10 shadow-sm rounded-3xl overflow-hidden h-[198px]">
                   <div className="flex flex-row w-full h-[196px]">
                     <div className="w-[224px] h-[196px] overflow-hidden flex-shrink-0">
@@ -220,13 +196,7 @@ export default function MySessions() {
                 </div>
               )}
 
-              {activeTab === 'past' && pastSessions.length === 0 && (
-                <div style={{ padding: "3rem", textAlign: "center", color: "#94A3B8", width: "100%" }}>
-                  No past sessions yet. Your completed sessions will appear here.
-                </div>
-              )}
-
-              {(activeTab === 'past' || activeTab === 'upcoming') && pastSessions.map(session => {
+              {(activeTab === 'past' || activeTab === 'upcoming') && pastSessionsData.map(session => {
                 const isCompleted = session.status === 'COMPLETED';
                 const containerClasses = isCompleted
                   ? "bg-[#F8FAFC] border-[#10B77F]/5"
