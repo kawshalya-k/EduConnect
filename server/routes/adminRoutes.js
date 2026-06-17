@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const auth = require('../middleware/auth');
-const skillCtrl    = require('../controllers/skillVerificationController');
 
 // Dashboard
 router.get('/stats', auth, adminController.getDashboardStats);
@@ -24,9 +23,5 @@ router.get('/analytics', auth, adminController.getAnalytics);
 router.get('/skills', auth, adminController.getAllSkills);
 router.post('/skills', auth, adminController.addSkill);
 router.delete('/skills/:skillId', auth, adminController.deleteSkill);
-
-// Mentor Management
-router.get('/', skillCtrl.getPendingVerifications);          // GET all pending
-router.patch('/:userSkillId/verify', skillCtrl.verifySkill);            // approve or reject
 
 module.exports = router;

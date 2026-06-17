@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDashboardStats } from '../../services/adminService';
 
 const sidebarItems = [
-  { icon: "📊", label: "Dashboard", path: "/admin/admin-dashboard" },
+  { icon: "📊", label: "Dashboard", path: "/admin/dashboard" },
   { icon: "👥", label: "User Management", path: "/admin/users" },
   { icon: "✅", label: "Skill Verifications", path: "/admin/verifications" },
   { icon: "📈", label: "Analytics", path: "/admin/analytics" },
