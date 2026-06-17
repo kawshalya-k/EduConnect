@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const gamificationRoutes = require('./routes/GamificationRoutes');
 const walletRoutes       = require('./routes/WalletRoutes');
 const { startScheduler } = require('./utils/challengeScheduler');
+const mentorSearchRoutes       = require('./routes/mentorSearchRoutes');
 
 // ── API Routes ──
 app.use('/api/auth',         authRoutes);

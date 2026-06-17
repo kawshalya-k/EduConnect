@@ -1,11 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bell, Wallet } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 
 const MentorNav = () => {
   const location = useLocation();
-  const { user } = useAuth();
 
   return (
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50">
@@ -29,8 +27,8 @@ const MentorNav = () => {
               Dashboard
             </Link>
             <Link
-              to="/MySessions"
-              className={`pb-1 ${location.pathname === '/MySessions' || location.pathname.startsWith('/session') ? 'text-[#10B981] border-b-2 border-[#10B981]' : 'text-slate-500 hover:text-slate-800'}`}
+              to="/my-sessions"
+              className={`pb-1 ${location.pathname === '/my-sessions' || location.pathname.startsWith('/session') ? 'text-[#10B981] border-b-2 border-[#10B981]' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Sessions
             </Link>
@@ -58,7 +56,7 @@ const MentorNav = () => {
           {/* Wallet */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg cursor-pointer">
             <Wallet className="w-4 h-4 text-[#10B981]" />
-            <span className="text-sm font-bold text-[#10B981]">{user?.skillCoins?.toLocaleString() ?? '100'} Skill Coins</span>
+            <span className="text-sm font-bold text-[#10B981]">100 Skill Coins</span>
           </div>
 
           {/* Notifications */}
