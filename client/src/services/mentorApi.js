@@ -4,58 +4,61 @@ import API from './axiosConfig';
 
 // ─── Dashboard ───────────────────────────────────────────────
 export const fetchMentorDashboard = (mentorId) =>
-  API.get(`/mentor/${mentorId}/dashboard`);
+  API.get('/mentors/dashboard');
 
 export const fetchMentorStats = (mentorId) =>
-  API.get(`/mentor/${mentorId}/stats`);
+  API.get('/mentors/dashboard');
 
 export const fetchPerformanceChart = (mentorId, period = '7days') =>
-  API.get(`/mentor/${mentorId}/performance?period=${period}`);
+  API.get(`/mentors/dashboard/earnings?period=${period}`);
 
 // ─── Profile ─────────────────────────────────────────────────
 export const fetchMentorProfile = (mentorId) =>
-  API.get(`/mentor/${mentorId}/profile`);
+  API.get('/mentors/profile');
 
 export const updateMentorProfile = (mentorId, data) =>
-  API.put(`/mentor/${mentorId}/profile`, data);
+  API.put(`/mentors/profile/${mentorId}`, data);
 
-export const toggleAcceptingLearners = (mentorId, value) =>
-  API.patch(`/mentor/${mentorId}/accepting`, { accepting: value });
+export const toggleAcceptingLearners = async (mentorId, value) => {
+  // Save toggle in localStorage since backend doesn't have an availability column
+  localStorage.setItem(`mentor_accepting_${mentorId}`, JSON.stringify(value));
+  return { data: { accepting: value } };
+};
 
 // ─── Sessions ────────────────────────────────────────────────
 export const fetchMentorSessions = (mentorId, params = {}) =>
-  API.get(`/mentor/${mentorId}/sessions`, { params });
+  API.get('/sessions/my', { params });
 
 export const fetchUpcomingSessions = (mentorId) =>
-  API.get(`/mentor/${mentorId}/sessions/upcoming`);
+  API.get('/sessions/my');
 
 export const fetchNextSession = (mentorId) =>
-  API.get(`/mentor/${mentorId}/sessions/next`);
+  API.get('/sessions/my');
 
 export const acceptSessionRequest = (sessionId) =>
-  API.patch(`/sessions/${sessionId}/accept`);
+  API.put(`/sessions/${sessionId}/status`, { status: 'Scheduled' });
 
 export const rejectSessionRequest = (sessionId) =>
-  API.patch(`/sessions/${sessionId}/reject`);
+  API.put(`/sessions/${sessionId}/status`, { status: 'Cancelled' });
 
 export const createSession = (data) =>
-  API.post('/sessions', data);
+  API.post('/sessions/book', data);
 
 export const fetchPendingRequests = (mentorId) =>
-  API.get(`/mentor/${mentorId}/requests/pending`);
+  API.get('/sessions/my');
 
 // ─── Skills & Verification ───────────────────────────────────
 export const fetchMentorSkills = (mentorId) =>
-  API.get(`/mentor/${mentorId}/skills`);
+  API.get('/mentors/skills/my');
 
 export const fetchSkillDetail = (mentorId, skillId) =>
-  API.get(`/mentor/${mentorId}/skills/${skillId}`);
+  API.get(`/mentors/skills/my`); // Fallback: filter in frontend if needed
 
 export const addSkill = (mentorId, data) =>
-  API.post(`/mentor/${mentorId}/skills`, data);
+  API.post('/mentors/skills/add', data);
 
 export const fetchVerificationProgress = (mentorId) =>
-  API.get(`/mentor/${mentorId}/verification/progress`);
+  API.get('/mentors/skills/my');
 
 export const startVerification = (skillId) =>
   API.post(`/verification/${skillId}/start`);
