@@ -41,11 +41,13 @@ import MentorSessions from './pages/Mentor/MentorSessions';
 // Discovery
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
+import { useAuth } from './context/AuthContext';
 //common
 import SkillWallet from './pages/SkillWallet';
 import Messages    from './pages/Messages';
 
 function App() {
+  const { mode } = useAuth();
   return (
     <div className="App">
       <DevMenu />
@@ -65,6 +67,7 @@ function App() {
         <Route path="/check-inbox" element={<CheckInbox />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+        <Route path="/dashboard" element={mode === 'mentor' ? <MentorDashboard /> : <LearnerDashboard />} />
         <Route path="/learner-dashboard" element={<LearnerDashboard />} />
         <Route path="/find-mentor" element={<FindMentor />} />
         <Route path="/session-booking" element={<SessionBooking />} />
