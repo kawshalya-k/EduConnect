@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/educonnect-logo.svg';
+import logo from '../Assets/educonnect-logo.svg';
 
 const Navbar = () => (
   <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">

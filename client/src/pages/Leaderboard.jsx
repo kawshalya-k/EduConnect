@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { fetchLeaderboard } from '../services/leaderboardService';
+import { useAuth } from '../context/AuthContext';
 
 
 const StarIcon = () => (
@@ -7,46 +9,30 @@ const StarIcon = () => (
   </svg>
 );
 
-const rankData = [
-  {
-    rank: '#4',
-    name: 'Emily Chen',
-    university: 'Stanford University',
-    level: 'Gold',
-    levelColor: 'bg-orange-50 text-orange-600',
-    coins: 850,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCLll5S14-y4BS7oBRGhNkUQrKzNHLQna4Tll_65xSSNrIRZS6oVLaeUb9ILREowlvf244Mfw9Oo8caJc_e-VGBdlVx4keU_CAImzabw20fjAlfYv890l3kkTDH9KNl9pSX9637w3vyEkiCbZwR-xB7Xsgx8XDB3xAnpnpO60jukN5kCrTCBOFzX_iW0nl1D8-j9imYj1q5tEiUi6lA0ieAo_56KisuQ9-7a2XbwcJYfjH09uWemn7e7AYmcUR6QkoCIA-fi6UUk6M',
-  },
-  {
-    rank: '#5',
-    name: 'Marcus Thorne',
-    university: 'MIT',
-    level: 'Silver',
-    levelColor: 'bg-slate-100 text-slate-500',
-    coins: 720,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSyIKTQ_7nxRM3MRN-rbByHNs8g6leaTCqO6oZySTOeJMyrvu-ARq123qEbW6PQ2InVlDZNewRu3oxU9UndS37hdFQa2TDfMMMTPT6UF_OFP9yENenwkxHlHIK7MEZJZ1fy8FsEffCiCVxd7YM5HybYVBAONd9ZZnrA_vu8vAWJFehyU6g8WKrCltsoLaCyvGuHmYs5bsvYcE84YJAJi0SUVYeyVb5_tARYbqk5xKlWBwIdd2C6AgelLCKoSmnOnYj-o59T70LQgA',
-  },
-  {
-    rank: '#6',
-    name: 'Sophia Loke',
-    university: 'Oxford University',
-    level: 'Silver',
-    levelColor: 'bg-slate-100 text-slate-500',
-    coins: 695,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBbeTcIl8TOXYGu8s3_HgEP_9uM_AUqq_N6Lw41oRc-hEJekCKimTPRMr5OjKG8m5xhXimW3SKjGU7GP74wAoSPGyEyNhNCeO8S0mIb-p9WFGP5hltT7whgs7Q7iyyJhEO_iMGKEZOk1wNUoaq0WGZiqPn6oJhdTlRauu3ogL_maYoZli0IQ7nOs0rxS1UjWsiufnjv1MVz3XWyg9ff9O-HQPhtaNUD_d272B-Ip2dDHAeAsqGj1FJfPZ8j1RFDGawDjCEwlpj_Uh4',
-  },
-  {
-    rank: '#7',
-    name: 'David Kim',
-    university: 'UC Berkeley',
-    level: 'Bronze',
-    levelColor: 'bg-orange-100 text-orange-700',
-    coins: 540,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC15jNJJ6a6rbHCeHwkFCp4YqVNp6U8y71i6b3IsFUMwrlS-LGnoY4niHGIu7IFV9fDNzoIGg49NLOq8Ye-9y-UlSC_FG_Zov_8UN1N-wBTBps-MUXRlh9KSwsH34oeiVhzQmlj5SxpfEzEVGioexRksoUWDUDEwdILghN5ANRkoWJ9TNJiaST8n5KMdWXN676NonnVFEbJZ8McyLqzaH94N-z4Y5DViOx-Bc1wHh8r2L26UOApx_YhAhip-cxp8LPXBnHLe11UveA',
-  },
-];
+
 
 const Leaderboard = () => {
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await fetchLeaderboard();
+        if (mounted && data?.success && Array.isArray(data.mentors)) setMentors(data.mentors);
+      } catch (e) {
+        console.error('Failed to load leaderboard', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const podium = (i) => mentors[i] || null;
+
   return (
     <div className="flex flex-1">
       {/* Sidebar */}
@@ -160,82 +146,86 @@ const Leaderboard = () => {
           {/* Podium */}
           <div className="flex justify-center items-end space-x-4 mb-16 relative">
             {/* 2nd Place */}
-            <div className="flex flex-col items-center">
-              <div className="relative mb-[-10px] z-10">
-                <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden">
-                  <img
-                    alt="Sarah Jenkins"
-                    className="w-full h-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMxrK4OuARkUPu_rMlfOMVbQp87QHakc5NC0bI-KTAxi_V8pq_rAbjIN3By_5uudlWNvEqR2I5EhBip0CwiSZ-7kRLc80Xd8YLtdHbUnSaomxxk5yQ7mDrn7LNjrSWILkEMGjRT4ElwnXlqDYr6pODmzvkw3Vc9ryN-ISA84RV5XMkfmCGQ1_i36P414-yM8zL709x0VZ9Sv_J0uW7AQ5kcQqal4WFnBjypB8NjIKwlr47wtn84rh2DRJrnsZyt5BnfWS5o3SZXdc"
-                  />
+            {(() => {
+              const m = podium(1);
+              return (
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-[-10px] z-10">
+                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                      {m?.avatar ? (
+                        <img alt={`${m.first_name} ${m.last_name}`} className="w-full h-full object-cover" src={m.avatar} />
+                      ) : (
+                        <div className="w-full h-full bg-slate-300" />
+                      )}
+                    </div>
+                    <span className="absolute -bottom-2 -right-1 bg-gray-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">#2</span>
+                  </div>
+                  <div className="podium-gradient-silver w-40 h-44 rounded-2xl shadow-sm border border-emerald-50 flex flex-col items-center justify-end pb-8">
+                    <h3 className="font-bold text-gray-700 text-sm">{m ? `${m.first_name} ${m.last_name}` : '—'}</h3>
+                    <p className="text-emerald-500 font-bold text-lg">{m?.skill_coins ?? '—'}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">Skill Coins</p>
+                  </div>
                 </div>
-                <span className="absolute -bottom-2 -right-1 bg-gray-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">
-                  #2
-                </span>
-              </div>
-              <div className="podium-gradient-silver w-40 h-44 rounded-2xl shadow-sm border border-emerald-50 flex flex-col items-center justify-end pb-8">
-                <h3 className="font-bold text-gray-700 text-sm">Sarah Jenkins</h3>
-                <p className="text-emerald-500 font-bold text-lg">1,240</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Skill Coins</p>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* 1st Place */}
-            <div className="flex flex-col items-center scale-110">
-              <div className="mb-4">
-                <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-              <div className="relative mb-[-10px] z-10">
-                <div className="w-32 h-32 rounded-full border-4 border-emerald-500 shadow-xl overflow-hidden ring-8 ring-emerald-50">
-                  <img
-                    alt="Alex Rivera"
-                    className="w-full h-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuChRpJhdjPZWDUmoqPVHQqvgcVCQLJjfiRBYdxQPv6LZi7w0b1kwY1_dpSoEF8sd_ydDM0kc0r16yP4rK3Q2SMUkidClLmG2bCW84NDqm0nxpplpSrR780DpjeemBDcJhiLvQWSsRvXHGo32mQkzkLSH3avkZcv6wlJnhP8Ojt_andR4lYgh5Uv_OrcIfXRaUFMjNSNpQlGkkPKidlfzlLUy2S5OLmXIFSbeQHvKhcAj9EZ8B5Mu7CNu5zARyDaz9OF2KIQIbXCKhQ"
-                  />
+            {(() => {
+              const m = podium(0);
+              return (
+                <div className="flex flex-col items-center scale-110">
+                  <div className="mb-4">
+                    <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                    </svg>
+                  </div>
+                  <div className="relative mb-[-10px] z-10">
+                    <div className="w-32 h-32 rounded-full border-4 border-emerald-500 shadow-xl overflow-hidden ring-8 ring-emerald-50">
+                      {m?.avatar ? (
+                        <img alt={`${m.first_name} ${m.last_name}`} className="w-full h-full object-cover" src={m.avatar} />
+                      ) : (
+                        <div className="w-full h-full bg-slate-300" />
+                      )}
+                    </div>
+                    <span className="absolute -bottom-2 right-2 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full border-2 border-white">#1</span>
+                  </div>
+                  <div className="bg-white podium-gradient-gold w-48 h-56 rounded-2xl shadow-md border border-emerald-100 flex flex-col items-center justify-end pb-10">
+                    <h3 className="font-bold text-gray-800 text-base">{m ? `${m.first_name} ${m.last_name}` : '—'}</h3>
+                    <p className="text-emerald-600 font-bold text-2xl">{m?.skill_coins ?? '—'}</p>
+                    <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-3">Skill Coins</p>
+                    <div className="flex space-x-1">
+                      <span className="text-emerald-400 text-sm">★</span>
+                      <span className="text-emerald-400 text-sm">★</span>
+                      <span className="text-emerald-400 text-sm">★</span>
+                    </div>
+                  </div>
                 </div>
-                <span className="absolute -bottom-2 right-2 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full border-2 border-white">
-                  #1
-                </span>
-              </div>
-              <div className="bg-white podium-gradient-gold w-48 h-56 rounded-2xl shadow-md border border-emerald-100 flex flex-col items-center justify-end pb-10">
-                <h3 className="font-bold text-gray-800 text-base">Alex Rivera</h3>
-                <p className="text-emerald-600 font-bold text-2xl">2,580</p>
-                <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-3">Skill Coins</p>
-                <div className="flex space-x-1">
-                  <span className="text-emerald-400 text-sm">★</span>
-                  <span className="text-emerald-400 text-sm">★</span>
-                  <span className="text-emerald-400 text-sm">★</span>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* 3rd Place */}
-            <div className="flex flex-col items-center">
-              <div className="relative mb-[-10px] z-10">
-                <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden">
-                  <img
-                    alt="Jordan Lee"
-                    className="w-full h-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmHT70rRbJMrFhmRzyt3hNVfQqsrYNjb29kQb1DziUiYKtBmIj_55mKy7eRKAc_SvnWsDQcExRFiUo6XEzScyKV6soxapBPV4R5r7hFwRTv1bBR73LM8MDjFghhh4Rr1bQ9O9xB8Yp85SKEcLZq3b2ktO2lO8VvPUhH0dudkJ2piE-SuiDKnBFTmGFSvQhZQIUarosSSYNzuiGFhZx4Alvsb4fmtackBF_bJBBqCi7tPkbBDuSx7LAAafx20oDJtlt4lvNNAjCKB0"
-                  />
+            {(() => {
+              const m = podium(2);
+              return (
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-[-10px] z-10">
+                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                      {m?.avatar ? (
+                        <img alt={`${m.first_name} ${m.last_name}`} className="w-full h-full object-cover" src={m.avatar} />
+                      ) : (
+                        <div className="w-full h-full bg-slate-300" />
+                      )}
+                    </div>
+                    <span className="absolute -bottom-2 -right-1 bg-orange-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">#3</span>
+                  </div>
+                  <div className="podium-gradient-silver w-40 h-40 rounded-2xl shadow-sm border border-emerald-50 flex flex-col items-center justify-end pb-8">
+                    <h3 className="font-bold text-gray-700 text-sm">{m ? `${m.first_name} ${m.last_name}` : '—'}</h3>
+                    <p className="text-emerald-500 font-bold text-lg">{m?.skill_coins ?? '—'}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">Skill Coins</p>
+                  </div>
                 </div>
-                <span className="absolute -bottom-2 -right-1 bg-orange-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">
-                  #3
-                </span>
-              </div>
-              <div className="podium-gradient-silver w-40 h-40 rounded-2xl shadow-sm border border-emerald-50 flex flex-col items-center justify-end pb-8">
-                <h3 className="font-bold text-gray-700 text-sm">Jordan Lee</h3>
-                <p className="text-emerald-500 font-bold text-lg">980</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Skill Coins</p>
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* Ranking Table */}
@@ -251,47 +241,46 @@ const Leaderboard = () => {
                 </tr>
               </thead>
               <tbody className="text-sm font-medium text-gray-600">
-                {rankData.map((row) => (
-                  <tr
-                    key={row.rank}
-                    className="border-b border-gray-50 hover:bg-emerald-50 transition-colors"
-                  >
-                    <td className="px-8 py-5 text-gray-400 font-bold">{row.rank}</td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          alt={row.name}
-                          className="w-10 h-10 rounded-full"
-                          src={row.avatar}
-                        />
-                        <span className="text-gray-800">{row.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-gray-500">{row.university}</td>
-                    <td className="px-8 py-5">
-                      <span
-                        className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.levelColor}`}
-                      >
-                        <StarIcon />
-                        <span>{row.level}</span>
-                      </span>
-                    </td>
-                    <td className="px-8 py-5 text-right font-bold text-emerald-600 text-base">
-                      {row.coins}
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <tr><td colSpan={5} className="p-8 text-center">Loading leaderboard...</td></tr>
+                ) : mentors.length === 0 ? (
+                  <tr><td colSpan={5} className="p-8 text-center">No leaderboard data available yet.</td></tr>
+                ) : (
+                  mentors.map((m, i) => (
+                    <tr key={m.user_id} className="border-b border-gray-50 hover:bg-emerald-50 transition-colors">
+                      <td className="px-8 py-5 text-gray-400 font-bold">#{i + 1}</td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center space-x-3">
+                          {m.avatar ? <img alt={`${m.first_name} ${m.last_name}`} className="w-10 h-10 rounded-full" src={m.avatar} /> : <div className="w-10 h-10 rounded-full bg-slate-300" />}
+                          <span className="text-gray-800">{m.first_name} {m.last_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-gray-500">{m.university || '—'}</td>
+                      <td className="px-8 py-5">
+                        <span className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500`}>
+                          <StarIcon />
+                          <span>{m.level || '—'}</span>
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 text-right font-bold text-emerald-600 text-base">{m.skill_coins ?? 0}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
 
             {/* Footer Bar */}
             <div className="bg-emerald-500 text-white p-6 flex items-center justify-between">
-              <div className="flex items-center space-x-12">
-                <div className="flex items-center space-x-4">
-                  <div className="w-8 h-8 rounded-full bg-emerald-400 border border-emerald-300 flex items-center justify-center font-bold text-sm">
-                    12
+              <div className="flex items-center space-x-4">
+                  {user?.Avatar ? (
+                    <img alt="User Avatar" className="w-12 h-12 rounded-full border-2 border-white shadow-sm" src={user.Avatar} />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-slate-300" />
+                  )}
+                  <div>
+                    <h4 className="font-bold leading-tight">{user?.First_Name || user?.first_name || user?.name ? `${user.First_Name || user.first_name || user.name}` : 'You'}</h4>
+                    <p className="text-[10px] uppercase opacity-80 font-semibold">{user?.University || user?.university || '—'}</p>
                   </div>
-                  <span className="font-bold text-lg">Your Position</span>
                 </div>
                 <div className="flex items-center space-x-4">
                   <img

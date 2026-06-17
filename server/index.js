@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const cors    = require('cors');
@@ -29,6 +30,56 @@ app.use('/api/admin',        adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/wallet',       walletRoutes);
+
+// Health check
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+// Dev-only: issue JWT for local testing (not for production)
+const jwt = require('jsonwebtoken');
+app.post('/dev/token', (req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.status(404).json({ message: 'Not found' });
+  const { userId } = req.body || {};
+  if (!userId) return res.status(400).json({ message: 'userId required' });
+  const token = jwt.sign({ id: Number(userId), role: 'Mentor' }, process.env.JWT_SECRET || 'dev-secret');
+  res.json({ token });
+});
+
+// Debug route to list registered routes
+app.get('/_routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // routes registered directly on the app
+      routes.push(middleware.route.path);
+    } else if (middleware.name === 'router') {
+      middleware.handle.stack.forEach((handler) => {
+        const route = handler.route && handler.route.path;
+        if (route) routes.push(route);
+      });
+    }
+  });
+  res.json({ routes });
+});
+
+// Print registered routes to console
+setTimeout(() => {
+  try {
+    const registered = [];
+    app._router.stack.forEach((middleware) => {
+      if (middleware.route) {
+        registered.push(middleware.route.path);
+      } else if (middleware.name === 'router') {
+        middleware.handle.stack.forEach((handler) => {
+          const route = handler.route && handler.route.path;
+          if (route) registered.push(route);
+        });
+      }
+    });
+    console.log('Registered routes:', registered);
+  } catch (e) {
+    console.error('Failed listing routes:', e.message);
+  }
+}, 1000);
 
 // ── Weekly Challenge Scheduler ──
 startScheduler();

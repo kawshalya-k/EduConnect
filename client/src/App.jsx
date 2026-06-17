@@ -41,6 +41,7 @@ import MentorSessions from './pages/Mentor/MentorSessions';
 // Discovery
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
+import Leaderboard from './pages/Leaderboard';
 import { useAuth } from './context/AuthContext';
 //common
 import SkillWallet from './pages/SkillWallet';
@@ -70,6 +71,7 @@ function App() {
         <Route path="/dashboard" element={mode === 'mentor' ? <MentorDashboard /> : <LearnerDashboard />} />
         <Route path="/learner-dashboard" element={<LearnerDashboard />} />
         <Route path="/find-mentor" element={<FindMentor />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/session-booking" element={<SessionBooking />} />
         <Route path="/booking-confirmed" element={<BookingConfirmed />} />
         <Route path="/my-sessions" element={<MySessions />} />

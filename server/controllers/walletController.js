@@ -10,10 +10,10 @@ const getWalletBalance = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
-      [userId]
-    );
+      const [user] = await db.query(
+        'SELECT skill_coins FROM `User` WHERE User_Id = ?',
+        [userId]
+      );
 
     if (user.length === 0) {
       return res.status(404).json({
@@ -24,7 +24,7 @@ const getWalletBalance = async (req, res) => {
 
     res.json({
       success: true,
-      balance: user[0].skill_coins_balance
+      balance: user[0].skill_coins
     });
 
   } catch (err) {

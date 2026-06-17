@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
-import logo from '../assets/educonnect-logo.svg';
+import logo from '../Assets/educonnect-logo.svg';
 
 const Register = () => {
   const navigate = useNavigate();

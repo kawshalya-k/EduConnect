@@ -12,6 +12,8 @@ const poolConfig = {
   multipleStatements: true
 };
 
+console.log('DB poolConfig preview:', { host: poolConfig.host, user: poolConfig.user, passwordPresent: Boolean(poolConfig.password), port: poolConfig.port });
+
 let dbInstance = null;
 
 async function initDB() {
