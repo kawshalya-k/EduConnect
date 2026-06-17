@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 
 // Book a session (Learner)
 exports.bookSession = async (req, res) => {
+  console.log('BOOKING REQUEST RECEIVED:', req.body);
   try {
     const { skill_id, mentor_id, session_type, date, time, duration, cost } = req.body;
     const learner_id = req.user.id;
@@ -41,8 +42,8 @@ exports.bookSession = async (req, res) => {
     res.status(201).json({ message: 'Session booked successfully!', sessionId: result.insertId });
 
   } catch (err) {
-    console.error('bookSession error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('FULL BOOKING ERROR:', err);
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -151,10 +152,10 @@ exports.addMeetingLink = async (req, res) => {
 
     res.status(200).json({ message: 'Meeting link added successfully!' });
 
-  } catch (err) {
-    console.error('addMeetingLink error:', err);
-    res.status(500).json({ message: 'Error adding meeting link' });
-  }
+ } catch (err) {
+    console.error('FULL BOOKING ERROR:', err);
+    res.status(500).json({ message: err.message });
+}
 };
 
 // Get single session
