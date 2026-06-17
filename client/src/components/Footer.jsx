@@ -18,7 +18,7 @@ const Footer = () => {
             Empowering University students through peer-to-peer learning and community recognition.
           </p>
           <div className="flex gap-4">
-            {['f', 'i', '@'].map((icon, i) => (
+            {['f', 'g', '@'].map((icon, i) => (
               <div key={i} className="w-10 h-10 rounded-full bg-emerald-900 flex items-center justify-center hover:bg-[#10B981] transition-colors cursor-pointer">
                 <span className="text-xs font-bold uppercase">{icon}</span>
               </div>

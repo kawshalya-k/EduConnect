@@ -5,7 +5,7 @@ const routes = [
   { group: 'Main', paths: ['/'] },
   { group: 'Auth', paths: ['/login', '/register', '/verify-otp', '/verification-failed', '/account-success', '/forgot-password', '/check-inbox', '/set-new-password', '/password-reset-success'] },
   { group: 'Onboarding', paths: ['/profile-setup'] },
-  { group: 'Learner', paths: ['/dashboard', '/find-mentor', '/my-sessions', '/session-booking', '/booking-confirmed', '/session-feedback', '/session-room'] },
+  { group: 'Learner', paths: ['/dashboard', '/find-mentor', '/MySessions', '/session-booking', '/booking-confirmed', '/session-feedback', '/session-room'] },
   { group: 'Admin', paths: ['/admin/dashboard', '/admin/users', '/admin/analytics', '/admin/settings', '/admin/verifications'] },
   { group: 'Legal', paths: ['/privacy-policy', '/terms-of-service', '/community-standards'] }
 ];

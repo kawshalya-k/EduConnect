@@ -49,7 +49,10 @@ exports.bookSession = async (req, res) => {
 // Get my sessions
 exports.getMySessions = async (req, res) => {
   try {
-    const sessions = await Session.getSessionsByUser(req.user.id);
+    const userId = req.user?.id || req.query.userId;
+    if (!userId) return res.status(401).json({ message: 'User not authenticated' });
+
+    const sessions = await Session.getSessionsByUser(userId);
     res.status(200).json(sessions);
   } catch (err) {
     console.error('getMySessions error:', err);
