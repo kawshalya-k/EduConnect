@@ -28,8 +28,9 @@ const AccountSuccess = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <span className="font-semibold text-sm text-[#0F172A]">{user?.name || 'User'}</span>
             <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer">
-              <img src={user?.avatar || `https://ui-avatars.com/api/?name=User&background=0F172A&color=fff`} alt="User" className="w-full h-full object-cover" />
+              <img src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=0F172A&color=fff`} alt="User" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
