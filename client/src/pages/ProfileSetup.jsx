@@ -11,10 +11,8 @@ import {
   Trash2
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 const ProfileSetup = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [learningSkills, setLearningSkills] = useState(["Data Science", "Digital Marketing", "Public Speaking"]);
@@ -98,12 +96,9 @@ const ProfileSetup = () => {
         
         {/* Profile */}
         <div className="flex items-center gap-4">
+          <span className="font-semibold text-sm text-slate-900">Alex Rivera</span>
           <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center border-2 border-slate-200">
-            {user?.avatar ? (
-              <img src={user.avatar} alt={user?.name || 'User'} className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <User className="w-5 h-5 text-slate-600" />
-            )}
+            <User className="w-5 h-5 text-slate-600" />
           </div>
         </div>
       </header>

@@ -30,8 +30,9 @@ const TermsOfService = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <span className="font-semibold text-sm text-[#0F172A]">Alex Rivera</span>
             <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer">
-              <img src="https://ui-avatars.com/api/?name=User&background=0F172A&color=fff" alt="User" className="w-full h-full object-cover" />
+              <img src="https://ui-avatars.com/api/?name=Alex+Rivera&background=0F172A&color=fff" alt="User" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
