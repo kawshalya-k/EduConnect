@@ -53,7 +53,16 @@ exports.getMyProfile = async (req, res) => {
 
         res.json({
             ...profile,
-          // ─────────────────────────────────────────────
+            skills,
+            badges,
+            review_summary: reviewSummary[0]
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// ─────────────────────────────────────────────
 // PUT /api/mentor/profile
 // Update bio and university
 // ─────────────────────────────────────────────
