@@ -10,11 +10,16 @@ const mentorLevel = require('../controllers/levelingController');
 
 const protect = require('../middleware/auth');
 
+const auth = protect;
+
 const isMentor = (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: "Not authenticated" });
     if (req.user.role !== 'Mentor') return res.status(403).json({ message: "Access denied. Mentors only." });
     next();
 };
+
+router.get('/', auth, mentorController.getMentors);
+router.post('/skills/verify', auth, mentorController.verifySkill);
 
 // Public
 router.get('/profile/:mentorId', mentorController.getPublicProfile);

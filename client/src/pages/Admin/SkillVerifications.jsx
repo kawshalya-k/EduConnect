@@ -67,7 +67,7 @@ export default function SkillVerifications() {
         {/* Sidebar */}
         <div style={{ width: 220, background: "#fff", borderRight: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: "#16a34a", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 32, height: 32, background: "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>E</span>
             </div>
             <span style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>EduConnect</span>
@@ -75,7 +75,7 @@ export default function SkillVerifications() {
           <div style={{ padding: "1rem 0.75rem", flex: 1 }}>
             {sidebarItems.map(item => (
               <div key={item.label} onClick={() => { setActivePage(item.label); navigate(item.path); }}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#16a34a" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #16a34a" : "3px solid transparent" }}>
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#10b981" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #10b981" : "3px solid transparent" }}>
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
@@ -103,7 +103,7 @@ export default function SkillVerifications() {
               <button style={{ padding: "10px 18px", borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", color: "#475569", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
                 🔄 Sync HackerRank Data
               </button>
-              <button style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+              <button style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
                 ➕ Add New Skill Quiz
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -118,7 +118,7 @@ export default function SkillVerifications() {
             {/* Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
               {[
-                { label: "Total Active Skills", value: "42", sub: "+3 this month", icon: "🎯", bg: "#f0fdf4", color: "#16a34a" },
+                { label: "Total Active Skills", value: "42", sub: "+3 this month", icon: "🎯", bg: "#f0fdf4", color: "#10b981" },
                 { label: "Avg. Passing Rate", value: "68%", sub: "-2% vs last week", icon: "📊", bg: "#fffbeb", color: "#d97706" },
                 { label: "Verification Requests", value: "1,204", sub: "12k Pending", icon: "📋", bg: "#eff6ff", color: "#3b82f6" },
                 { label: "Cooldown Policy", value: "24 hrs", sub: "Failed attempts limit", icon: "⏱️", bg: "#f5f3ff", color: "#7c3aed" },
@@ -139,7 +139,7 @@ export default function SkillVerifications() {
 
               {/* Skill Registry Table */}
               <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
-                <div style={{ background: "linear-gradient(135deg, #14532d 0%, #16a34a 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ background: "linear-gradient(135deg, #14532d 0%, #10b981 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.15)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📚</div>
                     <div>
@@ -170,13 +170,13 @@ export default function SkillVerifications() {
       </div>
     </div>
 
-    <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 500 }}>🔗 educonnect.com/skills</span>
+    <span style={{ fontSize: 12, color: "#10b981", fontWeight: 500 }}>🔗 educonnect.com/skills</span>
 
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 3 }}>
-        <div style={{ height: "100%", width: "75%", background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 3 }} />
+        <div style={{ height: "100%", width: "75%", background: "linear-gradient(90deg, #10b981, #4ade80)", borderRadius: 3 }} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a", flexShrink: 0 }}>75%</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#10b981", flexShrink: 0 }}>75%</span>
     </div>
 
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -185,7 +185,7 @@ export default function SkillVerifications() {
     </div>
 
     <div style={{ display: "flex", gap: 6 }}>
-      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #bbf7d0", background: "#f0fdf4", fontSize: 11, cursor: "pointer", color: "#16a34a", fontWeight: 700 }}>Update</button>
+      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #bbf7d0", background: "#f0fdf4", fontSize: 11, cursor: "pointer", color: "#10b981", fontWeight: 700 }}>Update</button>
       <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", fontSize: 11, cursor: "pointer", color: "#64748b", fontWeight: 600 }}>Link</button>
     </div>
   </div>
@@ -195,7 +195,7 @@ export default function SkillVerifications() {
                   <span style={{ fontSize: 12, color: "#94a3b8" }}>Showing 4 of 42 Skills</span>
                   <div style={{ display: "flex", gap: 4 }}>
                     {['←', '1', '2', '3', '→'].map((p, i) => (
-                      <button key={i} style={{ width: 30, height: 30, borderRadius: 8, border: p === '1' ? "none" : "1px solid #e2e8f0", background: p === '1' ? "#16a34a" : "#fff", color: p === '1' ? "#fff" : "#475569", fontSize: 12, fontWeight: p === '1' ? 700 : 400, cursor: "pointer" }}>{p}</button>
+                      <button key={i} style={{ width: 30, height: 30, borderRadius: 8, border: p === '1' ? "none" : "1px solid #e2e8f0", background: p === '1' ? "#10b981" : "#fff", color: p === '1' ? "#fff" : "#475569", fontSize: 12, fontWeight: p === '1' ? 700 : 400, cursor: "pointer" }}>{p}</button>
                     ))}
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export default function SkillVerifications() {
                             <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{req.skill} • {req.level} • {req.submitted}</p>
                           </div>
                           {req.status !== 'pending' && (
-                            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: req.status === 'approved' ? "#dcfce7" : "#fef2f2", color: req.status === 'approved' ? "#16a34a" : "#ef4444" }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: req.status === 'approved' ? "#dcfce7" : "#fef2f2", color: req.status === 'approved' ? "#10b981" : "#ef4444" }}>
                               {req.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
                             </span>
                           )}
@@ -234,7 +234,7 @@ export default function SkillVerifications() {
                         {req.status === 'pending' && (
                           <div style={{ display: "flex", gap: 6 }}>
                             <button onClick={() => handleApprove(i)}
-                              style={{ flex: 1, padding: "7px", borderRadius: 8, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                              style={{ flex: 1, padding: "7px", borderRadius: 8, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                               ✓ Approve
                             </button>
                             <button onClick={() => handleReject(i)}
@@ -258,7 +258,7 @@ export default function SkillVerifications() {
                     <p style={{ margin: "0 0 1rem", fontSize: 12, color: "#475569", lineHeight: 1.6 }}>All HackerRank integrations must point to tests containing at least 3 algorithmic questions and 1 practical project scenario to qualify for university-certified skill badges.</p>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {["Auto-Sync: Enabled", "Strict Proctoring: ON"].map((tag, i) => (
-                        <span key={i} style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>● {tag}</span>
+                        <span key={i} style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", color: "#10b981", border: "1px solid #bbf7d0" }}>● {tag}</span>
                       ))}
                     </div>
                   </div>
@@ -269,7 +269,7 @@ export default function SkillVerifications() {
                   <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "rgba(255,255,255,0.05)", borderRadius: "50%" }} />
                   <p style={{ margin: "0 0 0.25rem", fontSize: 14, fontWeight: 800, color: "#fff" }}>🌍 Global Skill Analytics</p>
                   <p style={{ margin: "0 0 1rem", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>View comprehensive student performance across all assessments.</p>
-                  <button style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.4)" }}>
+                  <button style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.4)" }}>
                     Generate Global Report →
                   </button>
                 </div>

@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   FiGrid, FiCalendar, FiCheckSquare, FiBookOpen, FiBarChart2,
 } from 'react-icons/fi';
-import './MentorSidebar.css';
+import './MentorSideBar.css';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/MentorDashboard', icon: <FiGrid size={17} /> },

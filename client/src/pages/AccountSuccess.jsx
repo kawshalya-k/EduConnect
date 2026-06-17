@@ -10,9 +10,11 @@ import {
   Rocket
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const AccountSuccess = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <div className="bg-[#F8FAFC] min-h-screen font-sans text-slate-900 flex flex-col">
       {/* Header - Top Navigation Bar */}
@@ -26,9 +28,9 @@ const AccountSuccess = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-sm text-[#0F172A]">Alex Rivera</span>
+            <span className="font-semibold text-sm text-[#0F172A]">{user?.name || 'User'}</span>
             <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer">
-              <img src="https://ui-avatars.com/api/?name=Alex+Rivera&background=0F172A&color=fff" alt="User" className="w-full h-full object-cover" />
+              <img src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=0F172A&color=fff`} alt="User" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -76,7 +78,7 @@ const AccountSuccess = () => {
                   <UserCheck className="w-[22px] h-[22px] text-[#10B981] shrink-0 mt-0.5" />
                   <div>
                     <h5 className="text-sm font-bold text-[#0F172A]">Account created</h5>
-                    <p className="text-sm text-slate-500">Alex Rivera</p>
+                    <p className="text-sm text-slate-500">{user?.name || 'User'}</p>
                   </div>
                 </div>
 
@@ -111,13 +113,19 @@ const AccountSuccess = () => {
             <div className="space-y-4">
               <h4 className="text-base font-bold text-[#0F172A]">Suggested Next Steps</h4>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="flex-1 flex items-center justify-center gap-3 py-4 px-4 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl transition-all">
+                <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="flex-1 flex items-center justify-center gap-3 py-4 px-4 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl transition-all"
+                >
                   <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
                     <LayoutGrid className="w-5 h-5 text-[#0F172A]" />
                   </div>
                   <span className="font-semibold text-[#0F172A]">Explore Dashboard</span>
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-3 py-4 px-4 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl transition-all">
+                <button 
+                  onClick={() => navigate('/discovery')}
+                  className="flex-1 flex items-center justify-center gap-3 py-4 px-4 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl transition-all"
+                >
                   <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
                     <Search className="w-5 h-5 text-[#0F172A]" />
                   </div>
@@ -129,7 +137,7 @@ const AccountSuccess = () => {
             {/* Primary Actions */}
             <div className="space-y-3 pt-2">
               <button 
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 className="w-full flex items-center justify-center gap-2 bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
               >
                 Go to Dashboard
