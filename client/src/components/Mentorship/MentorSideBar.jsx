@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  FiGrid, FiCalendar, FiCheckSquare, FiDollarSign, FiSettings, FiWifi
+  FiGrid, FiCalendar, FiCheckSquare, FiBookOpen, FiDollarSign, FiBarChart2, FiWifi
 } from 'react-icons/fi';
 import './MentorSideBar.css';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/mentor-dashboard', icon: <FiGrid size={17} /> },
-  { label: 'Sessions', path: '/mentor-sessions', icon: <FiCalendar size={17} /> },
-  { label: 'Availability', path: '/verification', icon: <FiCheckSquare size={17} /> },
-  { label: 'Earnings', path: '/wallet', icon: <FiDollarSign size={17} /> },
-  { label: 'Settings', path: '/profile', icon: <FiSettings size={17} /> },
+  { label: 'Upcoming Sessions', path: '/mentor-dashboard', icon: <FiGrid size={17} /> },
+  { label: 'Upcoming Sessions', path: '/mentor-sessions', icon: <FiCalendar size={17} /> },
+  { label: 'Verified Skills', path: '/verification', icon: <FiCheckSquare size={17} /> },
+  { label: 'Skills & Quizzes', path: '/verification/add', icon: <FiBookOpen size={17} /> },
+  { label: 'Wallet', path: '/wallet', icon: <FiDollarSign size={17} /> },
+  { label: 'Leaderboard', path: '/leaderboard', icon: <FiBarChart2 size={17} /> },
 ];
 
 export default function DashboardSidebar({ user }) {
