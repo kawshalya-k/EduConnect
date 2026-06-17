@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
-import logo from '../assets/educonnect-logo.svg';
+import logo from '../Assets/educonnect-logo.svg';
 
 const Login = () => {
   const navigate = useNavigate();

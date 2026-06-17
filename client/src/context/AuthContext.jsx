@@ -3,13 +3,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 export const AuthContext = createContext(null);
 
 const DUMMY_USER = {
-  id: 1,
-  name: 'Alex Rivera',
-  email: 'alex@example.com',
+  id: 3,
+  name: 'Sarah Chen',
+  email: 'sarah.c@test.ac.lk',
   avatar: null,
-  department: 'Computer Science',
-  skillCoins: 100,
-  mentorId: 1,
+  department: 'Design',
+  role: 'Mentor',
+  skillCoins: 0,
+  mentorId: 3,
 };
 
 export function AuthProvider({ children }) {
@@ -32,9 +33,25 @@ export function AuthProvider({ children }) {
         localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
       }
     } else if (!token) {
-      // Auto-login with dummy user 
-      setUser(DUMMY_USER);
-      localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
+      // Auto-login with dummy user but first fetch a dev JWT synchronously
+      (async () => {
+        try {
+          const res = await fetch('http://localhost:5000/dev/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: DUMMY_USER.id })
+          });
+          const data = await res.json();
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        setUser(DUMMY_USER);
+        localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
+      })();
     }
 
     setLoading(false);

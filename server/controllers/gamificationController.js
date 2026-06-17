@@ -95,27 +95,21 @@ const awardBadge = async (req, res) => {
 const getLeaderboard = async (req, res) => {
   try {
     const { period = 'weekly', skill = 'all' } = req.query;
-
     let query = `
-      SELECT 
-        u.user_id,
-        u.first_name,
-        u.last_name,
-        u.profile_picture,
-        u.skill_coins_balance,
-        ld.score,
-        ld.level,
-        ld.session_count,
-        ld.average_rating
-      FROM users u
-      JOIN Levelling_Data ld ON u.user_id = ld.user_id
+      SELECT
+        u.User_Id AS user_id,
+        u.First_Name AS first_name,
+        u.Last_Name AS last_name,
+        u.Avatar AS avatar,
+        u.skill_coins AS skill_coins,
+        ld.score AS score,
+        ld.session_count AS session_count,
+        ld.average_rating AS average_rating
+      FROM \`user\` u
+      JOIN \`levelling_data\` ld ON u.User_Id = ld.user_id
+      ORDER BY ld.score DESC
+      LIMIT 50
     `;
-
-    if (skill !== 'all') {
-      query += ` WHERE ld.skill_id = ${db.escape(skill)}`;
-    }
-
-    query += ` ORDER BY ld.score DESC LIMIT 50`;
 
     const [mentors] = await db.query(query);
 
