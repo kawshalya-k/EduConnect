@@ -1,10 +1,14 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FiCheckCircle } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import './SuccessState.css';
 
 export default function VerificationSuccess() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from');
+  const skillId = params.get('skillId');
 
   return (
     <PageLayout>
@@ -41,9 +45,15 @@ export default function VerificationSuccess() {
 
             <button
               className="go-dashboard-btn"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                if (from === 'onboarding') {
+                  navigate(`/profile-setup?verified_skill=${encodeURIComponent(skillId)}`);
+                } else {
+                  navigate('/dashboard');
+                }
+              }}
             >
-              Go to Dashboard →
+              {from === 'onboarding' ? 'Return to Profile Setup →' : 'Go to Dashboard →'}
             </button>
 
             <button className="share-achievement-btn">

@@ -25,7 +25,7 @@ export default function SessionFeedback() {
 
   const handleSubmit = () => {
     alert('Feedback submitted! Thank you 🎉');
-    navigate('/my-sessions');
+    navigate('/MySessions');
   };
 
   const getRatingText = () => {

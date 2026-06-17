@@ -13,13 +13,13 @@ export default function Navbar() {
   // Navbar links differ by mode
   const mentorLinks = [
     { label: 'Dashboard', path: '/dashboard' },
-    { label: 'Sessions', path: '/sessions' },
+    { label: 'Sessions', path: '/MySessions' },
     { label: 'Messages', path: '/messages' },
   ];
 
   const learnerLinks = [
-    { label: 'Dashboard', path: '/learner' },
-    { label: 'Sessions', path: '/sessions' },
+    { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Sessions', path: '/MySessions' },
     { label: 'Messages', path: '/messages' },
   ];
 
