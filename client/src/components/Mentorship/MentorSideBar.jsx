@@ -4,11 +4,11 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   FiGrid, FiCalendar, FiCheckSquare, FiBookOpen, FiBarChart2,
 } from 'react-icons/fi';
-import './MentorSidebar.css';
+import './MentorSideBar.css';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/dashboard', icon: <FiGrid size={17} /> },
-  { label: 'Upcoming Sessions', path: '/sessions', icon: <FiCalendar size={17} /> },
+  { label: 'Upcoming Sessions', path: '/MySessions', icon: <FiCalendar size={17} /> },
   { label: 'Verified Skills', path: '/verification', icon: <FiCheckSquare size={17} /> },
   { label: 'Skills & Quizzes', path: '/verification/add', icon: <FiBookOpen size={17} /> },
   { label: 'Leaderboard', path: '/leaderboard', icon: <FiBarChart2 size={17} /> },

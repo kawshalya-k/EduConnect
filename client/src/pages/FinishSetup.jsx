@@ -14,8 +14,8 @@ const FinishSetup = () => {
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-[#10B981] rounded-xl flex items-center justify-center text-white font-bold text-xl">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 12.8L4.34 8.64L12 4.48L19.65 8.64L12 12.8Z" fill="white"/>
-              <path d="M4 11.83V16.66L12 21L20 16.66V11.83L12 16.16L4 11.83Z" fill="white"/>
+              <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 12.8L4.34 8.64L12 4.48L19.65 8.64L12 12.8Z" fill="white" />
+              <path d="M4 11.83V16.66L12 21L20 16.66V11.83L12 16.16L4 11.83Z" fill="white" />
             </svg>
           </div>
           <span className="text-2xl font-bold text-slate-900">EduConnect</span>
@@ -25,7 +25,7 @@ const FinishSetup = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-[448px] flex flex-col items-center relative">
-          
+
           {/* Success Icon */}
           <div className="relative w-[102.25px] h-[102.25px] flex items-center justify-center mb-6">
             {/* Overlay Blur */}
@@ -48,7 +48,7 @@ const FinishSetup = () => {
           </div>
 
           <form className="w-full flex flex-col gap-6">
-            
+
             {/* Password Input */}
             <div className="flex flex-col gap-2">
               <label className="font-semibold text-[14px] leading-[20px] text-[#334155]">
@@ -58,12 +58,12 @@ const FinishSetup = () => {
                 <div className="absolute left-0 top-0 bottom-0 pl-4 flex items-center pointer-events-none z-10">
                   <Lock className="w-[18px] h-[18px] text-[#94A3B8]" />
                 </div>
-                <input 
-                  type={showPassword ? "text" : "password"} 
+                <input
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   className="w-full h-full bg-white border border-[#E2E8F0] rounded-lg pl-12 pr-12 text-[16px] text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-0 top-0 bottom-0 pr-4 flex items-center z-10 text-[#94A3B8] hover:text-[#475569] transition-colors"
@@ -82,12 +82,12 @@ const FinishSetup = () => {
                 <div className="absolute left-0 top-0 bottom-0 pl-4 flex items-center pointer-events-none z-10">
                   <Lock className="w-[18px] h-[18px] text-[#94A3B8]" />
                 </div>
-                <input 
-                  type={showRePassword ? "text" : "password"} 
+                <input
+                  type={showRePassword ? "text" : "password"}
                   placeholder="••••••••"
                   className="w-full h-full bg-white border border-[#E2E8F0] rounded-lg pl-12 pr-12 text-[16px] text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowRePassword(!showRePassword)}
                   className="absolute right-0 top-0 bottom-0 pr-4 flex items-center z-10 text-[#94A3B8] hover:text-[#475569] transition-colors"
@@ -100,8 +100,8 @@ const FinishSetup = () => {
             {/* Checkbox */}
             <div className="flex items-start mt-2">
               <div className="flex items-center h-5">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="w-4 h-4 bg-white border border-[#CBD5E1] rounded text-[#10B981] focus:ring-[#10B981] focus:ring-offset-0 cursor-pointer"
                 />
               </div>
@@ -111,7 +111,7 @@ const FinishSetup = () => {
             </div>
 
             {/* Submit Button */}
-            <button 
+            <button
               type="button"
               onClick={() => navigate('/profile-setup')}
               className="mt-2 w-full h-[52px] bg-[#10B981] rounded-lg shadow-[0px_10px_15px_-3px_rgba(13,242,89,0.2),0px_4px_6px_-4px_rgba(13,242,89,0.2)] hover:bg-[#0EA5E9] hover:shadow-[0px_10px_15px_-3px_rgba(14,165,233,0.2)] transition-all flex items-center justify-center gap-2 group cursor-pointer"

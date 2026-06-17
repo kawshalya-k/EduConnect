@@ -14,11 +14,11 @@ const DUMMY_USER = {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [mode, setMode] = useState('mentor'); // 'mentor' | 'learner'
+  const [mode, setMode] = useState('learner'); // 'mentor' | 'learner'
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedMode = localStorage.getItem('educonnect_mode') || 'mentor';
+    const savedMode = localStorage.getItem('educonnect_mode') || 'learner';
     const savedUser = localStorage.getItem('educonnect_user');
     const token = localStorage.getItem('token');
 

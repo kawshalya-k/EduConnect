@@ -1,9 +1,71 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
+import { fetchLeaderboard } from '../services/leaderboardService';
+import { getMySessions } from '../services/sessionService';
+import { useAuth } from '../context/AuthContext';
 
 const LearnerDashboard = () => {
+  const [topMentors, setTopMentors] = useState([]);
+  const [loadingLeaders, setLoadingLeaders] = useState(true);
+  const [learningProgress, setLearningProgress] = useState({ completed: 0, total: 0, percent: 0 });
+  const [loadingProgress, setLoadingProgress] = useState(true);
+  const [progressError, setProgressError] = useState('');
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      try {
+        const data = await fetchLeaderboard();
+        if (data?.success && Array.isArray(data.mentors)) {
+          setTopMentors(data.mentors.slice(0, 3));
+        }
+      } catch (err) {
+        console.error('Failed to load leaderboard:', err);
+      } finally {
+        setLoadingLeaders(false);
+      }
+    };
+
+    loadLeaderboard();
+  }, []);
+
+  useEffect(() => {
+    const loadLearningProgress = async () => {
+      if (!user?.id) {
+        setLoadingProgress(false);
+        return;
+      }
+
+      try {
+        const sessions = await getMySessions();
+        const learnerSessions = sessions.filter(
+          (session) => Number(session.Learner_Id) === Number(user.id)
+        );
+        const completedCourses = learnerSessions.filter(
+          (session) => String(session.Status).toLowerCase() === 'completed'
+        ).length;
+        const weeklyGoal = 4;
+        const percent = Math.min(100, Math.round((completedCourses / weeklyGoal) * 100));
+
+        setLearningProgress({
+          completed: completedCourses,
+          total: learnerSessions.length,
+          percent,
+          goal: weeklyGoal,
+        });
+      } catch (err) {
+        console.error('Failed to load learning progress:', err);
+        setProgressError('Unable to load learning progress.');
+      } finally {
+        setLoadingProgress(false);
+      }
+    };
+
+    loadLearningProgress();
+  }, [user?.id]);
+
   return (
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-['Inter']">
       <DashboardNavbar />
@@ -26,7 +88,7 @@ const LearnerDashboard = () => {
               <div className="flex flex-col items-start h-[82px]">
                 <div className="flex flex-col items-start h-[38px]">
                   <span className="font-bold text-[30px] leading-[38px] flex items-center text-[#0F172A]">
-                    1,250 Coins
+                    {user?.skillCoins?.toLocaleString() ?? '1,250'} Coins
                   </span>
                 </div>
                 <div className="flex flex-col items-start h-6">
@@ -118,7 +180,7 @@ const LearnerDashboard = () => {
                 </Link>
 
                 {/* My Sessions Button */}
-                <Link to="/my-sessions" className="box-border flex flex-col items-center py-6 px-[77px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
+                <Link to="/MySessions" className="box-border flex flex-col items-center py-6 px-[77px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-4">
                       <path d="M4 4H16C17.1 4 18 4.9 18 6V18C18 19.1 17.1 20 16 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -157,62 +219,53 @@ const LearnerDashboard = () => {
                 <h3 className="font-bold text-lg leading-7 flex items-center text-[#0F172A]">
                   Top Mentors
                 </h3>
-                <a href="#" className="font-bold text-sm leading-5 flex items-center text-[#10B77F] hover:underline">
+                <Link to="/leaderboard" className="font-bold text-sm leading-5 flex items-center text-[#10B77F] hover:underline">
                   View all
-                </a>
+                </Link>
               </div>
 
               <div className="flex flex-col items-start gap-4 w-full h-[254px]">
-                
-                {/* Mentor 1 */}
-                <div className="box-border flex flex-row items-center p-3 gap-3 w-full h-[74px] bg-[#10B77F]/5 border border-[#10B77F]/10 rounded-2xl relative">
-                  <div className="absolute flex flex-row justify-center items-center py-1 px-0 w-6 h-6 -left-[7px] -top-[7px] bg-[#FACC15] shadow-sm rounded-full z-10">
-                    <span className="font-bold text-[10px] leading-[15px] text-center text-white">1st</span>
+                {loadingLeaders ? (
+                  <div className="flex flex-col gap-4 w-full">
+                    <div className="h-[74px] rounded-2xl bg-slate-100 animate-pulse"></div>
+                    <div className="h-[74px] rounded-2xl bg-slate-100 animate-pulse"></div>
+                    <div className="h-[74px] rounded-2xl bg-slate-100 animate-pulse"></div>
                   </div>
-                  <div className="box-border w-12 h-12 border-2 border-white shadow-sm rounded-full bg-slate-300 overflow-hidden flex-shrink-0 relative z-0">
-                    {/* Placeholder image */}
-                    <div className="w-full h-full bg-slate-400"></div>
-                  </div>
-                  <div className="flex flex-col items-start gap-1 flex-1 h-[34px] z-0">
-                    <span className="font-bold text-sm leading-[14px] text-[#0F172A]">Sarah Chen</span>
-                    <span className="font-normal text-xs leading-4 text-[#64748B]">UX Strategy</span>
-                  </div>
-                  <div className="flex flex-col items-end w-[27px] h-[31px]">
-                    <span className="font-bold text-xs leading-4 text-right text-[#10B77F]">2.4k</span>
-                    <span className="font-normal text-[10px] leading-[15px] text-right text-[#94A3B8]">Coins</span>
-                  </div>
-                </div>
-
-                {/* Mentor 2 */}
-                <div className="box-border flex flex-row items-center p-3 gap-3 w-full h-[74px] rounded-2xl hover:bg-slate-50 transition-colors">
-                  <div className="box-border w-12 h-12 border border-[#E2E8F0] rounded-full overflow-hidden flex-shrink-0 bg-slate-300">
-                    <div className="w-full h-full bg-slate-400"></div>
-                  </div>
-                  <div className="flex flex-col items-start gap-1 flex-1 h-[34px]">
-                    <span className="font-bold text-sm leading-[14px] text-[#0F172A]">David Miller</span>
-                    <span className="font-normal text-xs leading-4 text-[#64748B]">Python Dev</span>
-                  </div>
-                  <div className="flex flex-col items-end w-[27px] h-[31px]">
-                    <span className="font-bold text-xs leading-4 text-right text-[#10B77F]">1.9k</span>
-                    <span className="font-normal text-[10px] leading-[15px] text-right text-[#94A3B8]">Coins</span>
-                  </div>
-                </div>
-
-                {/* Mentor 3 */}
-                <div className="box-border flex flex-row items-center p-3 gap-3 w-full h-[74px] rounded-2xl hover:bg-slate-50 transition-colors">
-                  <div className="box-border w-12 h-12 border border-[#E2E8F0] rounded-full overflow-hidden flex-shrink-0 bg-slate-300">
-                    <div className="w-full h-full bg-slate-400"></div>
-                  </div>
-                  <div className="flex flex-col items-start gap-1 flex-1 h-[34px]">
-                    <span className="font-bold text-sm leading-[14px] text-[#0F172A]">Elena Rodriguez</span>
-                    <span className="font-normal text-xs leading-4 text-[#64748B]">Product Mgmt</span>
-                  </div>
-                  <div className="flex flex-col items-end w-[27px] h-[31px]">
-                    <span className="font-bold text-xs leading-4 text-right text-[#10B77F]">1.7k</span>
-                    <span className="font-normal text-[10px] leading-[15px] text-right text-[#94A3B8]">Coins</span>
-                  </div>
-                </div>
-
+                ) : topMentors.length > 0 ? (
+                  topMentors.map((mentor, index) => (
+                    <div
+                      key={mentor.User_Id}
+                      className={`box-border flex flex-row items-center p-3 gap-3 w-full h-[74px] ${index === 0 ? 'bg-[#10B77F]/5 border border-[#10B77F]/10 rounded-2xl' : 'rounded-2xl hover:bg-slate-50 transition-colors'}`}
+                    >
+                      {index === 0 ? (
+                        <div className="absolute flex flex-row justify-center items-center py-1 px-0 w-6 h-6 -left-[7px] -top-[7px] bg-[#FACC15] shadow-sm rounded-full z-10">
+                          <span className="font-bold text-[10px] leading-[15px] text-center text-white">1st</span>
+                        </div>
+                      ) : null}
+                      <div className="box-border w-12 h-12 border-2 border-white shadow-sm rounded-full bg-slate-300 overflow-hidden flex-shrink-0 relative z-0">
+                        <div className="w-full h-full bg-slate-400"></div>
+                      </div>
+                      <div className="flex flex-col items-start gap-1 flex-1 h-[34px] z-0">
+                        <span className="font-bold text-sm leading-[14px] text-[#0F172A]">
+                          {mentor.First_Name} {mentor.Last_Name}
+                        </span>
+                        <span className="font-normal text-xs leading-4 text-[#64748B]">
+                          {mentor.University || 'Mentor'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end w-[27px] h-[31px]">
+                        <span className="font-bold text-xs leading-4 text-right text-[#10B77F]">
+                          {mentor.skill_coins?.toLocaleString() || 0}
+                        </span>
+                        <span className="font-normal text-[10px] leading-[15px] text-right text-[#94A3B8]">
+                          Coins
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-[#64748B]">No leaderboard data available yet.</div>
+                )}
               </div>
             </div>
 
@@ -232,23 +285,33 @@ const LearnerDashboard = () => {
 
               <div className="flex flex-col items-start gap-4 w-full h-[152px]">
                 <div className="flex flex-row justify-between items-end w-full h-9">
-                  <span className="font-bold text-[30px] leading-[36px] flex items-center text-[#0F172A]">
-                    75%
+                    <span className="font-bold text-[30px] leading-[36px] flex items-center text-[#0F172A]">
+                      {loadingProgress ? '...' : `${learningProgress.percent}%`}
+                    </span>
+                    <span className="font-normal text-sm leading-5 flex items-center text-[#94A3B8] pb-1">
+                      {loadingProgress
+                        ? 'Loading...'
+                        : `${Math.min(learningProgress.completed, learningProgress.goal)} / ${learningProgress.goal} courses`}
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="relative w-full h-2.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div
+                      className="absolute left-0 top-0 bottom-0 bg-[#10B77F] rounded-full"
+                      style={{ width: `${loadingProgress ? 0 : learningProgress.percent}%` }}
+                    />
+                  </div>
+
+                  <span className="font-normal text-sm leading-5 flex items-center text-[#64748B]">
+                    {progressError
+                      ? progressError
+                      : loadingProgress
+                      ? 'Loading learning progress...'
+                      : learningProgress.total === 0
+                      ? 'Book your first session to begin learning.'
+                      : 'Keep going! You’re almost at your weekly goal.'}
                   </span>
-                  <span className="font-normal text-sm leading-5 flex items-center text-[#94A3B8] pb-1">
-                    3 / 4 courses
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="relative w-full h-2.5 bg-[#F1F5F9] rounded-full overflow-hidden">
-                  <div className="absolute left-0 top-0 bottom-0 w-[75%] bg-[#10B77F] rounded-full"></div>
-                </div>
-
-                <span className="font-normal text-sm leading-5 flex items-center text-[#64748B]">
-                  "Keep going! You're almost at your weekly goal."
-                </span>
-
                 <button className="box-border flex flex-row justify-center items-center py-2 px-0 w-full h-[38px] bg-[#10B77F]/5 border border-[#10B77F]/10 rounded-2xl hover:bg-[#10B77F]/10 transition-colors">
                   <span className="font-bold text-sm leading-5 text-center text-[#10B77F]">
                     View Learning Path
