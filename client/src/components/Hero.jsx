@@ -1,7 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const Hero = () => {
+  const [stats, setStats] = useState({ totalUsers: 0, recentUsers: [] });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${apiBase}/users/public/stats`);
+        if (res.ok) {
+          const data = await res.json();
+          setStats({
+            totalUsers: data.totalUsers || 0,
+            recentUsers: data.recentUsers || []
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching public stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const bgColors = ['0D8ABC', 'F59E0B', '10B981'];
+
+  // Only real registered users
+  const displayedUsers = stats.recentUsers.map((u) => ({
+    name: `${u.First_Name} ${u.Last_Name}`,
+    avatar: u.Avatar
+  }));
+
+  // Only real registered count
+  const displayCount = stats.totalUsers;
+
   return (
     <section className="max-w-7xl mx-auto px-6 pt-32 pb-20 flex flex-col md:flex-row items-center gap-12">
       <div className="flex-1 space-y-8 text-left">
@@ -21,13 +53,23 @@ const Hero = () => {
         </div>
         
         <div className="flex items-center gap-4 pt-4">
-          <div className="flex -space-x-3">
-            <img className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=Sara+D&background=0D8ABC&color=fff" alt="Student" />
-            <img className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=John+M&background=F59E0B&color=fff" alt="Student" />
-            <img className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=Alex+K&background=10B981&color=fff" alt="Student" />
-          </div>
+          {displayedUsers.length > 0 && (
+            <div className="flex -space-x-3">
+              {displayedUsers.map((u, i) => {
+                const avatarUrl = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=${bgColors[i % 3]}&color=fff`;
+                return (
+                  <img 
+                    key={i} 
+                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" 
+                    src={avatarUrl} 
+                    alt={u.name} 
+                  />
+                );
+              })}
+            </div>
+          )}
           <p className="text-sm font-medium text-slate-500">
-            Join 1,200+ students already learning
+            Join {displayCount.toLocaleString()}+ students already learning
           </p>
         </div>
       </div>
@@ -42,4 +84,4 @@ const Hero = () => {
   );
 };
 
-export default Hero;
+export default Hero;
