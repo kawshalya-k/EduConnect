@@ -30,8 +30,6 @@ import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
 import Notifications from './pages/Notifications';
 import DevMenu from './components/DevMenu';
-import Leaderboard from './pages/Leaderboard';
-import Wallet from './pages/Wallet';
 //Mentor
 import MentorDashboard from './pages/Mentor/MentorDashboard';
 import VerificationCenter from './pages/Mentor/VerificationCenter';
@@ -39,10 +37,14 @@ import AddSkill from './pages/Mentor/AddSkill';
 import VerifySkill from './pages/Mentor/VerifySkill';
 import SuccessState from './pages/Mentor/SuccessState';
 import FailedState from './pages/Mentor/FailedState';
+import MentorSessions from './pages/Mentor/MentorSessions';
 // Discovery
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
 import { useAuth } from './context/AuthContext';
+//common
+import SkillWallet from './pages/SkillWallet';
+import Messages    from './pages/Messages';
 
 function App() {
   const { mode } = useAuth();
@@ -66,11 +68,11 @@ function App() {
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
         <Route path="/dashboard" element={mode === 'mentor' ? <MentorDashboard /> : <LearnerDashboard />} />
+        <Route path="/learner-dashboard" element={<LearnerDashboard />} />
         <Route path="/find-mentor" element={<FindMentor />} />
         <Route path="/session-booking" element={<SessionBooking />} />
         <Route path="/booking-confirmed" element={<BookingConfirmed />} />
-        <Route path="/MySessions" element={<MySessions />} />
-        <Route path="/sessions" element={<MySessions />} />
+        <Route path="/my-sessions" element={<MySessions />} />
         <Route path="/session-feedback" element={<SessionFeedback />} />
         <Route path="/session-room" element={<SessionRoom />} />
         <Route path="/badges" element={<BadgesPage />} />
@@ -80,9 +82,8 @@ function App() {
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/verifications" element={<SkillVerifications />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/wallet" element={<Wallet />} />
         {/* Mentor routes */}
+        <Route path="/mentor-dashboard" element={<MentorDashboard />} />
         <Route path="/verification" element={<VerificationCenter />} />
         <Route path="/verification/add" element={<AddSkill />} />
         <Route path="/verification/verify" element={<VerifySkill />} />
@@ -92,9 +93,13 @@ function App() {
         {/* Learner / Discovery routes */}
         <Route path="/discovery" element={<MentorDiscovery />} />
         <Route path="/mentor/:mentorId" element={<MentorProfile />} />
+        {/* Shared routes */}
+        <Route path="/mentor-sessions" element={<MentorSessions />} />
         {/* Redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/learner-dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/learner-dashboard" replace />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/wallet"   element={<SkillWallet />} />  
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
