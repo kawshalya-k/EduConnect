@@ -13,6 +13,7 @@ import {
   fetchPerformanceChart,
   fetchMentorSkills,
 } from '../../services/mentorApi';
+import { fetchMentorSessions } from '../../services/mentorApi';
 import './MentorDashboard.css';
 
 export default function MentorDashboard() {
@@ -39,6 +40,35 @@ export default function MentorDashboard() {
       setDashData(dashRes.data);
       setChartData(chartRes.data?.data || []);
       setSkills(skillsRes.data?.skills || []);
+      // Fetch sessions separately to compute upcoming & pending requests
+      try {
+        const sessionsRes = await fetchMentorSessions(user.mentorId);
+        const sessions = sessionsRes.data || [];
+
+        // Upcoming = Scheduled or Pending and date >= today
+        const now = new Date();
+        const upcoming = sessions
+          .map((s) => {
+            let start = null;
+            try {
+              start = s.Date ? new Date(s.Date) : null;
+              if (start && s.Time) {
+                const [hh, mm, ss] = (s.Time || '').split(':').map(Number);
+                start.setHours(hh || 0, mm || 0, ss || 0, 0);
+              }
+            } catch (e) { start = null; }
+            return { ...s, _start: start };
+          })
+          .filter((s) => s._start && (s.Status === 'Scheduled' || s.Status === 'Pending') && s._start >= now)
+          .sort((a, b) => a._start - b._start);
+
+        const pending = sessions.filter((s) => s.Status === 'Pending');
+
+        // Attach derived arrays onto dashData for UI
+        setDashData((d) => ({ ...(d || {}), upcomingSessions: upcoming, pendingRequests: pending }));
+      } catch (e) {
+        console.error('Failed loading sessions for mentor dashboard:', e);
+      }
     } catch (err) {
       console.error('Dashboard load error:', err);
     } finally {
@@ -60,18 +90,27 @@ export default function MentorDashboard() {
     }
   };
 
-  const mentor = dashData?.mentor || {};
+  const mentor = { ...user };
   const upcoming = dashData?.upcomingSessions || [];
   const pendingRequests = dashData?.pendingRequests || [];
-  const walletBalance = dashData?.walletBalance ?? 0;
-  const avgRating = dashData?.avgRating ?? null;
-  const ratingChange = dashData?.ratingChange ?? null;
+  const walletBalance = dashData?.wallet_balance ?? dashData?.walletBalance ?? 0;
+  const avgRating = dashData?.session_stats?.Overall_Rating ?? null;
+  const ratingChange = null;
 
   // ── Dynamically map backend metrics to UI ──────────────────────────────────────
-  const level = dashData?.level || 'bronze'; // 'bronze' | 'silver' | 'gold'
-  const score = dashData?.score || 0;
-  const pointsToNext = dashData?.pointsToNext ?? null;
-  const nextLevel = dashData?.nextLevel || null;
+  // derive overall level/score from skill_stats
+  const skillStats = dashData?.skill_stats || [];
+  const level = (() => {
+    const ranks = { GOLD: 3, SILVER: 2, BRONZE: 1 };
+    let best = 'BRONZE';
+    for (const s of skillStats) {
+      if (s.Mentor_Level && ranks[s.Mentor_Level.toUpperCase()] > ranks[best]) best = s.Mentor_Level.toUpperCase();
+    }
+    return best.toLowerCase();
+  })();
+  const score = skillStats.reduce((sum, s) => sum + (Number(s.Score) || 0), 0);
+  const pointsToNext = null;
+  const nextLevel = null;
 
   // Formatted Label (e.g., 'silver' -> 'Silver Mentor')
   const levelLabel = `${level.charAt(0).toUpperCase() + level.slice(1)} Mentor`;

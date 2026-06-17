@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Star, CheckCircle2 } from 'lucide-react';
 
 const mentors = [
@@ -111,9 +112,9 @@ const Leaderboard = () => (
         </table>
       </div>
       <div className="p-4 text-center bg-slate-50/50 border-t border-slate-100">
-        <button className="text-[#10B981] font-bold text-sm hover:text-[#059669] cursor-pointer transition-colors">
+        <Link to="/leaderboard" className="text-[#10B981] font-bold text-sm hover:text-[#059669] cursor-pointer transition-colors">
           View All Rankings
-        </button>
+        </Link>
       </div>
     </div>
   </section>
