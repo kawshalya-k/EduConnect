@@ -1,32 +1,36 @@
 import { useState, useEffect } from 'react';
-import { FiClock, FiVideo, FiPlus, FiAlertCircle, FiTrendingUp } from 'react-icons/fi';
+import { FiMapPin, FiClock, FiVideo, FiMessageSquare } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
-import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import { LoadingState } from '../../components/Layout/LoadingState';
 import { useAuth } from '../../context/AuthContext';
 import { fetchMentorSessions } from '../../services/mentorApi';
 import './MentorSessions.css';
 
+const SESSION_TABS = [
+  { id: 'upcoming', label: 'Upcoming Sessions' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
+];
+
 export default function Sessions() {
-  const { user } = useAuth();
+  const { user, mode } = useAuth();
+  const [activeTab, setActiveTab] = useState('upcoming');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     loadSessions();
-  }, [user]);
+  }, [user, activeTab]);
 
   const loadSessions = async () => {
-    if (!user) return;
+    if (!user?.mentorId && mode === 'mentor') return;
     setLoading(true);
     try {
-      // Calls fetchMentorSessions (which we aliased to /sessions/my)
-      const res = await fetchMentorSessions(user.mentorId || user.id);
-      // Ensure we filter for sessions where the user is the Mentor
-      const mentorSessions = (res.data || res || []).filter(
-        (s) => s.Mentor_Id === (user.mentorId || user.id)
-      );
-      setSessions(mentorSessions);
+      const res = await fetchMentorSessions(user.mentorId || user.id, {
+        status: activeTab,
+      });
+      setSessions(res.data?.sessions || []);
     } catch (err) {
       console.error('Sessions load error:', err);
     } finally {
@@ -34,261 +38,131 @@ export default function Sessions() {
     }
   };
 
-  // Helper to format time (e.g. '14:30:00' -> '2:30 PM')
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '';
-    const [hours, minutes] = timeStr.split(':');
-    let hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12;
-    hour = hour ? hour : 12; // the hour '0' should be '12'
-    return `${hour}:${minutes} ${ampm}`;
-  };
+  const sidebar = (
+    <div className="sessions-sidebar">
+      <h3 className="sidebar-title">Session Manager</h3>
+      <p className="sidebar-subtitle">Manage your learning sessions</p>
 
-  // Helper to format date (e.g. '2026-06-20' -> 'June 20')
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+      <nav className="sessions-nav">
+        {SESSION_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={`sessions-nav-item ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
-  // Parse Date and Time to Date object
-  const getSessionDateObject = (session) => {
-    if (!session?.Date || !session?.Time) return null;
-    const datePart = session.Date.split('T')[0]; // Handle IsoString
-    return new Date(`${datePart}T${session.Time}`);
-  };
-
-  // 1. Determine "Active Focus" (Next Session)
-  // Find upcoming scheduled sessions
-  const scheduledSessions = sessions
-    .filter((s) => s.Status === 'Scheduled' || s.Status === 'Pending' || s.Status === 'In-Session')
-    .sort((a, b) => {
-      const dateA = getSessionDateObject(a);
-      const dateB = getSessionDateObject(b);
-      return (dateA || 0) - (dateB || 0);
-    });
-
-  const nextSession = scheduledSessions[0];
-
-  // 2. Upcoming Sessions (excluding the active focus one)
-  const upcomingList = scheduledSessions.slice(1);
+      {/* Filter */}
+      <div className="sessions-filter">
+        <label className="filter-label">Filter</label>
+        <select
+          className="filter-select"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="all">All Sessions</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+    </div>
+  );
 
   return (
-    <PageLayout>
-      <div className="dash-layout">
-        <DashboardSidebar user={user} />
-
-        <div className="sessions-main-content">
-          <div className="sessions-content-container">
-            {loading ? (
-              <LoadingState message="Loading your sessions..." />
-            ) : (
-              <>
-                {/* Active Focus Header */}
-                <div className="sessions-section-wrapper">
-                  <div className="section-header-title-row">
-                    <div className="section-header-title">
-                      <FiTrendingUp className="header-icon" />
-                      <h2>Active Focus</h2>
-                    </div>
-                    <span className="live-soon-tag">LIVE SOON</span>
-                  </div>
-
-                  {nextSession ? (
-                    <ActiveFocusCard 
-                      session={nextSession} 
-                      formatTime={formatTime}
-                      formatDate={formatDate}
-                      getSessionDateObject={getSessionDateObject}
-                    />
-                  ) : (
-                    <div className="no-active-focus">
-                      <FiAlertCircle size={24} />
-                      <p>No active sessions scheduled soon.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Upcoming Sessions List */}
-                <div className="sessions-section-wrapper">
-                  <div className="section-header-title-row">
-                    <div className="section-header-title">
-                      <FiClock className="header-icon" />
-                      <h2>Upcoming Sessions</h2>
-                    </div>
-                  </div>
-
-                  <div className="timeline-container">
-                    {upcomingList.length > 0 ? (
-                      upcomingList.map((session) => (
-                        <TimelineEntry 
-                          key={session.Session_Id} 
-                          session={session} 
-                          formatTime={formatTime}
-                        />
-                      ))
-                    ) : (
-                      nextSession && upcomingList.length === 0 ? (
-                        <div className="no-more-sessions">
-                          <p>No other upcoming sessions scheduled.</p>
-                        </div>
-                      ) : (
-                        <div className="no-sessions-timeline">
-                          <FiAlertCircle size={20} />
-                          <p>You have no scheduled sessions at this time.</p>
-                        </div>
-                      )
-                    )}
-
-                    {/* Dotted Schedule Button */}
-                    <div className="manual-schedule-entry">
-                      <div className="timeline-time-col"></div>
-                      <div className="manual-schedule-box">
-                        <FiPlus className="plus-icon" />
-                        <span>Manually Schedule a Session</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+    <PageLayout sidebar={sidebar}>
+      <div className="sessions-main">
+        <div className="sessions-header">
+          <h1 className="sessions-title">
+            {SESSION_TABS.find((t) => t.id === activeTab)?.label || 'Sessions'}
+          </h1>
+          <p className="sessions-subtitle">
+            {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+          </p>
         </div>
+
+        {loading ? (
+          <LoadingState message="Loading sessions..." />
+        ) : sessions.length === 0 ? (
+          <div className="sessions-empty">
+            <p>No {activeTab} sessions</p>
+          </div>
+        ) : (
+          <div className="sessions-list">
+            {sessions.map((session) => (
+              <SessionCard key={session.id} session={session} status={activeTab} />
+            ))}
+          </div>
+        )}
       </div>
     </PageLayout>
   );
 }
 
-// Active Focus Countdown Card
-function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject }) {
-  const [timeLeft, setTimeLeft] = useState({ minutes: 0, seconds: 0 });
-  const [isLive, setIsLive] = useState(false);
+function SessionCard({ session, status }) {
+  const isMentor = localStorage.getItem('educonnect_mode') === 'mentor';
 
-  useEffect(() => {
-    const targetDate = getSessionDateObject(session);
-    if (!targetDate) return;
-
-    const updateTimer = () => {
-      const now = new Date();
-      const difference = targetDate - now;
-
-      if (difference <= 0) {
-        setTimeLeft({ minutes: 0, seconds: 0 });
-        setIsLive(true);
-      } else {
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        setTimeLeft({ minutes, seconds });
-        setIsLive(false);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [session]);
-
-  const joinCall = () => {
-    if (session.Meeting_Link) {
-      window.open(session.Meeting_Link, '_blank');
-    } else {
-      alert('Meeting link is pending. Please check back shortly!');
-    }
-  };
+  const statusColor = {
+    confirmed: 'success',
+    pending: 'warning',
+    completed: 'gray',
+    cancelled: 'error',
+  }[session.status] || 'gray';
 
   return (
-    <div className="active-focus-card">
-      <div className="active-focus-gradient"></div>
-      <div className="active-focus-content">
-        {/* Left Side: Workstation Image */}
-        <div className="active-focus-image-wrapper">
-          <img 
-            src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=500&auto=format&fit=crop&q=80" 
-            alt="Session workstation" 
-            className="active-focus-img" 
-          />
-        </div>
-
-        {/* Right Side: Info & Controls */}
-        <div className="active-focus-details">
-          <div className="active-focus-meta">
-            <span className="starts-in-label">
-              Starts at {formatTime(session.Time)} ({formatDate(session.Date)})
-            </span>
-            <h3 className="next-session-title">
-              Next Session: {session.Learner_First} {session.Learner_Last}
-            </h3>
-            <span className="skill-category-tag">
-              {session.Skill_Name || 'React.js Development'}
-            </span>
+    <div className={`session-card status-${statusColor}`}>
+      <div className="session-card-top">
+        <div className="session-learner">
+          <div className="session-avatar">
+            {session.learnerAvatar ? (
+              <img src={session.learnerAvatar} alt={session.learnerName} />
+            ) : (
+              <span>{session.learnerName?.slice(0, 1)}</span>
+            )}
           </div>
-
-          <div className="active-focus-actions">
-            {/* Countdown Blocks */}
-            <div className="countdown-blocks-container">
-              <div className="countdown-block">
-                <span className="block-number">{timeLeft.minutes.toString().padStart(2, '0')}</span>
-                <span className="block-label">MIN</span>
-              </div>
-              <div className="countdown-block">
-                <span className="block-number">{timeLeft.seconds.toString().padStart(2, '0')}</span>
-                <span className="block-label">SEC</span>
-              </div>
-            </div>
-
-            {/* Join Call button */}
-            <button className="join-call-btn" onClick={joinCall}>
-              <FiVideo size={18} />
-              <span>Join Video Call</span>
-            </button>
+          <div className="session-learner-info">
+            <h3 className="session-learner-name">{session.learnerName}</h3>
+            <p className="session-topic">{session.topic}</p>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-// Timeline Entry Component
-function TimelineEntry({ session, formatTime }) {
-  const isPending = session.Status === 'Pending' || !session.Meeting_Link;
-  const statusLabel = isPending ? 'LINK PENDING' : 'CONFIRMED';
-  const statusClass = isPending ? 'pending' : 'confirmed';
-
-  return (
-    <div className="timeline-entry">
-      {/* Time column */}
-      <div className="timeline-time-col">
-        <span className="timeline-time-text">{formatTime(session.Time)}</span>
-        <div className="timeline-line-indicator"></div>
-      </div>
-
-      {/* Card column */}
-      <div className="timeline-card">
-        {/* Avatar */}
-        <div className="timeline-avatar-wrapper">
-          <span>
-            {session.Learner_First?.slice(0, 1)}
-            {session.Learner_Last?.slice(0, 1)}
-          </span>
-        </div>
-
-        {/* Information */}
-        <div className="timeline-info-wrapper">
-          <h4 className="timeline-student-name">
-            {session.Learner_First} {session.Learner_Last}
-          </h4>
-          <span className="timeline-session-slot">
-            🕐 {formatTime(session.Time)} ({session.Duration} min session)
-          </span>
-        </div>
-
-        {/* Action Tags */}
-        <div className="timeline-tags-wrapper">
-          <span className="timeline-topic-badge">{session.Skill_Name}</span>
-          <span className={`timeline-status-badge ${statusClass}`}>{statusLabel}</span>
+        <div className={`session-status-badge status-${statusColor}`}>
+          {session.status.toUpperCase()}
         </div>
       </div>
+
+      <div className="session-details">
+        <div className="detail-item">
+          <FiClock size={14} />
+          <span>{session.startTime}</span>
+        </div>
+        <div className="detail-item">
+          <FiMapPin size={14} />
+          <span>{session.duration}</span>
+        </div>
+      </div>
+
+      {status === 'upcoming' && (
+        <div className="session-actions">
+          <button className="session-action-btn primary">
+            <FiVideo size={14} />
+            Join Video Call
+          </button>
+          <button className="session-action-btn">
+            <FiMessageSquare size={14} />
+            Message
+          </button>
+        </div>
+      )}
+
+      {status === 'completed' && session.rating && (
+        <div className="session-rating">
+          <span className="rating-stars">{'★'.repeat(session.rating)}{'☆'.repeat(5 - session.rating)}</span>
+          <span className="rating-text">{session.rating}/5 - {session.ratingComment}</span>
+        </div>
+      )}
     </div>
   );
 }
