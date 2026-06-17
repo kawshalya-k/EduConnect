@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/Footer';
 
 const guidelines = [
@@ -18,19 +18,7 @@ export default function SessionRoom() {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
-  const roomTopRef = useRef(null);
-  const chatPanelRef = useRef(null);
-  const location = useLocation();
   const navigate = useNavigate();
-
-  const scrollToSection = (section) => {
-    if (section === 'sessions' && roomTopRef.current) {
-      roomTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    if (section === 'messages' && chatPanelRef.current) {
-      chatPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   useEffect(() => {
     if (timeLeft <= 0) { setSessionStarted(true); return; }
@@ -41,12 +29,6 @@ export default function SessionRoom() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  useEffect(() => {
-    if (location.hash === '#messages' && chatPanelRef.current) {
-      chatPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [location.hash]);
 
   const formatTime = (s) => `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
 
@@ -73,18 +55,9 @@ export default function SessionRoom() {
           <span style={{ fontWeight: 800, fontSize: 18, color: "#0f172a" }}>EduConnect</span>
         </div>
         <div style={{ display: "flex", gap: 32 }}>
-          <span
-            onClick={() => scrollToSection('sessions')}
-            style={{ cursor: "pointer", fontWeight: 700, color: "#16a34a", borderBottom: "2px solid #16a34a", paddingBottom: 4, fontSize: 14 }}
-          >
-            Sessions
-          </span>
-          <span
-            onClick={() => scrollToSection('messages')}
-            style={{ cursor: "pointer", fontWeight: 500, color: "#64748b", paddingBottom: 4, fontSize: 14 }}
-          >
-            Messages
-          </span>
+          {["Dashboard", "Sessions", "Messages"].map(n => (
+            <span key={n} style={{ cursor: "pointer", fontWeight: n === "Sessions" ? 700 : 500, color: n === "Sessions" ? "#16a34a" : "#64748b", borderBottom: n === "Sessions" ? "2px solid #16a34a" : "none", paddingBottom: 4, fontSize: 14 }}>{n}</span>
+          ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button style={{ padding: "7px 16px", borderRadius: 24, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Mentor</button>
@@ -152,7 +125,7 @@ export default function SessionRoom() {
         </div>
 
         {/* CENTER */}
-        <div ref={roomTopRef} style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "1.5rem", gap: "1.25rem" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "1.5rem", gap: "1.25rem" }}>
 
           {/* Countdown Hero */}
           <div style={{ background: sessionStarted ? "linear-gradient(135deg, #16a34a, #22c55e)" : "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)", borderRadius: 20, padding: "2rem", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", position: "relative", overflow: "hidden" }}>
@@ -257,7 +230,7 @@ export default function SessionRoom() {
         </div>
 
         {/* RIGHT SIDEBAR — CHAT */}
-        <div ref={chatPanelRef} style={{ width: 310, background: "#fff", borderLeft: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div style={{ width: 310, background: "#fff", borderLeft: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
 
           {/* Chat Header */}
           <div style={{ padding: "1.125rem 1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff" }}>
