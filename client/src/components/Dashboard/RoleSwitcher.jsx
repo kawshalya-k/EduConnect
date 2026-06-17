@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 
 const RoleSwitcher = () => {
   const navigate = useNavigate();
@@ -23,9 +25,25 @@ const RoleSwitcher = () => {
     }
   }, [location.pathname]);
 
-  const handleRoleChange = (role) => {
+  const { user, setUser } = useAuth();
+
+  const handleRoleChange = async (role) => {
     setCurrentRole(role);
     localStorage.setItem('activeRole', role);
+    localStorage.setItem('educonnect_mode', role);
+
+    // Update backend user role if logged in
+    if (user && user.id) {
+      const backendRole = role === 'mentor' ? 'Mentor' : 'Student';
+      try {
+        await api.put(`/users/${user.id}/role`, { role: backendRole });
+        // update local user object
+        setUser({ ...user, role: backendRole });
+      } catch (err) {
+        console.error('Failed to update role on server', err?.response?.data || err.message);
+      }
+    }
+
     if (role === 'mentor') {
       navigate('/mentor-dashboard');
     } else {
