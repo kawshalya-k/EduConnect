@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   FiGrid, FiCalendar, FiCheckSquare, FiBookOpen, FiDollarSign, FiBarChart2, FiWifi
@@ -6,11 +6,11 @@ import {
 import './MentorSideBar.css';
 
 const NAV_ITEMS = [
-  { label: 'Upcoming Sessions', path: '/mentor-dashboard', icon: <FiGrid size={17} /> },
+  { label: 'Dashboard', path: '/mentor-dashboard', icon: <FiGrid size={17} />, exact: true },
   { label: 'Upcoming Sessions', path: '/mentor-sessions', icon: <FiCalendar size={17} /> },
-  { label: 'Verified Skills', path: '/verification', icon: <FiCheckSquare size={17} /> },
-  { label: 'Skills & Quizzes', path: '/verification/add', icon: <FiBookOpen size={17} /> },
-  { label: 'Wallet', path: '/wallet', icon: <FiDollarSign size={17} /> },
+  { label: 'Verified Skills', path: '/verification', icon: <FiCheckSquare size={17} />, exact: true },
+  { label: 'Skills & Quizzes', path: '/verification/add', icon: <FiBookOpen size={17} />, exact: true },
+  { label: 'Wallet', path: '/mentor-wallet', icon: <FiDollarSign size={17} /> },
   { label: 'Leaderboard', path: '/leaderboard', icon: <FiBarChart2 size={17} /> },
 ];
 
@@ -18,11 +18,42 @@ export default function DashboardSidebar({ user }) {
   const location = useLocation();
   const mentorId = user?.mentorId || user?.id || '1';
 
-  // Availability Toggle State
   const [accepting, setAccepting] = useState(() => {
     const saved = localStorage.getItem(`mentor_accepting_${mentorId}`);
     return saved ? JSON.parse(saved) : true;
   });
+
+  const [dailyEarnings, setDailyEarnings] = useState(0);
+  const [earningsLoading, setEarningsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDailyEarnings = async () => {
+      try {
+        setEarningsLoading(true);
+        const response = await fetch(`/api/wallet/${mentorId}/transactions`);
+        if (!response.ok) throw new Error('Failed to fetch wallet data');
+        const data = await response.json();
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const todayEarnings = (data.transactions || data).reduce((sum, txn) => {
+          const txnDate = new Date(txn.date || txn.createdAt || txn.timestamp).toISOString().split('T')[0];
+          const isToday = txnDate === today;
+          const isCredit = txn.type === 'credit' || txn.type === 'earning' || txn.amount > 0;
+          return isToday && isCredit ? sum + (txn.amount || 0) : sum;
+        }, 0);
+
+        setDailyEarnings(todayEarnings);
+      } catch (err) {
+        console.error('Error fetching daily earnings:', err);
+        setDailyEarnings(0);
+      } finally {
+        setEarningsLoading(false);
+      }
+    };
+
+    fetchDailyEarnings();
+  }, [mentorId]);
 
   const handleToggle = () => {
     const newVal = !accepting;
@@ -32,15 +63,12 @@ export default function DashboardSidebar({ user }) {
 
   return (
     <aside className="dash-sidebar">
-      <div className="sidebar-header-section">
-        <h3 className="sidebar-title">Session Manager</h3>
-        <p className="sidebar-subtitle">Manage your learning sessions</p>
-      </div>
 
       <nav className="dash-sidebar-nav">
         {NAV_ITEMS.map((item) => {
-          // Match `/mentor-sessions` for Sessions tab, and respect active state
-          const isActive = location.pathname.startsWith(item.path);
+          const isActive = item.exact
+            ? location.pathname === item.path
+            : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.path}
@@ -54,13 +82,11 @@ export default function DashboardSidebar({ user }) {
         })}
       </nav>
 
-      {/* Sidebar Quick Actions */}
       <div className="sidebar-quick-actions">
-        {/* Availability Toggle */}
         <div className="availability-toggle-card">
           <div className="toggle-header">
             <span className="toggle-title">AVAILABILITY</span>
-            <button 
+            <button
               onClick={handleToggle}
               className={`toggle-switch ${accepting ? 'active' : ''}`}
               aria-label="Toggle availability"
@@ -73,19 +99,23 @@ export default function DashboardSidebar({ user }) {
           </span>
         </div>
 
-        {/* Daily Earnings Card */}
         <div className="daily-earnings-card">
           <div className="earnings-header">
             <FiDollarSign className="earnings-icon" size={14} />
             <span className="earnings-title">Daily Earnings</span>
           </div>
           <div className="earnings-value-row">
-            <span className="earnings-amount">150</span>
-            <span className="earnings-currency">Skill Coins</span>
+            {earningsLoading ? (
+              <span className="earnings-loading">...</span>
+            ) : (
+              <>
+                <span className="earnings-amount">{dailyEarnings}</span>
+                <span className="earnings-currency">Skill Coins</span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Go Live Button */}
         <button className="go-live-btn">
           <FiWifi className="live-icon" size={16} />
           <span className="live-text">Go Live</span>
