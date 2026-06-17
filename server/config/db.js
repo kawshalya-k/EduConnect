@@ -104,6 +104,7 @@ async function initDB() {
       Mentor_Level VARCHAR(50),
       Verification_Status BOOLEAN DEFAULT FALSE,
       Certificates TEXT,
+      Last_Attempt DATETIME,
       FOREIGN KEY (User_Id) REFERENCES User(User_Id) ON DELETE CASCADE,
       FOREIGN KEY (Skill_Id) REFERENCES Skill(Skill_Id) ON DELETE CASCADE
     )`);
@@ -158,6 +159,15 @@ async function initDB() {
     } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') {
         console.error('Error adding Avatar column:', e.message);
+      }
+    }
+
+    try {
+      await connection.query('ALTER TABLE User_Skill ADD COLUMN Last_Attempt DATETIME');
+      console.log('✅ Added Last_Attempt column to User_Skill table.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('Error adding Last_Attempt column:', e.message);
       }
     }
 

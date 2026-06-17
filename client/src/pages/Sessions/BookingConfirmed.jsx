@@ -136,7 +136,7 @@ export default function BookingConfirmed() {
             {/* Actions */}
             <div className="flex justify-center gap-4 w-full">
               <button 
-                onClick={() => navigate('/my-sessions')}
+                onClick={() => navigate('/MySessions')}
                 className="flex items-center justify-center gap-2 px-8 py-3 bg-[#10B77F] rounded-full text-white font-bold text-base shadow-[0_4px_6px_-1px_rgba(16,183,127,0.2),0_2px_4px_-2px_rgba(16,183,127,0.2)] hover:bg-[#0ea873] transition-colors w-[232px]"
               >
                 Go to My Sessions

@@ -1,105 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { fetchUserBadges } from '../services/gamificationService';
 
-const badges = [
-  {
-    id: "first-session",
-    title: "First Session",
-    description: "Completed your very first learning session on EduConnect.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-        <path d="M12 2L15 8L22 9L17 14L18 21L12 17L6 21L7 14L2 9L9 8L12 2Z" />
-      </svg>
-    ),
-    state: "completed",
-    stateLabel: "Completed",
-    percent: 100
-  },
-  {
-    id: "fast-learner",
-    title: "Fast Learner",
-    description: "Finished a full course module in under 24 hours.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
-      </svg>
-    ),
-    state: "completed",
-    stateLabel: "Completed",
-    percent: 100
-  },
-  {
-    id: "top-student",
-    title: "Top Student",
-    description: "Reached the #1 spot on the weekly leaderboard.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-        <path d="M12 15L8 18V22L12 20L16 22V18L12 15Z"/><circle cx="12" cy="8" r="6"/>
-      </svg>
-    ),
-    state: "completed",
-    stateLabel: "Completed",
-    percent: 100
-  },
-  {
-    id: "streak",
-    title: "7-Day Streak",
-    description: "Study for 7 consecutive days to earn this badge.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-        <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>
-      </svg>
-    ),
-    state: "inprogress",
-    stateLabel: "5 / 7 Days",
-    percent: 71
-  },
-  {
-    id: "collaborator",
-    title: "Collaborator",
-    description: "Contribute to 5 community discussions or Q&As.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
-    ),
-    state: "locked",
-    stateLabel: "1 / 5 contributions",
-    percent: 20
-  },
-  {
-    id: "course-master",
-    title: "Course Master",
-    description: "Complete 10 full courses with an average score of 90%.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-        <circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-      </svg>
-    ),
-    state: "locked",
-    stateLabel: "Locked",
-    percent: 0
-  },
-  {
-    id: "olympian",
-    title: "Olympian",
-    description: "Earn all 3 gold medals in the monthly championship.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-        <path d="M8 21h8M12 17v4M7 4h10M5 4v6c0 3.866 3.134 7 7 7s7-3.134 7-7V4"></path>
-      </svg>
-    ),
-    state: "locked",
-    stateLabel: "Locked",
-    percent: 0
-  },
-  {
-    id: "hidden",
-    variant: "hidden"
-  }
-];
+const badgeIconDefault = (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+    <path d="M12 2L15 8L22 9L17 14L18 21L12 17L6 21L7 14L2 9L9 8L12 2Z" />
+  </svg>
+);
+
+const getBadgeCardData = (badge) => ({
+  id: badge.Badge_Id || badge.id,
+  title: badge.Badge_Name || badge.Title || 'Badge',
+  description: badge.Description || badge.description || 'Earned achievement',
+  icon: badge.icon || badgeIconDefault,
+  state: 'completed',
+  stateLabel: 'Completed',
+  percent: 100,
+  awardedAt: badge.awarded_at || badge.Awarded_Date,
+});
 
 function BadgeCard({ badge }) {
   if (badge.variant === "hidden") {
@@ -175,15 +96,50 @@ function BadgeCard({ badge }) {
 }
 
 export default function BadgesPage() {
-  const [activeTab, setActiveTab] = useState("all");
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('all');
+  const [badges, setBadges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
+  useEffect(() => {
+    const loadBadges = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetchUserBadges(user.id);
+        if (response.success && Array.isArray(response.badges)) {
+          setBadges(response.badges.map(getBadgeCardData));
+        } else {
+          setError('Unable to load badges at this time.');
+        }
+      } catch (err) {
+        console.error('Badges fetch error:', err);
+        setError('Unable to load badges.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBadges();
+  }, [user?.id]);
+
+  const earnedBadges = badges.filter((b) => b.state === 'completed');
+  const inProgressBadges = badges.filter((b) => b.state === 'inprogress');
+  const lockedBadges = badges.filter((b) => b.state === 'locked' || b.variant === 'hidden');
   const filteredBadges = React.useMemo(() => {
-    if (activeTab === "all") return badges;
-    if (activeTab === "earned") return badges.filter(b => b.state === "completed");
-    if (activeTab === "inprogress") return badges.filter(b => b.state === "inprogress");
-    if (activeTab === "locked") return badges.filter(b => b.state === "locked" || b.variant === "hidden");
+    if (activeTab === 'all') return badges;
+    if (activeTab === 'earned') return earnedBadges;
+    if (activeTab === 'inprogress') return inProgressBadges;
+    if (activeTab === 'locked') return lockedBadges;
     return badges;
-  }, [activeTab]);
+  }, [activeTab, badges, earnedBadges, inProgressBadges, lockedBadges]);
+
+  const totalBadges = badges.length;
+  const badgeXP = totalBadges * 25;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter'] relative">
@@ -212,11 +168,11 @@ export default function BadgesPage() {
           <div className="flex gap-4">
             <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-14 min-w-[140px]">
               <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">Badges</p>
-              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">12/25</p>
+              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">{totalBadges}/{Math.max(totalBadges, 25)}</p>
             </div>
             <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-12 min-w-[140px]">
               <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">XP Points</p>
-              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">1,250</p>
+              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">{badgeXP.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -224,10 +180,10 @@ export default function BadgesPage() {
         {/* Tabs */}
         <div className="flex gap-8 border-b border-[#10B77F]/10 mb-[32px]">
           {[
-            { id: "all", label: "All Badges" },
-            { id: "earned", label: "Earned (12)" },
-            { id: "inprogress", label: "In Progress (4)" },
-            { id: "locked", label: "Locked (9)" }
+            { id: 'all', label: `All Badges (${totalBadges})` },
+            { id: 'earned', label: `Earned (${earnedBadges.length})` },
+            { id: 'inprogress', label: `In Progress (${inProgressBadges.length})` },
+            { id: 'locked', label: `Locked (${lockedBadges.length})` }
           ].map(tab => (
             <button
               key={tab.id}
@@ -244,9 +200,17 @@ export default function BadgesPage() {
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {filteredBadges.map((badge, idx) => (
-            <BadgeCard key={badge.id || idx} badge={badge} />
-          ))}
+          {loading ? (
+            <div className="col-span-full p-8 text-center text-gray-500">Loading badges...</div>
+          ) : error ? (
+            <div className="col-span-full p-8 text-center text-red-500">{error}</div>
+          ) : filteredBadges.length === 0 ? (
+            <div className="col-span-full p-8 text-center text-gray-500">No badges available yet. Earn your first badge to get started.</div>
+          ) : (
+            filteredBadges.map((badge, idx) => (
+              <BadgeCard key={badge.id || idx} badge={badge} />
+            ))
+          )}
         </div>
 
         {/* Next Milestone */}

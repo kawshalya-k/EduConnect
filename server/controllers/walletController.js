@@ -1,41 +1,22 @@
 // server/controllers/walletController.js
-
 const db = require('../config/db');
 
-// ─────────────────────────────────────────
-// TASK 18: GET wallet balance
-// GET /api/wallet/:userId
-// ─────────────────────────────────────────
 const getWalletBalance = async (req, res) => {
   try {
     const { userId } = req.params;
-
     const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
+      'SELECT skill_coins FROM user WHERE User_Id = ?',
       [userId]
     );
-
     if (user.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-
-    res.json({
-      success: true,
-      balance: user[0].skill_coins_balance
-    });
-
+    res.json({ success: true, balance: user[0].skill_coins });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────
-// TASK 20: GET transaction history
-// GET /api/wallet/:userId/transactions
-// ─────────────────────────────────────────
 const getTransactions = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -44,207 +25,51 @@ const getTransactions = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [count] = await db.query(
-      'SELECT COUNT(*) as total FROM Wallet_Transaction WHERE user_id = ?',
+      'SELECT COUNT(*) as total FROM Wallet_Transaction WHERE User_Id = ?',
       [userId]
     );
-
     const [transactions] = await db.query(
-      `SELECT * FROM Wallet_Transaction 
-       WHERE user_id = ? 
-       ORDER BY created_at DESC 
+      `SELECT Transaction_Id AS transaction_id,
+              Transaction_Type AS type,
+              Amount AS amount,
+              Description AS reason,
+              Timestamp AS created_at
+       FROM Wallet_Transaction
+       WHERE User_Id = ?
+       ORDER BY Timestamp DESC
        LIMIT ? OFFSET ?`,
       [userId, limit, offset]
     );
-
     res.json({
-      success: true,
-      transactions,
-      total: count[0].total,
-      page,
+      success: true, transactions, total: count[0].total, page,
       totalPages: Math.ceil(count[0].total / limit)
     });
-
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────
-// TASK 19: POST create a transaction
-// POST /api/wallet/transact
-// ─────────────────────────────────────────
 const createTransaction = async (req, res) => {
   try {
-    const { user_id, type, amount, reason, session_id } = req.body;
-
-    const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
-      [user_id]
-    );
-
+    const { user_id, type, amount, reason } = req.body;
+    const [user] = await db.query('SELECT skill_coins FROM user WHERE User_Id = ?', [user_id]);
     if (user.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-
-    const currentBalance = user[0].skill_coins_balance || 0;
-
-    // Check if enough coins for debit
+    const currentBalance = user[0].skill_coins || 0;
     if (type === 'DEBIT' && currentBalance < amount) {
-      return res.status(400).json({
-        success: false,
-        message: 'Insufficient coins',
-        balance: currentBalance
-      });
+      return res.status(400).json({ success: false, message: 'Insufficient coins', balance: currentBalance });
     }
-
-    const newBalance = type === 'CREDIT'
-      ? currentBalance + amount
-      : currentBalance - amount;
-
+    const newBalance = type === 'CREDIT' ? currentBalance + amount : currentBalance - amount;
+    await db.query('UPDATE user SET skill_coins = ? WHERE User_Id = ?', [newBalance, user_id]);
     await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
-      [newBalance, user_id]
+      `INSERT INTO Wallet_Transaction (User_Id, Transaction_Type, Amount, Description) VALUES (?, ?, ?, ?)`,
+      [user_id, type, amount, reason]
     );
-
-    await db.query(
-      `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, session_id, running_balance)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [user_id, type, amount, reason, session_id || null, newBalance]
-    );
-
-    res.json({
-      success: true,
-      message: type === 'CREDIT' ? 'Coins credited!' : 'Coins deducted!',
-      newBalance
-    });
-
+    res.json({ success: true, message: type === 'CREDIT' ? 'Coins credited!' : 'Coins deducted!', newBalance });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─────────────────────────────────────────
-// TASK 21: Hook — deduct coins on booking
-// ─────────────────────────────────────────
-const deductCoinsOnBooking = async (user_id, session_id, mentor_name, skill) => {
-  try {
-    const [config] = await db.query(
-      'SELECT config_value FROM Coin_Config WHERE config_key = "SESSION_BOOKING_COST"'
-    );
-    const cost = config[0].config_value;
-
-    const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
-      [user_id]
-    );
-
-    const currentBalance = user[0].skill_coins_balance || 0;
-
-    if (currentBalance < cost) {
-      throw new Error('Insufficient coins to book session');
-    }
-
-    const newBalance = currentBalance - cost;
-
-    await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
-      [newBalance, user_id]
-    );
-
-    await db.query(
-      `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, session_id, running_balance)
-       VALUES (?, 'DEBIT', ?, ?, ?, ?)`,
-      [user_id, cost, `Booked session: ${skill} with ${mentor_name}`, session_id, newBalance]
-    );
-
-    return { success: true, newBalance, cost };
-  } catch (err) {
-    throw new Error(err.message);
-  }
-};
-
-// ─────────────────────────────────────────
-// TASK 22: Hook — credit coins on session complete
-// ─────────────────────────────────────────
-const creditCoinsOnSessionComplete = async (mentor_id, session_id, learner_name, skill) => {
-  try {
-    const [config] = await db.query(
-      'SELECT config_value FROM Coin_Config WHERE config_key = "SESSION_COMPLETE_REWARD"'
-    );
-    const reward = config[0].config_value;
-
-    const [mentor] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
-      [mentor_id]
-    );
-
-    const currentBalance = mentor[0].skill_coins_balance || 0;
-    const newBalance = currentBalance + reward;
-
-    await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
-      [newBalance, mentor_id]
-    );
-
-    await db.query(
-      `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, session_id, running_balance)
-       VALUES (?, 'CREDIT', ?, ?, ?, ?)`,
-      [mentor_id, reward, `Session completed: ${skill} with ${learner_name}`, session_id, newBalance]
-    );
-
-    return { success: true, newBalance, reward };
-  } catch (err) {
-    throw new Error(err.message);
-  }
-};
-
-// ─────────────────────────────────────────
-// TASK 23: Hook — credit coins on verification
-// ─────────────────────────────────────────
-const creditCoinsOnVerification = async (user_id, skill_name) => {
-  try {
-    const [config] = await db.query(
-      'SELECT config_value FROM Coin_Config WHERE config_key = "SKILL_VERIFY_REWARD"'
-    );
-    const reward = config[0].config_value;
-
-    const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
-      [user_id]
-    );
-
-    const currentBalance = user[0].skill_coins_balance || 0;
-    const newBalance = currentBalance + reward;
-
-    await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
-      [newBalance, user_id]
-    );
-
-    await db.query(
-      `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, running_balance)
-       VALUES (?, 'CREDIT', ?, ?, ?)`,
-      [user_id, reward, `Skill verified: ${skill_name}`, newBalance]
-    );
-
-    return { success: true, newBalance, reward };
-  } catch (err) {
-    throw new Error(err.message);
-  }
-};
-
-module.exports = {
-  getWalletBalance,
-  getTransactions,
-  createTransaction,
-  deductCoinsOnBooking,
-  creditCoinsOnSessionComplete,
-  creditCoinsOnVerification,
-};
+module.exports = { getWalletBalance, getTransactions, createTransaction };

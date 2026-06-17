@@ -7,6 +7,7 @@ import logo from '../../assets/educonnect-logo.svg';
 const DashboardNavbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const currentHash = location.hash;
 
   return (
     <nav className="flex flex-col items-start px-8 w-full h-16 bg-white/80 backdrop-blur-md sticky top-0 z-50">
@@ -29,13 +30,13 @@ const DashboardNavbar = () => {
                 Dashboard
               </span>
             </Link>
-            <Link to="/my-sessions" className={`flex flex-col items-start pb-1 ${currentPath === '/my-sessions' || currentPath.startsWith('/session') ? 'border-b-2 border-[#10B981]' : ''}`}>
-              <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/my-sessions' || currentPath.startsWith('/session') ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+            <Link to="/MySessions" className={`flex flex-col items-start pb-1 ${currentPath === '/MySessions' || currentPath === '/sessions' ? 'border-b-2 border-[#10B981]' : ''}`}>
+              <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/MySessions' || currentPath === '/sessions' ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
                 Sessions
               </span>
             </Link>
-            <Link to="/messages" className={`flex flex-col items-start pb-1 ${currentPath === '/messages' ? 'border-b-2 border-[#10B981]' : ''}`}>
-              <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/messages' ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+            <Link to="/session-room#messages" className={`flex flex-col items-start pb-1 ${currentPath === '/session-room' && currentHash === '#messages' ? 'border-b-2 border-[#10B981]' : ''}`}>
+              <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/session-room' && currentHash === '#messages' ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
                 Messages
               </span>
             </Link>

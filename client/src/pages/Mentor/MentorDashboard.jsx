@@ -144,7 +144,7 @@ export default function MentorDashboard() {
             <div className="dash-section-card">
               <div className="dash-section-header">
                 <h2 className="dash-section-title">Upcoming Sessions</h2>
-                <Link to="/sessions" className="dash-view-all">View All</Link>
+                <Link to="/MySessions" className="dash-view-all">View All</Link>
               </div>
 
               {loading ? (

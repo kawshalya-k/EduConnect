@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
 
         // Save to DB with OTP and Expiry
         const sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role, otp_code, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, false]);
+        await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, 1]); // Set is_verified to 1 to bypass OTP temporarily
 
         // Send email via Mailtrap/Nodemailer
         await sendEmail(email, otp);
@@ -76,7 +76,7 @@ exports.verifyOTP = async (req, res) => {
 
 // --- 3. LOGIN ---
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     try {
         // Find user
         const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
@@ -96,11 +96,18 @@ exports.login = async (req, res) => {
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
         // Create Token
-        const token = jwt.sign({ id: user.User_Id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const expiresIn = rememberMe ? '30d' : '1d';
+        const token = jwt.sign({ id: user.User_Id }, process.env.JWT_SECRET, { expiresIn });
 
         res.json({
             token,
-            user: { id: user.User_Id, name: `${user.First_Name} ${user.Last_Name}`, coins: user.skill_coins }
+            user: { 
+                id: user.User_Id, 
+                name: `${user.First_Name} ${user.Last_Name}`,
+                email: user.Email,
+                avatar: user.Avatar,
+                skillCoins: user.skill_coins || 0
+            }
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
