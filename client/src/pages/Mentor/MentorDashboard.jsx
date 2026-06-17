@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiStar, FiArrowUp, FiEdit2, FiVideo } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
+import RoleSwitcher from '../../components/Dashboard/RoleSwitcher';
 import WalletCard from '../../components/Mentorship/WalletCard';
 import PerformanceChart from '../../components/Mentorship/PerformanceChart';
 import SkillsWidget from '../../components/Mentorship/SkillsPanel';
@@ -66,10 +67,31 @@ export default function MentorDashboard() {
   const avgRating = dashData?.avgRating ?? null;
   const ratingChange = dashData?.ratingChange ?? null;
 
-  const levelLabel = mentor.level || 'Silver Mentor';
-  const levelXP = mentor.currentXP || 750;
-  const levelMaxXP = mentor.nextLevelXP || 1000;
-  const levelNum = mentor.levelNumber || 12;
+  // ── Dynamically map backend metrics to UI ──────────────────────────────────────
+  const level = dashData?.level || 'bronze'; // 'bronze' | 'silver' | 'gold'
+  const score = dashData?.score || 0;
+  const pointsToNext = dashData?.pointsToNext ?? null;
+  const nextLevel = dashData?.nextLevel || null;
+
+  // Formatted Label (e.g., 'silver' -> 'Silver Mentor')
+  const levelLabel = `${level.charAt(0).toUpperCase() + level.slice(1)} Mentor`;
+
+  // Define local boundaries matching backend thresholds for precise bar scaling
+  const thresholds = { bronze: 0, silver: 50, gold: 100 };
+
+  let levelXP = score;
+  let levelMaxXP = thresholds.silver; // Default maximum boundary if Bronze
+
+  if (level === 'silver') {
+    levelXP = score - thresholds.silver;
+    levelMaxXP = thresholds.gold - thresholds.silver; // 50 points window
+  } else if (level === 'gold') {
+    levelXP = score;
+    levelMaxXP = score; // Progress bar fills up completely when maxed out
+  }
+
+  // Optional derived numeric leveling metric if needed by design layout
+  const levelNum = level === 'gold' ? 3 : level === 'silver' ? 2 : 1;
 
   return (
     <PageLayout>
@@ -91,21 +113,44 @@ export default function MentorDashboard() {
                   </p>
                 </div>
 
-                {/* Level Badge */}
-                <div className="dash-level-badge">
-                  <div className="level-badge-icon">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="16" r="15" stroke="#9ca3af" strokeWidth="1.5" />
-                      <circle cx="16" cy="10" r="5" fill="#9ca3af" />
-                      <path d="M8 26c0-4.418 3.582-8 8-8s8 3.582 8 8" fill="#9ca3af" />
-                    </svg>
+                {/* Level Badge Card */}
+                <div className="dash-level-badge bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4 min-w-[280px]">
+                  <div className={`level-badge-icon w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 
+                    ${level === 'gold' ? 'bg-amber-50 text-amber-500 border-amber-300' : 
+                      level === 'silver' ? 'bg-slate-50 text-slate-500 border-slate-300' : 
+                      'bg-orange-50 text-orange-700 border-orange-300'}`}
+                  >
+                    {level.charAt(0).toUpperCase()}
                   </div>
-                  <div className="level-badge-info">
-                    <p className="level-badge-title">{levelLabel}</p>
-                    <p className="level-badge-level">LVL {levelNum}</p>
-                    <p className="level-badge-xp">{levelXP}/{levelMaxXP} XP to Gold</p>
+                  
+                  <div className="level-badge-info flex-1">
+                    <div className="flex justify-between items-baseline">
+                      <p className="level-badge-title font-bold text-slate-800 text-sm">{levelLabel}</p>
+                      <p className="text-xs font-semibold text-slate-400">Score: {score}</p>
+                    </div>
+                    
+                    {/* Dynamic Progress Indicator */}
+                    <div className="w-full bg-slate-100 h-2 rounded-full mt-1.5 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-500 rounded-full ${
+                          level === 'gold' ? 'bg-amber-400' : level === 'silver' ? 'bg-slate-400' : 'bg-orange-400'
+                        }`}
+                        style={{ width: `${Math.min(100, (levelXP / levelMaxXP) * 100)}%` }}
+                      />
+                    </div>
+
+                    <p className="level-badge-xp text-[11px] text-slate-500 mt-1">
+                      {pointsToNext !== null && nextLevel ? (
+                        <>
+                          Need <span className="font-bold text-[#10B981]">{pointsToNext}</span> more points for <span className="capitalize">{nextLevel}</span>
+                        </>
+                      ) : (
+                        <span className="text-amber-500 font-medium">✨ Maximum Rank Achieved</span>
+                      )}
+                    </p>
                   </div>
                 </div>
+                
               </div>
             </div>
 
@@ -144,7 +189,7 @@ export default function MentorDashboard() {
             <div className="dash-section-card">
               <div className="dash-section-header">
                 <h2 className="dash-section-title">Upcoming Sessions</h2>
-                <Link to="/MySessions" className="dash-view-all">View All</Link>
+                <Link to="/sessions" className="dash-view-all">View All</Link>
               </div>
 
               {loading ? (
