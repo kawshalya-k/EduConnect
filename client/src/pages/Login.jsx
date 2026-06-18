@@ -6,7 +6,7 @@ import logo from '../Assets/educonnect-logo.svg';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
+  const { login, setMode } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
@@ -34,6 +34,11 @@ const Login = () => {
         rememberMe
       });
       login(res.data.user, res.data.token);
+      // Ensure learner dashboard is the default after login
+      if (setMode) {
+        setMode('learner');
+        localStorage.setItem('educonnect_mode', 'learner');
+      }
       setSuccessMsg('Logged in successfully!');
       setTimeout(() => navigate('/dashboard'), 1000); // Redirect to dashboard
     } catch (err) {
