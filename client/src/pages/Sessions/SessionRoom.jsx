@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Footer from '../../components/Footer';
 
 const guidelines = [
@@ -19,6 +19,8 @@ export default function SessionRoom() {
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('id');
 
   useEffect(() => {
     if (timeLeft <= 0) { setSessionStarted(true); return; }
@@ -55,16 +57,16 @@ export default function SessionRoom() {
           <span style={{ fontWeight: 800, fontSize: 18, color: "#0f172a" }}>EduConnect</span>
         </div>
         <div style={{ display: "flex", gap: 32 }}>
-          {["Dashboard", "Sessions", "Messages"].map(n => (
-            <span key={n} style={{ cursor: "pointer", fontWeight: n === "Sessions" ? 700 : 500, color: n === "Sessions" ? "#16a34a" : "#64748b", borderBottom: n === "Sessions" ? "2px solid #16a34a" : "none", paddingBottom: 4, fontSize: 14 }}>{n}</span>
-          ))}
+          <Link to="/learner-dashboard" style={{ textDecoration: "none", cursor: "pointer", fontWeight: 500, color: "#64748b", paddingBottom: 4, fontSize: 14 }}>Dashboard</Link>
+          <Link to="/my-sessions" style={{ textDecoration: "none", cursor: "pointer", fontWeight: 700, color: "#16a34a", borderBottom: "2px solid #16a34a", paddingBottom: 4, fontSize: 14 }}>Sessions</Link>
+          <Link to="/messages" style={{ textDecoration: "none", cursor: "pointer", fontWeight: 500, color: "#64748b", paddingBottom: 4, fontSize: 14 }}>Messages</Link>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button style={{ padding: "7px 16px", borderRadius: 24, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Mentor</button>
+          <button style={{ padding: "7px 16px", borderRadius: 24, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Mentor Mode</button>
           <button style={{ padding: "7px 16px", borderRadius: 24, border: "none", background: "#16a34a", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Learner Mode</button>
           <div style={{ background: "#f0fdf4", borderRadius: 24, padding: "7px 14px", display: "flex", alignItems: "center", gap: 6, border: "1px solid #bbf7d0" }}>
             <span style={{ fontSize: 14 }}>💰</span>
-            <span style={{ fontWeight: 700, fontSize: 13, color: "#16a34a" }}>100 Skill Coins</span>
+            <span style={{ fontWeight: 700, fontSize: 13, color: "#16a34a" }}>100 SC</span>
           </div>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 18 }}>🔔</div>
           <img src="https://i.pravatar.cc/40?img=12" alt="avatar" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
@@ -99,7 +101,7 @@ export default function SessionRoom() {
           <div style={{ background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)", borderRadius: 12, padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
             <p style={{ margin: "0 0 0.25rem", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" }}>💰 Balance</p>
             <p style={{ margin: "0 0 0.1rem", fontSize: 26, fontWeight: 900, color: "#fff" }}>120 <span style={{ fontSize: 14 }}>SC</span></p>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Skill Coins available</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>SC available</p>
           </div>
 
           {/* Guidelines */}

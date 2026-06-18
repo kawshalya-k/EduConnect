@@ -42,6 +42,7 @@ import MentorSessions from './pages/Mentor/MentorSessions';
 import MentorDiscovery from './pages/MentorDiscovery';
 import MentorProfile from './pages/MentorProfile';
 import Leaderboard from './pages/Leaderboard';
+import Wallet from './pages/Wallet';
 import { useAuth } from './context/AuthContext';
 //common
 import SkillWallet from './pages/SkillWallet';
@@ -97,11 +98,12 @@ function App() {
         <Route path="/mentor/:mentorId" element={<MentorProfile />} />
         {/* Shared routes */}
         <Route path="/mentor-sessions" element={<MentorSessions />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/wallet"   element={<Wallet />} />
+        <Route path="/mentor-wallet" element={<SkillWallet />} />
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/learner-dashboard" replace />} />
         <Route path="*" element={<Navigate to="/learner-dashboard" replace />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/wallet"   element={<SkillWallet />} />  
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

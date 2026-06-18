@@ -38,6 +38,7 @@ const Login = () => {
       if (setMode) {
         setMode('learner');
         localStorage.setItem('educonnect_mode', 'learner');
+        localStorage.setItem('activeRole', 'learner');
       }
       setSuccessMsg('Logged in successfully!');
       setTimeout(() => navigate('/dashboard'), 1000); // Redirect to dashboard

@@ -84,7 +84,7 @@ const DashboardNavbar = () => {
           {/* Role Switcher */}
           <RoleSwitcher />
 
-          {/* Skill Coins / Wallet */}
+          {/* Skill Wallet */}
           <WalletWidget />
 
           {/* Notifications */}
