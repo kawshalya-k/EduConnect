@@ -19,7 +19,7 @@ const RoleSwitcher = () => {
     if (location.pathname === '/mentor-dashboard') {
       setCurrentRole('mentor');
       localStorage.setItem('activeRole', 'mentor');
-    } else if (location.pathname === '/learner-dashboard') {
+    } else if (location.pathname === '/learner-dashboard' || location.pathname === '/dashboard') {
       setCurrentRole('learner');
       localStorage.setItem('activeRole', 'learner');
     }

@@ -110,7 +110,7 @@ export default function DashboardSidebar({ user }) {
             ) : (
               <>
                 <span className="earnings-amount">{dailyEarnings}</span>
-                <span className="earnings-currency">Skill Coins</span>
+                <span className="earnings-currency">Skill Wallet</span>
               </>
             )}
           </div>

@@ -56,7 +56,7 @@ const MentorNav = () => {
           {/* Wallet */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg cursor-pointer">
             <Wallet className="w-4 h-4 text-[#10B981]" />
-            <span className="text-sm font-bold text-[#10B981]">100 Skill Coins</span>
+            <span className="text-sm font-bold text-[#10B981]">100 SC</span>
           </div>
 
           {/* Notifications */}

@@ -20,7 +20,7 @@ const FindMentor = () => {
       role: 'UX Strategy & Design Thinking',
       rating: '5.0',
       reviews: 42,
-      price: '120 Skill Coins',
+      price: '120 SC',
       skills: ['Figma', 'UX Research', 'Product Design'],
     },
     {
@@ -31,7 +31,7 @@ const FindMentor = () => {
       role: 'Python Developer & Data Engineer',
       rating: '4.8',
       reviews: 99,
-      price: '100 Skill Coins',
+      price: '100 SC',
       skills: ['Python', 'Django', 'Backend'],
     },
     {
@@ -42,7 +42,7 @@ const FindMentor = () => {
       role: 'Product Management Lead',
       rating: '4.7',
       reviews: 56,
-      price: '90 Skill Coins',
+      price: '90 SC',
       skills: ['Agile', 'Roadmap', 'Strategy'],
     },
   ];
