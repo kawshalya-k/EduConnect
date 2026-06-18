@@ -14,7 +14,7 @@ const pillars = [
   },
   { 
     title: "Skill Economy", 
-    desc: "Earn Skill Coins for every session you teach. Spend your rewards to unlock learning sessions with university experts and Gold-tier mentors.", 
+    desc: "Earn Skill Wallet credits for every session you teach. Spend your rewards to unlock learning sessions with university experts and Gold-tier mentors.", 
     icon: <Banknote className="w-6 h-6" /> 
   }
 ];

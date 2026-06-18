@@ -78,7 +78,7 @@ const createTransaction = async (req, res) => {
     const { user_id, type, amount, reason, session_id } = req.body;
 
     const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
+      'SELECT skill_coins FROM User WHERE User_Id = ?',
       [user_id]
     );
 
@@ -89,7 +89,7 @@ const createTransaction = async (req, res) => {
       });
     }
 
-    const currentBalance = user[0].skill_coins_balance || 0;
+    const currentBalance = user[0].skill_coins || 0;
 
     // Check if enough coins for debit
     if (type === 'DEBIT' && currentBalance < amount) {
@@ -105,7 +105,7 @@ const createTransaction = async (req, res) => {
       : currentBalance - amount;
 
     await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
+      'UPDATE User SET skill_coins = ? WHERE User_Id = ?',
       [newBalance, user_id]
     );
 
@@ -138,11 +138,11 @@ const deductCoinsOnBooking = async (user_id, session_id, mentor_name, skill) => 
     const cost = config[0].config_value;
 
     const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
+      'SELECT skill_coins FROM User WHERE User_Id = ?',
       [user_id]
     );
 
-    const currentBalance = user[0].skill_coins_balance || 0;
+    const currentBalance = user[0].skill_coins || 0;
 
     if (currentBalance < cost) {
       throw new Error('Insufficient coins to book session');
@@ -151,7 +151,7 @@ const deductCoinsOnBooking = async (user_id, session_id, mentor_name, skill) => 
     const newBalance = currentBalance - cost;
 
     await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
+      'UPDATE User SET skill_coins = ? WHERE User_Id = ?',
       [newBalance, user_id]
     );
 
@@ -179,15 +179,15 @@ const creditCoinsOnSessionComplete = async (mentor_id, session_id, learner_name,
     const reward = config[0].config_value;
 
     const [mentor] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
+      'SELECT skill_coins FROM User WHERE User_Id = ?',
       [mentor_id]
     );
 
-    const currentBalance = mentor[0].skill_coins_balance || 0;
+    const currentBalance = mentor[0].skill_coins || 0;
     const newBalance = currentBalance + reward;
 
     await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
+      'UPDATE User SET skill_coins = ? WHERE User_Id = ?',
       [newBalance, mentor_id]
     );
 
@@ -215,15 +215,15 @@ const creditCoinsOnVerification = async (user_id, skill_name) => {
     const reward = config[0].config_value;
 
     const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
+      'SELECT skill_coins FROM User WHERE User_Id = ?',
       [user_id]
     );
 
-    const currentBalance = user[0].skill_coins_balance || 0;
+    const currentBalance = user[0].skill_coins || 0;
     const newBalance = currentBalance + reward;
 
     await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
+      'UPDATE User SET skill_coins = ? WHERE User_Id = ?',
       [newBalance, user_id]
     );
 

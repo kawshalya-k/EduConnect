@@ -1,50 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import axiosInstance from '../../services/axiosConfig';
 
 
-const upcomingSessions = [
-  {
-    id: 1,
-    mentor: "Sarah Jenkins",
-    image: "https://i.pravatar.cc/250?img=47",
-    skill: "UI/UX Design",
-    topic: "Design Fundamentals & Portfolio Review",
-    date: "Oct 24, 2023",
-    time: "10:00 AM - 11:00 AM",
-    status: "SCHEDULED",
-    meetingType: "Zoom Meeting",
-  },
-  {
-    id: 2,
-    mentor: "Michael Chen",
-    image: "https://i.pravatar.cc/250?img=11",
-    skill: "Frontend Dev",
-    topic: "Advanced React Patterns & Performance",
-    date: "Oct 26, 2023",
-    time: "02:00 PM - 03:30 PM",
-    status: "SCHEDULED",
-    meetingType: "Google Meet",
-  },
-];
-
-const pastSessionsData = [
-  {
-    id: 3,
-    mentor: "Elena Rodriguez",
-    image: "https://i.pravatar.cc/250?img=25",
-    skill: "Product Mgmt",
-    date: "Oct 15, 2023 • 60 mins",
-    status: "COMPLETED",
-  },
-  {
-    id: 4,
-    mentor: "David Park",
-    image: "https://i.pravatar.cc/250?img=13",
-    skill: "Python Basics",
-    date: "Oct 10, 2023 • 30 mins",
-    status: "CANCELLED",
-  },
-];
 
 const SidebarItem = ({ icon, label, active, onClick }) => (
   <div
@@ -64,10 +23,39 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
 );
 
 export default function MySessions() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await axiosInstance.get('/sessions/my');
+        const data = res.data;
+        const transformed = (data || []).map(s => ({
+          id: s.Session_Id,
+          mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
+          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.Mentor_First || s.Mentor_Id}&backgroundColor=E2E8F0`,
+          skill: s.Skill_Name || 'Mentoring',
+          topic: s.Skill_Name || 'Session',
+          date: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD',
+          time: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'TBD',
+          status: s.Status || 'SCHEDULED',
+          meetingType: s.Meeting_Link ? 'Online' : 'In-Person',
+        }));
+        setSessions(transformed);
+      } catch (err) {
+        console.error('Failed to fetch sessions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSessions();
+  }, [user?.id]);
 
   const statusColors = {
     SCHEDULED: "#22c55e",
@@ -150,7 +138,7 @@ export default function MySessions() {
             {/* Content List */}
             <div className="flex flex-col items-start gap-6 w-full max-w-[960px]">
 
-              {activeTab === 'upcoming' && upcomingSessionsData.map(session => (
+              {activeTab === 'upcoming' && sessions.filter(s => s.status !== 'COMPLETED').map(session => (
                 <div key={session.id} className="box-border flex flex-col items-start w-full bg-white border border-[#10B77F]/10 shadow-sm rounded-3xl overflow-hidden h-[198px]">
                   <div className="flex flex-row w-full h-[196px]">
                     <div className="w-[224px] h-[196px] overflow-hidden flex-shrink-0">
@@ -196,7 +184,7 @@ export default function MySessions() {
                 </div>
               )}
 
-              {(activeTab === 'past' || activeTab === 'upcoming') && pastSessionsData.map(session => {
+              {(activeTab === 'past' || activeTab === 'upcoming') && sessions.filter(s => s.status === 'COMPLETED').map(session => {
                 const isCompleted = session.status === 'COMPLETED';
                 const containerClasses = isCompleted
                   ? "bg-[#F8FAFC] border-[#10B77F]/5"

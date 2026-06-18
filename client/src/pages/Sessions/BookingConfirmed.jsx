@@ -103,7 +103,7 @@ export default function BookingConfirmed() {
                 
                 <div className="flex flex-col h-full">
                   <div className="flex justify-between items-center py-2 border-b border-[#10B77F]/5 mb-2">
-                    <span className="text-[#475569] text-base leading-6">Skill Coins Deducted</span>
+                    <span className="text-[#475569] text-base leading-6">Skill Wallet Deducted</span>
                     <span className="text-[#EF4444] font-bold text-base leading-6">-{session.coinsDeducted} SC</span>
                   </div>
 

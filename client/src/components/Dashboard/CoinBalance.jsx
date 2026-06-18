@@ -21,7 +21,7 @@ export default function CoinBalance({ balance = 100 }) {
         fontWeight: "600",
         color: "#0F6E56",
       }}>
-        {balance.toLocaleString()} Skill Coins
+        {balance.toLocaleString()} Skill Wallet
       </span>
     </div>
   );
