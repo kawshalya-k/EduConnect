@@ -5,10 +5,10 @@ import './SkillsPanel.css';
 export default function SkillsWidget({ skills = [], loading = false }) {
   return (
     <div className="skills-widget">
-      <div className="skills-widget-header">
+      <Link to="/verification?view=all" className="skills-widget-header hover:opacity-80 transition-opacity block no-underline text-inherit">
         <span className="skills-widget-icon">✓</span>
         <h3 className="skills-widget-title">Skills</h3>
-      </div>
+      </Link>
 
       {loading ? (
         <div className="skills-loading">
@@ -20,7 +20,7 @@ export default function SkillsWidget({ skills = [], loading = false }) {
         <div className="skills-list">
           {skills.map((skill) => (
             <Link
-              to={`/verification/skill/${skill.id}`}
+              to="/verification?view=all"
               key={skill.id}
               className="skill-item"
             >

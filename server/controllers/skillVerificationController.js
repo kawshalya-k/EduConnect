@@ -63,8 +63,8 @@ exports.getMySkills = async (req, res) => {
     const userId = req.user.id;
     try {
         const [skills] = await db.query(
-            `SELECT us.User_Skill_Id, s.Skill_Id, s.Skill_Name, s.Category,
-                    us.Mentor_Level, us.Verification_Status, us.Certificates,
+            `SELECT us.User_Skill_Id, s.Skill_Id, s.Skill_Name, s.Category, s.Description,
+                    us.Mentor_Level, us.Verification_Status, us.Certificates, us.Last_Attempt,
                     COALESCE(ld.Average_Rating, 0) AS Average_Rating,
                     COALESCE(ld.Total_Sessions, 0) AS Total_Sessions,
                     COALESCE(ld.Score, 0)           AS Score,
@@ -73,8 +73,8 @@ exports.getMySkills = async (req, res) => {
              JOIN Skill s ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld 
                     ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
-             WHERE us.User_Id = ? AND us.Role = 'Mentor'
-             ORDER BY us.Verification_Status, s.Skill_Name`,
+             WHERE us.User_Id = ?
+             ORDER BY us.Verification_Status DESC, s.Skill_Name`,
             [userId]
         );
         res.json(skills);
@@ -91,56 +91,54 @@ exports.getMySkills = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.addSkill = async (req, res) => {
     const userId = req.user.id;
-    const { skill_id } = req.body;
-
-    if (!skill_id) return res.status(400).json({ message: "skill_id is required." });
+    let { skill_id, name } = req.body;
 
     try {
+        // If name is passed but no skill_id, try to look up or create the skill by name
+        if (!skill_id && name) {
+            const [rows] = await db.query(`SELECT Skill_Id FROM Skill WHERE Skill_Name = ?`, [name]);
+            if (rows.length > 0) {
+                skill_id = rows[0].Skill_Id;
+            } else {
+                // Create a new Skill record
+                const [result] = await db.query(
+                    `INSERT INTO Skill (Skill_Name, Category, Description) VALUES (?, 'Technical', ?)`,
+                    [name, `Assessment of expertise in ${name}.`]
+                );
+                skill_id = result.insertId;
+            }
+        }
+
+        if (!skill_id) return res.status(400).json({ message: "skill_id or name is required." });
+
         // Check skill exists
         const [skillRows] = await db.query(`SELECT * FROM Skill WHERE Skill_Id = ?`, [skill_id]);
         if (skillRows.length === 0) return res.status(404).json({ message: "Skill not found." });
 
-        // Prevent duplicate submission
+        // Check if there is already a User_Skill record
         const [existing] = await db.query(
-            `SELECT * FROM User_Skill WHERE User_Id = ? AND Skill_Id = ? AND Role = 'Mentor'`,
+            `SELECT * FROM User_Skill WHERE User_Id = ? AND Skill_Id = ?`,
             [userId, skill_id]
         );
+        
         if (existing.length > 0) {
-            return res.status(409).json({
-                message: "You have already submitted this skill.",
+            return res.json({
+                message: "Skill already added.",
+                skill_id,
                 status: existing[0].Verification_Status
             });
         }
 
-        // Store certificate path temporarily (if uploaded)
-        // We'll persist it once they pass the quiz via the callback
-        const certificatePath = req.file ? req.file.path : null;
-
-        // Generate a one-time token that encodes who is taking the quiz and for which skill
-        const token = createQuizToken(userId, skill_id);
-
-        // If a certificate was uploaded, stash it in the token data so the callback can use it
-        if (certificatePath) {
-            const tokenData = pendingQuizTokens.get(token);
-            tokenData.certificatePath = certificatePath;
-        }
-
-        // Build the callback URL that HackerRank will redirect back to
-        // ?result=pass|fail  &token=<token>
-        // ⚠️  Real HackerRank Tests use a fixed redirect URL set in their dashboard.
-        //     Replace the callback_url param with whatever HackerRank supports.
-        const callbackUrl = encodeURIComponent(
-            `${BACKEND_URL}/api/mentor/skills/quiz-callback?token=${token}`
+        // Insert into User_Skill as Student (unverified)
+        await db.query(
+            `INSERT INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status)
+             VALUES (?, ?, 'Student', 0)`,
+            [userId, skill_id]
         );
 
-        // Redirect the mentor to the HackerRank test
-        // When HackerRank is properly configured it will append ?result=pass/fail
-        // and redirect back to callbackUrl automatically.
-        const redirectUrl = `${HACKERRANK_TEST_URL}?callback_url=${callbackUrl}`;
-
         return res.json({
-            message: "Please complete the skill assessment on HackerRank to proceed.",
-            redirect_url: redirectUrl  // Frontend should window.location.href to this
+            message: "Skill added successfully.",
+            skill_id
         });
 
     } catch (err) {
