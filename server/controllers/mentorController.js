@@ -193,8 +193,9 @@ exports.getMentors = async (req, res) => {
 exports.verifySkill = async (req, res) => {
   try {
     const { skillId, passed } = req.body;
+    const isPassed = String(passed) === 'true' || passed === true;
+    
     // req.user could be from auth middleware. Handle both id and User_Id.
-    // If testing without login, we need a fallback or they must log in. The prompt warned they must log in.
     const userId = req.user?.User_Id || req.user?.id;
 
     if (!userId) {
@@ -213,7 +214,7 @@ exports.verifySkill = async (req, res) => {
 
     let userSkill = existing.length > 0 ? existing[0] : null;
 
-    if (userSkill && userSkill.Verification_Status) {
+    if (userSkill && (userSkill.Verification_Status === 1 || userSkill.Verification_Status === true || userSkill.Verification_Status === 'Verified')) {
       return res.status(400).json({ message: 'Skill is already verified' });
     }
 
@@ -232,17 +233,24 @@ exports.verifySkill = async (req, res) => {
       }
     }
 
-    if (passed) {
+    if (isPassed) {
+      // Validate file presence
+      if (!req.file) {
+        return res.status(400).json({ message: 'Certificate proof is required for verification.' });
+      }
+
+      const certificatePath = `uploads/certificates/${req.file.filename}`;
+
       // Handle success
       if (userSkill) {
         await db.query(
-          'UPDATE User_Skill SET Verification_Status = TRUE, Mentor_Level = ?, Role = ?, Last_Attempt = NULL WHERE User_Skill_Id = ?',
-          ['Bronze', 'Mentor', userSkill.User_Skill_Id]
+          'UPDATE User_Skill SET Verification_Status = TRUE, Mentor_Level = ?, Role = ?, Certificates = ?, Last_Attempt = NULL WHERE User_Skill_Id = ?',
+          ['Bronze', 'Mentor', certificatePath, userSkill.User_Skill_Id]
         );
       } else {
         await db.query(
-          'INSERT INTO User_Skill (User_Id, Skill_Id, Role, Mentor_Level, Verification_Status) VALUES (?, ?, ?, ?, ?)',
-          [userId, skillId, 'Mentor', 'Bronze', true]
+          'INSERT INTO User_Skill (User_Id, Skill_Id, Role, Mentor_Level, Verification_Status, Certificates) VALUES (?, ?, ?, ?, ?, ?)',
+          [userId, skillId, 'Mentor', 'Bronze', true, certificatePath]
         );
       }
 
@@ -276,7 +284,7 @@ exports.verifySkill = async (req, res) => {
       // Handle failure
       if (userSkill) {
         await db.query(
-          'UPDATE User_Skill SET Last_Attempt = NOW() WHERE User_Skill_Id = ?',
+          'UPDATE User_Skill SET Last_Attempt = NOW(), Verification_Status = FALSE, Certificates = NULL WHERE User_Skill_Id = ?',
           [userSkill.User_Skill_Id]
         );
       } else {
