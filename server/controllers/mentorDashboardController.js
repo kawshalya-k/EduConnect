@@ -50,7 +50,7 @@ exports.getDashboard = async (req, res) => {
 
         // 4. Wallet balance
         const [walletRow] = await db.query(
-            `SELECT Wallet_Balance FROM User WHERE User_Id = ?`, [mentorId]
+            `SELECT skill_coins AS Wallet_Balance FROM User WHERE User_Id = ?`, [mentorId]
         );
 
         // 5. Badges earned
