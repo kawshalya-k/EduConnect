@@ -54,6 +54,7 @@ const Leaderboard = () => {
   };
 
   const podiumData = leaderboardData.slice(0, 3);
+  const top7Ids = new Set(leaderboardData.slice(0, 7).map(m => m.user_id));
   const rankData = leaderboardData.slice(3, 7).map((mentor, index) => ({
     rank: `#${index + 4}`,
     name: `${mentor.first_name} ${mentor.last_name}`,
@@ -67,6 +68,20 @@ const Leaderboard = () => {
   const currentUserIndex = leaderboardData.findIndex(m => m.user_id === authUser?.id);
   const currentUserEntry = currentUserIndex >= 0 ? leaderboardData[currentUserIndex] : null;
   const currentUserRank = currentUserIndex >= 0 ? currentUserIndex + 1 : null;
+
+  // If current user is not in top 7, add their row to the table
+  if (currentUserEntry && !top7Ids.has(authUser?.id)) {
+    rankData.push({
+      rank: `#${currentUserRank}`,
+      name: `${currentUserEntry.first_name} ${currentUserEntry.last_name}`,
+      university: currentUserEntry.university || 'University',
+      level: getLevelFromScore(currentUserEntry.mentor_level).level,
+      levelColor: getLevelFromScore(currentUserEntry.mentor_level).color,
+      coins: currentUserEntry.skill_coins || 0,
+      avatar: getAvatar(currentUserEntry.first_name, currentUserEntry.last_name, currentUserEntry.avatar),
+      isCurrentUser: true,
+    });
+  }
 
   if (loading) {
     return (
@@ -114,7 +129,7 @@ const Leaderboard = () => {
         <nav className="space-y-2 flex-1">
           <Link
             className="flex items-center space-x-3 p-3 rounded-lg text-gray-500 hover:bg-gray-50 transition"
-            to="/dashboard"
+            to="/learner-dashboard"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -334,8 +349,8 @@ const Leaderboard = () => {
               <tbody className="text-sm font-medium text-gray-600">
                 {rankData.map((row) => (
                   <tr
-                    key={row.rank}
-                    className="border-b border-gray-50 hover:bg-emerald-50 transition-colors"
+                    key={row.rank + row.name}
+                    className={`border-b border-gray-50 hover:bg-emerald-50 transition-colors ${row.isCurrentUser ? 'bg-emerald-50/50' : ''}`}
                   >
                     <td className="px-8 py-5 text-gray-400 font-bold">{row.rank}</td>
                     <td className="px-8 py-5">

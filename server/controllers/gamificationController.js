@@ -100,20 +100,29 @@ const getLeaderboard = async (req, res) => {
         u.User_Id AS user_id,
         u.First_Name AS first_name,
         u.Last_Name AS last_name,
+        u.University AS university,
         u.Avatar AS avatar,
         u.skill_coins AS skill_coins,
-        ld.score AS score,
-        ld.session_count AS session_count,
-        ld.average_rating AS average_rating
-      FROM \`user\` u
-      JOIN \`levelling_data\` ld ON u.User_Id = ld.user_id
-      ORDER BY ld.score DESC
+        COALESCE(SUM(ld.score), 0) AS score,
+        COALESCE(SUM(ld.session_count), 0) AS session_count,
+        COALESCE(AVG(ld.average_rating), 0) AS average_rating,
+        COALESCE(MAX(ld.level), 'BRONZE') AS mentor_level
+      FROM User u
+      LEFT JOIN Levelling_Data ld ON u.User_Id = ld.user_id
+      GROUP BY u.User_Id
+      ORDER BY u.skill_coins DESC, score DESC
       LIMIT 50
     `;
 
     const [mentors] = await db.query(query);
 
-    res.json({ success: true, mentors });
+    const [totalRow] = await db.query(
+      'SELECT COUNT(*) AS total FROM Session WHERE Status = "Completed"'
+    );
+    const totalSessions = totalRow[0]?.total || 0;
+
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.json({ success: true, mentors, totalSessions });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -126,7 +135,7 @@ const getLeaderboard = async (req, res) => {
 const checkAndAwardBadges = async (user_id) => {
   try {
     const [sessions] = await db.query(
-      'SELECT COUNT(*) as count FROM sessions WHERE mentor_id = ? AND status = "completed"',
+      'SELECT COUNT(*) as count FROM Session WHERE Mentor_Id = ? AND Status = "Completed"',
       [user_id]
     );
 
@@ -160,15 +169,15 @@ const checkAndAwardBadges = async (user_id) => {
 const creditCoins = async (user_id, amount, reason) => {
   try {
     const [user] = await db.query(
-      'SELECT skill_coins_balance FROM users WHERE user_id = ?',
+      'SELECT skill_coins FROM User WHERE User_Id = ?',
       [user_id]
     );
 
-    const currentBalance = user[0].skill_coins_balance || 0;
+    const currentBalance = user[0].skill_coins || 0;
     const newBalance = currentBalance + amount;
 
     await db.query(
-      'UPDATE users SET skill_coins_balance = ? WHERE user_id = ?',
+      'UPDATE User SET skill_coins = ? WHERE User_Id = ?',
       [newBalance, user_id]
     );
 
