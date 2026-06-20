@@ -4,7 +4,7 @@ const sessionController = require('../controllers/sessionController');
 const auth = require('../middleware/auth');
 
 router.post('/book', auth, sessionController.bookSession);
-router.get('/my', sessionController.getMySessions);
+router.get('/my', auth, sessionController.getMySessions);
 router.put('/:sessionId/status', auth, sessionController.updateStatus);
 router.put('/:sessionId/meeting-link', auth, sessionController.addMeetingLink);
 router.get('/:sessionId', auth, sessionController.getSessionById);
