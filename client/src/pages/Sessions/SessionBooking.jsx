@@ -4,13 +4,6 @@ import Footer from '../../components/Footer';
 import { bookSession } from '../../services/sessionService';
 import axiosInstance from '../../services/axiosConfig';
 
-const topics = [
-  "Advanced UI Prototyping in Figma",
-  "React.js Fundamentals",
-  "Node.js Backend Development",
-  "MySQL Database Design",
-  "Python for Beginners",
-];
 
 const timeSlots = [
   "10:00 AM - 11:00 AM",
@@ -46,7 +39,17 @@ export default function SessionBooking() {
     fetchSkills();
   }, []);
 
-  const handleBook = async () => {
+  const convertTo24Hour = (timeRange) => {
+  const startTime = timeRange.split(' - ')[0]; // "01:00 PM"
+  const [time, period] = startTime.split(' ');
+  let [hours, minutes] = time.split(':');
+  hours = parseInt(hours);
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return `${String(hours).padStart(2, '0')}:${minutes}:00`;
+};
+
+const handleBook = async () => {
   setLoading(true);
   setError('');
   try {
@@ -55,7 +58,7 @@ export default function SessionBooking() {
       mentor_id: 2, // will be dynamic later
       session_type: "Online-Video",
       date: date,
-      time: time,
+      time: convertTo24Hour(time),
       duration: 60,
       cost: sessionCost
     });
@@ -93,6 +96,7 @@ export default function SessionBooking() {
             <span style={{ fontWeight: 700, fontSize: 13, color: "#1a7a4a" }}>{walletBalance} Skill Coins</span>
           </div>
           <span style={{ fontSize: 20, cursor: "pointer" }}>🔔</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><img src="https://i.pravatar.cc/40?img=12" alt="profile" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} /></div>
         </div>
       </nav>
 
