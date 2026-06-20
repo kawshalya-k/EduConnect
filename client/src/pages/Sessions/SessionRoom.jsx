@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Footer from '../../components/Footer';
 
 const guidelines = [
@@ -18,19 +18,9 @@ export default function SessionRoom() {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
-  const roomTopRef = useRef(null);
-  const chatPanelRef = useRef(null);
-  const location = useLocation();
   const navigate = useNavigate();
-
-  const scrollToSection = (section) => {
-    if (section === 'sessions' && roomTopRef.current) {
-      roomTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    if (section === 'messages' && chatPanelRef.current) {
-      chatPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('id');
 
   useEffect(() => {
     if (timeLeft <= 0) { setSessionStarted(true); return; }
@@ -41,12 +31,6 @@ export default function SessionRoom() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  useEffect(() => {
-    if (location.hash === '#messages' && chatPanelRef.current) {
-      chatPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [location.hash]);
 
   const formatTime = (s) => `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
 
@@ -73,25 +57,16 @@ export default function SessionRoom() {
           <span style={{ fontWeight: 800, fontSize: 18, color: "#0f172a" }}>EduConnect</span>
         </div>
         <div style={{ display: "flex", gap: 32 }}>
-          <span
-            onClick={() => scrollToSection('sessions')}
-            style={{ cursor: "pointer", fontWeight: 700, color: "#16a34a", borderBottom: "2px solid #16a34a", paddingBottom: 4, fontSize: 14 }}
-          >
-            Sessions
-          </span>
-          <span
-            onClick={() => scrollToSection('messages')}
-            style={{ cursor: "pointer", fontWeight: 500, color: "#64748b", paddingBottom: 4, fontSize: 14 }}
-          >
-            Messages
-          </span>
+          <Link to="/learner-dashboard" style={{ textDecoration: "none", cursor: "pointer", fontWeight: 500, color: "#64748b", paddingBottom: 4, fontSize: 14 }}>Dashboard</Link>
+          <Link to="/my-sessions" style={{ textDecoration: "none", cursor: "pointer", fontWeight: 700, color: "#16a34a", borderBottom: "2px solid #16a34a", paddingBottom: 4, fontSize: 14 }}>Sessions</Link>
+          <Link to="/messages" style={{ textDecoration: "none", cursor: "pointer", fontWeight: 500, color: "#64748b", paddingBottom: 4, fontSize: 14 }}>Messages</Link>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button style={{ padding: "7px 16px", borderRadius: 24, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Mentor</button>
+          <button style={{ padding: "7px 16px", borderRadius: 24, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#475569" }}>Mentor Mode</button>
           <button style={{ padding: "7px 16px", borderRadius: 24, border: "none", background: "#16a34a", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Learner Mode</button>
           <div style={{ background: "#f0fdf4", borderRadius: 24, padding: "7px 14px", display: "flex", alignItems: "center", gap: 6, border: "1px solid #bbf7d0" }}>
             <span style={{ fontSize: 14 }}>💰</span>
-            <span style={{ fontWeight: 700, fontSize: 13, color: "#16a34a" }}>100 Skill Coins</span>
+            <span style={{ fontWeight: 700, fontSize: 13, color: "#16a34a" }}>100 SC</span>
           </div>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 18 }}>🔔</div>
           <img src="https://i.pravatar.cc/40?img=12" alt="avatar" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
@@ -126,7 +101,7 @@ export default function SessionRoom() {
           <div style={{ background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)", borderRadius: 12, padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
             <p style={{ margin: "0 0 0.25rem", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.75)", textTransform: "uppercase" }}>💰 Balance</p>
             <p style={{ margin: "0 0 0.1rem", fontSize: 26, fontWeight: 900, color: "#fff" }}>120 <span style={{ fontSize: 14 }}>SC</span></p>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Skill Coins available</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>SC available</p>
           </div>
 
           {/* Guidelines */}
@@ -152,7 +127,7 @@ export default function SessionRoom() {
         </div>
 
         {/* CENTER */}
-        <div ref={roomTopRef} style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "1.5rem", gap: "1.25rem" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "1.5rem", gap: "1.25rem" }}>
 
           {/* Countdown Hero */}
           <div style={{ background: sessionStarted ? "linear-gradient(135deg, #16a34a, #22c55e)" : "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)", borderRadius: 20, padding: "2rem", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", position: "relative", overflow: "hidden" }}>
@@ -257,7 +232,7 @@ export default function SessionRoom() {
         </div>
 
         {/* RIGHT SIDEBAR — CHAT */}
-        <div ref={chatPanelRef} style={{ width: 310, background: "#fff", borderLeft: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div style={{ width: 310, background: "#fff", borderLeft: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
 
           {/* Chat Header */}
           <div style={{ padding: "1.125rem 1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff" }}>

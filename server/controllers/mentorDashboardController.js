@@ -23,13 +23,13 @@ exports.getDashboard = async (req, res) => {
 
         // 2. Per-skill performance
         const [skillStats] = await db.query(
-            `SELECT s.Skill_Name, s.Category,
-                    ld.Mentor_Level, ld.Average_Rating, ld.Total_Sessions, ld.Score,
-                    ld.Last_Evaluation_Date
-             FROM Levelling_Data ld
-             JOIN Skill s ON s.Skill_Id = ld.Skill_Id
-             WHERE ld.Mentor_Id = ?
-             ORDER BY ld.Score DESC`,
+             `SELECT s.Skill_Name, s.Category,
+                      ld.level AS Mentor_Level, ld.average_rating AS Average_Rating, ld.session_count AS Total_Sessions, ld.score AS Score,
+                      ld.updated_at AS Last_Evaluation_Date
+                  FROM levelling_data ld
+                  JOIN Skill s ON s.Skill_Id = ld.skill_id
+                  WHERE ld.user_id = ?
+                  ORDER BY ld.score DESC`,
             [mentorId]
         );
 
@@ -50,16 +50,16 @@ exports.getDashboard = async (req, res) => {
 
         // 4. Wallet balance
         const [walletRow] = await db.query(
-            `SELECT Wallet_Balance FROM User WHERE User_Id = ?`, [mentorId]
+            `SELECT skill_coins AS Wallet_Balance FROM User WHERE User_Id = ?`, [mentorId]
         );
 
         // 5. Badges earned
         const [badges] = await db.query(
-            `SELECT b.Badge_Name, b.Description, ub.Awarded_Date
-             FROM User_Badge ub
-             JOIN Badge b ON b.Badge_Id = ub.Badge_Id
-             WHERE ub.User_Id = ?
-             ORDER BY ub.Awarded_Date DESC`,
+            `SELECT b.name AS Badge_Name, b.description AS Description, ub.awarded_at AS Awarded_Date
+             FROM user_badge ub
+             JOIN badge b ON b.badge_id = ub.badge_id
+             WHERE ub.user_id = ?
+             ORDER BY ub.awarded_at DESC`,
             [mentorId]
         );
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
-import logo from '../assets/educonnect-logo.svg';
+import logo from '../Assets/educonnect-logo.svg';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -10,8 +10,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
-    password: ''
+    email: ''
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
@@ -26,7 +25,7 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+    if (!formData.firstName || !formData.lastName || !formData.email) {
       setError('Please fill in all fields');
       return;
     }
@@ -36,7 +35,7 @@ const Register = () => {
       const res = await api.post('/auth/register', {
         full_name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
-        password: formData.password
+        password: 'Password123!'
       });
       setSuccessMsg(res.data.message || 'Account created successfully!');
       
@@ -162,11 +161,6 @@ const Register = () => {
                 <label className="text-sm font-bold text-slate-700">University Email</label>
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="student@dept.ac.lk" className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:bg-white outline-none transition-all" />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:bg-white outline-none transition-all" />
-              </div>
-              
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 By clicking Continue, you agree to our <Link to="/terms-of-service" className="text-[#10B981] hover:underline">Terms of Service</Link>, <Link to="/privacy-policy" className="text-[#10B981] hover:underline">Privacy Policy</Link>, and <Link to="/community-standards" className="text-[#10B981] hover:underline">Community Standards</Link>.
               </p>

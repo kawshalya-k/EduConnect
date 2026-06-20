@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/educonnect-logo.svg';
+import logo from '../Assets/educonnect-logo.svg';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -18,7 +18,7 @@ const Footer = () => {
             Empowering University students through peer-to-peer learning and community recognition.
           </p>
           <div className="flex gap-4">
-            {['f', 'g', '@'].map((icon, i) => (
+            {['f', 'i', '@'].map((icon, i) => (
               <div key={i} className="w-10 h-10 rounded-full bg-emerald-900 flex items-center justify-center hover:bg-[#10B981] transition-colors cursor-pointer">
                 <span className="text-xs font-bold uppercase">{icon}</span>
               </div>

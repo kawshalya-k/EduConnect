@@ -64,7 +64,7 @@ export default function CoinAwardToast({ amount, reason, onClose }) {
             margin: "0 0 4px",
             fontWeight: "700", fontSize: "20px",
             color: "#F9A825",
-          }}>+{amount} Skill Coins</p>
+          }}>+{amount} Skill Wallet</p>
           <p style={{
             margin: 0, fontSize: "12px",
             color: "#aaa",

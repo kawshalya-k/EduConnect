@@ -12,6 +12,8 @@ const poolConfig = {
   multipleStatements: true
 };
 
+console.log('DB poolConfig preview:', { host: poolConfig.host, user: poolConfig.user, passwordPresent: Boolean(poolConfig.password), port: poolConfig.port });
+
 let dbInstance = null;
 
 async function initDB() {
@@ -51,7 +53,7 @@ async function initDB() {
       is_verified BOOLEAN DEFAULT FALSE,
       reset_token VARCHAR(255),
       reset_token_expiry DATETIME,
-      skill_coins INT DEFAULT 0
+      skill_coins INT DEFAULT 100
     )`);
 
     await connection.query(`CREATE TABLE IF NOT EXISTS Admin (
@@ -171,11 +173,29 @@ async function initDB() {
       }
     }
 
+    try {
+      await connection.query('ALTER TABLE Session ADD COLUMN Meeting_Link VARCHAR(500)');
+      console.log('✅ Added Meeting_Link column to Session table.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('Error adding Meeting_Link column:', e.message);
+      }
+    }
+
+    try {
+      await connection.query('ALTER TABLE Session ADD COLUMN Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+      console.log('✅ Added Created_At column to Session table.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('Error adding Created_At column:', e.message);
+      }
+    }
+
     connection.release();
     console.log('✅ All 10 MySQL tables are verified and ready.');
 
   } catch (err) {
-    console.error('❌ Failed to initialize MySQL database:', err.message);
+    console.error('❌ Failed to initialize MySQL database:', err);
   }
 }
 
