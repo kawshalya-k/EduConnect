@@ -93,7 +93,7 @@ const handleBook = async () => {
           <button style={{ padding: "6px 14px", borderRadius: 20, border: "none", background: "#1a7a4a", color: "#fff", fontSize: 12, cursor: "pointer" }}>Learner Mode</button>
           <div style={{ background: "#e8f5ee", borderRadius: 20, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ color: "#1a7a4a" }}>💰</span>
-            <span style={{ fontWeight: 700, fontSize: 13, color: "#1a7a4a" }}>{walletBalance} Skill Coins</span>
+            <span style={{ fontWeight: 700, fontSize: 13, color: "#1a7a4a" }}>{walletBalance} SC</span>
           </div>
           <span style={{ fontSize: 20, cursor: "pointer" }}>🔔</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><img src="https://i.pravatar.cc/40?img=12" alt="profile" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} /></div>
@@ -176,7 +176,7 @@ const handleBook = async () => {
 
           {/* Payment Card */}
           <div style={{ background: "#1a3a2a", borderRadius: 14, padding: "1.5rem", color: "#fff" }}>
-            <h3 style={{ margin: "0 0 1.25rem", fontSize: 16, fontWeight: 700 }}>Skill Coins Payment</h3>
+            <h3 style={{ margin: "0 0 1.25rem", fontSize: 16, fontWeight: 700 }}>SC Payment</h3>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontSize: 14 }}>
               <span style={{ color: "#aac4b4" }}>Current Wallet Balance</span>
               <span style={{ fontWeight: 700 }}>{walletBalance} 🪙</span>

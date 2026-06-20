@@ -103,7 +103,7 @@ export default function BookingConfirmed() {
                 
                 <div className="flex flex-col h-full">
                   <div className="flex justify-between items-center py-2 border-b border-[#10B77F]/5 mb-2">
-                    <span className="text-[#475569] text-base leading-6">Skill Coins Deducted</span>
+                    <span className="text-[#475569] text-base leading-6">Skill Wallet Deducted</span>
                     <span className="text-[#EF4444] font-bold text-base leading-6">-{session.coinsDeducted} SC</span>
                   </div>
 
@@ -136,7 +136,7 @@ export default function BookingConfirmed() {
             {/* Actions */}
             <div className="flex justify-center gap-4 w-full">
               <button 
-                onClick={() => navigate('/MySessions')}
+                onClick={() => navigate('/my-sessions')}
                 className="flex items-center justify-center gap-2 px-8 py-3 bg-[#10B77F] rounded-full text-white font-bold text-base shadow-[0_4px_6px_-1px_rgba(16,183,127,0.2),0_2px_4px_-2px_rgba(16,183,127,0.2)] hover:bg-[#0ea873] transition-colors w-[232px]"
               >
                 Go to My Sessions

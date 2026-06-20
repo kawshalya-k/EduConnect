@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
-import Footer from '../../components/Footer';
-import { getMySessions } from '../../services/sessionService';
 import { useAuth } from '../../context/AuthContext';
+import axiosInstance from '../../services/axiosConfig';
+
+
 
 const SidebarItem = ({ icon, label, active, onClick }) => (
   <div
@@ -23,66 +23,39 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
 );
 
 export default function MySessions() {
-  const [activeTab, setActiveTab] = useState('upcoming');
-  const [upcomingSessions, setUpcomingSessions] = useState([]);
-  const [pastSessions, setPastSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('upcoming');
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSessions = async () => {
+      if (!user?.id) return;
       try {
-        setLoading(true);
-        const data = await getMySessions();
-        
-        // Separate sessions into upcoming and past
-        const now = new Date();
-        const upcoming = [];
-        const past = [];
-        
-        if (data && Array.isArray(data)) {
-          data.forEach(session => {
-            // Transform backend fields to match component structure
-            const transformedSession = {
-              id: session.Session_Id,
-              mentor: `${session.Mentor_First || ''} ${session.Mentor_Last || ''}`.trim(),
-              image: `https://i.pravatar.cc/250?img=${Math.floor(Math.random() * 70)}`,
-              skill: session.Skill_Name || 'Unknown Skill',
-              topic: `Session with ${session.Mentor_First || 'Mentor'}`,
-              date: session.Date ? new Date(session.Date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'TBD',
-              time: session.Time ? `${session.Time}` : 'TBD',
-              status: session.Status || 'Pending',
-              meetingType: session.Meeting_Type || 'Video Call',
-              sessionDate: session.Date
-            };
-            
-            // Check if session is in the future or is scheduled/ongoing
-            if (session.Status === 'Scheduled' || new Date(session.Date) > now) {
-              upcoming.push(transformedSession);
-            } else {
-              past.push(transformedSession);
-            }
-          });
-        }
-        
-        setUpcomingSessions(upcoming);
-        setPastSessions(past);
-        setError(null);
+        const res = await axiosInstance.get('/sessions/my');
+        const data = res.data;
+        const transformed = (data || []).map(s => ({
+          id: s.Session_Id,
+          mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
+          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.Mentor_First || s.Mentor_Id}&backgroundColor=E2E8F0`,
+          skill: s.Skill_Name || 'Mentoring',
+          topic: s.Skill_Name || 'Session',
+          date: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD',
+          time: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'TBD',
+          status: s.Status || 'SCHEDULED',
+          meetingType: s.Meeting_Link ? 'Online' : 'In-Person',
+        }));
+        setSessions(transformed);
       } catch (err) {
-        console.error('Error fetching sessions:', err);
-        setError('Failed to load sessions');
-        // Fallback to empty arrays
-        setUpcomingSessions([]);
-        setPastSessions([]);
+        console.error('Failed to fetch sessions:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSessions();
-  }, []);
+  }, [user?.id]);
 
   const statusColors = {
     SCHEDULED: "#22c55e",
@@ -91,9 +64,6 @@ export default function MySessions() {
   };
 
   if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#16a34a" }}>Loading sessions...</div>;
-  
-  if (error) return <div style={{ padding: "3rem", textAlign: "center", color: "#ef4444" }}>{error}</div>;
-  
   return (
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7]">
       <DashboardNavbar />
@@ -168,13 +138,7 @@ export default function MySessions() {
             {/* Content List */}
             <div className="flex flex-col items-start gap-6 w-full max-w-[960px]">
 
-              {activeTab === 'upcoming' && upcomingSessions.length === 0 && (
-                <div style={{ padding: "3rem", textAlign: "center", color: "#94A3B8", width: "100%" }}>
-                  No upcoming sessions. Book a session with a mentor to get started!
-                </div>
-              )}
-
-              {activeTab === 'upcoming' && upcomingSessions.map(session => (
+              {activeTab === 'upcoming' && sessions.filter(s => s.status !== 'COMPLETED').map(session => (
                 <div key={session.id} className="box-border flex flex-col items-start w-full bg-white border border-[#10B77F]/10 shadow-sm rounded-3xl overflow-hidden h-[198px]">
                   <div className="flex flex-row w-full h-[196px]">
                     <div className="w-[224px] h-[196px] overflow-hidden flex-shrink-0">
@@ -220,13 +184,7 @@ export default function MySessions() {
                 </div>
               )}
 
-              {activeTab === 'past' && pastSessions.length === 0 && (
-                <div style={{ padding: "3rem", textAlign: "center", color: "#94A3B8", width: "100%" }}>
-                  No past sessions yet. Your completed sessions will appear here.
-                </div>
-              )}
-
-              {(activeTab === 'past' || activeTab === 'upcoming') && pastSessions.map(session => {
+              {(activeTab === 'past' || activeTab === 'upcoming') && sessions.filter(s => s.status === 'COMPLETED').map(session => {
                 const isCompleted = session.status === 'COMPLETED';
                 const containerClasses = isCompleted
                   ? "bg-[#F8FAFC] border-[#10B77F]/5"

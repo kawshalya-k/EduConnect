@@ -11,15 +11,31 @@ const LearnerDashboard = () => {
   const [loadingLeaders, setLoadingLeaders] = useState(true);
   const [learningProgress, setLearningProgress] = useState({ completed: 0, total: 0, percent: 0 });
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [upcomingSession, setUpcomingSession] = useState(null);
   const [progressError, setProgressError] = useState('');
   const { user } = useAuth();
+
+  useEffect(() => {
+    const loadWallet = async () => {
+      if (!user?.id) return;
+      try {
+        const { balance, success } = await (await import('../services/walletService')).getWalletBalance(user.id);
+        if (success) setWalletBalance(balance ?? 0);
+      } catch (e) {
+        console.error('Failed to load wallet balance', e);
+      }
+    };
+    loadWallet();
+  }, [user?.id]);
 
   useEffect(() => {
     const loadLeaderboard = async () => {
       try {
         const data = await fetchLeaderboard();
         if (data?.success && Array.isArray(data.mentors)) {
-          setTopMentors(data.mentors.slice(0, 3));
+          const sorted = [...data.mentors].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+          setTopMentors(sorted.slice(0, 3));
         }
       } catch (err) {
         console.error('Failed to load leaderboard:', err);
@@ -29,6 +45,8 @@ const LearnerDashboard = () => {
     };
 
     loadLeaderboard();
+    const interval = setInterval(loadLeaderboard, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -55,6 +73,26 @@ const LearnerDashboard = () => {
           percent,
           goal: weeklyGoal,
         });
+
+        // Compute upcoming session (nearest future session)
+        const now = new Date();
+        const future = learnerSessions
+          .map((s) => {
+            try {
+              const d = s.Date ? new Date(s.Date) : null;
+              if (d && s.Time) {
+                const [hh, mm, ss] = s.Time.split(':').map(Number);
+                d.setHours(hh || 0, mm || 0, ss || 0, 0);
+              }
+              return { ...s, _start: d };
+            } catch (e) {
+              return { ...s, _start: null };
+            }
+          })
+          .filter((s) => s._start && s._start >= now)
+          .sort((a, b) => a._start - b._start);
+
+        setUpcomingSession(future.length > 0 ? future[0] : learnerSessions.length > 0 ? learnerSessions[0] : null);
       } catch (err) {
         console.error('Failed to load learning progress:', err);
         setProgressError('Unable to load learning progress.');
@@ -76,7 +114,7 @@ const LearnerDashboard = () => {
           {/* Left Column */}
           <div className="flex flex-col items-start gap-6 w-[800px]">
             
-            {/* Skill Coins Balance Card */}
+            {/* Skill Wallet Balance Card */}
             <div className="box-border flex flex-row items-center p-6 gap-6 w-full h-[131px] bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
               <div className="flex flex-row justify-center items-center w-16 h-16 bg-[#10B77F]/20 rounded-full">
                 {/* Coin Icon */}
@@ -88,12 +126,12 @@ const LearnerDashboard = () => {
               <div className="flex flex-col items-start h-[82px]">
                 <div className="flex flex-col items-start h-[38px]">
                   <span className="font-bold text-[30px] leading-[38px] flex items-center text-[#0F172A]">
-                    {user?.skillCoins?.toLocaleString() ?? '1,250'} Coins
+                    {walletBalance != null ? Number(walletBalance).toLocaleString() : (user?.skillCoins?.toLocaleString() ?? '1,250')}
                   </span>
                 </div>
                 <div className="flex flex-col items-start h-6">
                   <span className="font-medium text-base leading-6 flex items-center text-[#64748B]">
-                    Skill Coins Balance
+                    Skill Wallet Balance
                   </span>
                 </div>
                 <div className="flex flex-col items-start h-5">
@@ -131,7 +169,7 @@ const LearnerDashboard = () => {
                 <div className="flex flex-col justify-between items-start p-6 w-[532px] h-[176px]">
                   <div className="flex flex-col items-start gap-2 w-full">
                     <h3 className="font-bold text-xl leading-7 flex items-center text-[#0F172A]">
-                      Next Session: Dr. Sarah Mitchell
+                      {upcomingSession ? `Next Session: ${upcomingSession.Mentor_Name || upcomingSession.Mentor || 'Your Mentor'}` : 'No upcoming sessions'}
                     </h3>
                     <div className="flex flex-row items-center gap-2 h-6">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#10B77F]">
@@ -139,18 +177,21 @@ const LearnerDashboard = () => {
                         <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="2" />
                       </svg>
                       <span className="font-medium text-base leading-6 flex items-center text-[#64748B]">
-                        Tomorrow, 10:00 AM
+                        {upcomingSession && upcomingSession.Date ? new Date(upcomingSession._start).toLocaleString() : '—'}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex flex-row justify-between items-center w-full mt-6">
                     <span className="font-normal text-sm leading-5 flex items-center text-[#94A3B8]">
-                      Meeting link will activate 5m before
+                      {upcomingSession ? 'Meeting link will activate 5m before' : 'Schedule your first session to get started.'}
                     </span>
-                    <Link to="/session-room" className="relative flex flex-col justify-center items-center py-2.5 px-6 w-[147px] h-11 bg-[#10B77F] rounded-3xl hover:bg-[#059669] transition-colors shadow-[0_4px_6px_-4px_rgba(16,183,127,0.2),0_10px_15px_-3px_rgba(16,183,127,0.2)]">
-                      <span className="font-bold text-base leading-6 text-center text-white z-10">
-                        Join Session
+                    <Link
+                      to={upcomingSession ? `/session-room?id=${upcomingSession.Session_Id}` : '/session-room'}
+                      className={`relative flex flex-col justify-center items-center py-2.5 px-6 w-[147px] h-11 ${upcomingSession ? 'bg-[#10B77F] hover:bg-[#059669] text-white' : 'bg-slate-100 text-[#64748B] cursor-pointer'} rounded-3xl transition-colors shadow-[0_4px_6px_-4px_rgba(16,183,127,0.2),0_10px_15px_-3px_rgba(16,183,127,0.2)]`}
+                    >
+                      <span className="font-bold text-base leading-6 text-center z-10">
+                        {upcomingSession ? 'View Session' : 'View Session Room'}
                       </span>
                     </Link>
                   </div>
@@ -234,7 +275,7 @@ const LearnerDashboard = () => {
                 ) : topMentors.length > 0 ? (
                   topMentors.map((mentor, index) => (
                     <div
-                      key={mentor.User_Id}
+                      key={mentor.user_id}
                       className={`box-border flex flex-row items-center p-3 gap-3 w-full h-[74px] ${index === 0 ? 'bg-[#10B77F]/5 border border-[#10B77F]/10 rounded-2xl' : 'rounded-2xl hover:bg-slate-50 transition-colors'}`}
                     >
                       {index === 0 ? (
@@ -247,10 +288,10 @@ const LearnerDashboard = () => {
                       </div>
                       <div className="flex flex-col items-start gap-1 flex-1 h-[34px] z-0">
                         <span className="font-bold text-sm leading-[14px] text-[#0F172A]">
-                          {mentor.First_Name} {mentor.Last_Name}
+                          {mentor.first_name} {mentor.last_name}
                         </span>
                         <span className="font-normal text-xs leading-4 text-[#64748B]">
-                          {mentor.University || 'Mentor'}
+                          {mentor.university || 'Mentor'}
                         </span>
                       </div>
                       <div className="flex flex-col items-end w-[27px] h-[31px]">

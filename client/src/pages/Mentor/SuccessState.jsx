@@ -33,7 +33,7 @@ export default function VerificationSuccess() {
               <p className="reward-label">NEW REWARD EARNED</p>
               <div className="reward-coins">
                 <span className="reward-coin-icon">🪙</span>
-                <span>+100 Skill Coins</span>
+                <span>+100 SC</span>
               </div>
             </div>
 

@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
         const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
         // Save to DB with OTP and Expiry
-        const sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role, otp_code, otp_expiry, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        const sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role, otp_code, otp_expiry, is_verified, skill_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100)";
         await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, 1]); // Set is_verified to 1 to bypass OTP temporarily
 
         // Send email via Mailtrap/Nodemailer
@@ -101,13 +101,7 @@ exports.login = async (req, res) => {
 
         res.json({
             token,
-            user: { 
-                id: user.User_Id, 
-                name: `${user.First_Name} ${user.Last_Name}`,
-                email: user.Email,
-                avatar: user.Avatar,
-                skillCoins: user.skill_coins || 0
-            }
+            user: { id: user.User_Id, name: `${user.First_Name} ${user.Last_Name}`, coins: user.skill_coins }
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
