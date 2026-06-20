@@ -62,7 +62,15 @@ const handleBook = async () => {
       duration: 60,
       cost: sessionCost
     });
-    navigate('/booking-confirmed');
+    navigate('/booking-confirmed', { 
+  state: { 
+    mentor: "Sarani Herath",
+    date: date,
+    time: time,
+    coinsDeducted: sessionCost,
+    remainingBalance: walletBalance - sessionCost
+  } 
+});
   } catch (err) {
     setError(err.response?.data?.message || 'Booking failed. Please try again.');
   } finally {
