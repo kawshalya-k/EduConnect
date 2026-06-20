@@ -101,9 +101,6 @@ function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/wallet"   element={<Wallet />} />
         <Route path="/mentor-wallet" element={<SkillWallet />} />
-        {/* Redirects */}
-        <Route path="/" element={<Navigate to="/learner-dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/learner-dashboard" replace />} />
         {/* Catch-all redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
