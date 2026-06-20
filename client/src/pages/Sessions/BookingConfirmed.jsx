@@ -1,17 +1,19 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
 
 export default function BookingConfirmed() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const bookingData = location.state || {};
   const session = {
-    mentor: "Dr. Sarah Mitchell",
+    mentor: bookingData.mentor || "Your Mentor",
     mentorImg: "https://i.pravatar.cc/80?img=47",
-    date: "Oct 24, 2024 • 10:00 AM",
+    date: bookingData.date && bookingData.time ? `${bookingData.date} • ${bookingData.time}` : "Date not set",
     type: "Online Session",
-    coinsDeducted: "200",
-    remainingBalance: "1,050",
+    coinsDeducted: bookingData.coinsDeducted || "0",
+    remainingBalance: bookingData.remainingBalance || "0",
   };
 
   return (
