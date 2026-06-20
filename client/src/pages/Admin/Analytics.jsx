@@ -52,7 +52,7 @@ export default function Analytics() {
   const stats = [
     { label: "Total Active Users", value: analyticsData.totalUsers, change: "+12.4%", icon: "👥", iconBg: "#ecfdf5", iconColor: "#10b981", positive: true },
     { label: "Sessions This Month", value: analyticsData.totalSessions, change: "+5.2%", icon: "📅", iconBg: "#eff6ff", iconColor: "#3b82f6", positive: true },
-    { label: "Skill Coins Circulation", value: analyticsData.skillCoinsCirculation, change: "+2.1M", icon: "💰", iconBg: "#f5f3ff", iconColor: "#8b5cf6", positive: true },
+    { label: "Skill Wallet Circulation", value: analyticsData.skillCoinsCirculation, change: "+2.1M", icon: "💰", iconBg: "#f5f3ff", iconColor: "#8b5cf6", positive: true },
     { label: "Mentor Satisfaction", value: "4.8★", change: "Top Tier", icon: "⭐", iconBg: "#fffbeb", iconColor: "#f59e0b", positive: true },
   ];
 

@@ -1,32 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getWalletBalance } from '../../services/walletService';
 
 const WalletWidget = () => {
-  const { user, setUser } = useAuth();
-  const [balance, setBalance] = useState(user?.skillCoins ?? 0);
+  const { user } = useAuth();
+  const [balance, setBalance] = useState(null);
 
   useEffect(() => {
-    let isMounted = true;
     const loadBalance = async () => {
       if (!user?.id) return;
       try {
-        const response = await getWalletBalance(user.id);
-        if (!isMounted) return;
-        setBalance(response.balance ?? 0);
-        if (setUser) {
-          setUser((prev) => prev ? { ...prev, skillCoins: response.balance ?? prev.skillCoins } : prev);
+        const data = await getWalletBalance(user.id);
+        if (data.success) {
+          setBalance(data.balance);
         }
       } catch (err) {
-        console.error('WalletWidget balance fetch failed:', err);
+        console.error('Failed to load wallet balance', err);
       }
     };
 
     loadBalance();
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id, setUser]);
+    const interval = setInterval(loadBalance, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   return (
     <div className="box-border flex flex-row items-center py-1.5 px-3 gap-2 bg-[#10B981]/10 border border-[#10B981]/20 rounded-lg h-[34px]">
@@ -38,7 +34,7 @@ const WalletWidget = () => {
       </div>
       <div className="flex flex-col items-start h-5">
         <span className="font-['Lexend'] font-bold text-sm leading-5 flex items-center text-[#10B981]">
-          {balance?.toLocaleString() ?? '0'} Skill Coins
+          {balance != null ? balance.toLocaleString() : '100'} Skill Coins
         </span>
       </div>
     </div>

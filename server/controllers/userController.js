@@ -94,3 +94,22 @@ exports.switchRole = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.getPublicStats = async (req, res) => {
+  try {
+    const [countRows] = await db.query('SELECT COUNT(*) AS total FROM User');
+    const totalUsers = countRows[0]?.total || 0;
+
+    const [userRows] = await db.query(
+      'SELECT First_Name, Last_Name, Avatar FROM User WHERE Status = "Active" ORDER BY User_Id DESC LIMIT 3'
+    );
+
+    res.status(200).json({
+      totalUsers,
+      recentUsers: userRows
+    });
+  } catch (error) {
+    console.error('getPublicStats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDashboardStats } from '../../services/adminService';
 
 const sidebarItems = [
-  { icon: "📊", label: "Dashboard", path: "/admin/dashboard" },
+  { icon: "📊", label: "Dashboard", path: "/admin/admin-dashboard" },
   { icon: "👥", label: "User Management", path: "/admin/users" },
   { icon: "✅", label: "Skill Verifications", path: "/admin/verifications" },
   { icon: "📈", label: "Analytics", path: "/admin/analytics" },
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
     { label: "Total Active Users", value: dashboardData.totalUsers, change: "+12%", icon: "👥", iconBg: "#ecfdf5", iconColor: "#10b981", positive: true },
     { label: "Pending Verifications", value: dashboardData.pendingVerifications, change: "High", icon: "⚠️", iconBg: "#fffbeb", iconColor: "#f59e0b", positive: false },
     { label: "Sessions Today", value: dashboardData.sessionsToday, change: "+5%", icon: "📅", iconBg: "#eff6ff", iconColor: "#3b82f6", positive: true },
-    { label: "Skill Coins", value: dashboardData.skillCoinsCirculation, change: "+8%", icon: "💰", iconBg: "#f5f3ff", iconColor: "#8b5cf6", positive: true },
+    { label: "Skill Wallet", value: dashboardData.skillCoinsCirculation, change: "+8%", icon: "💰", iconBg: "#f5f3ff", iconColor: "#8b5cf6", positive: true },
   ];
 
   return (

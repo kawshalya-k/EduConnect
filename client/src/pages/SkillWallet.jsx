@@ -1,26 +1,15 @@
 // client/src/pages/MentorWallet.jsx
 
-import { useState } from "react";
-import { Link } from 'react-router-dom';
-
-const mentorTransactions = [
-  { id: 1, learner: "Alex Chen",    avatar: "AC", skill: "PYTHON",       skillColor: "#3B82F6", skillBg: "#EFF6FF", amount: +20, status: "done"    },
-  { id: 2, learner: "Sarah Miller", avatar: "SM", skill: "REACT",        skillColor: "#06B6D4", skillBg: "#ECFEFF", amount: +20, status: "done"    },
-  { id: 3, learner: "David Kim",    avatar: "DK", skill: "UX DESIGN",    skillColor: "#8B5CF6", skillBg: "#F5F3FF", amount: +40, status: "done"    },
-  { id: 4, learner: "Redemption",   avatar: "🎁", skill: "LIBRARY PASS", skillColor: "#6B7280", skillBg: "#F9FAFB", amount: -50, status: "pending" },
-];
-
-const graphData = [
-  { week: "WEEK 1", value: 20  },
-  { week: "WEEK 2", value: 45  },
-  { week: "WEEK 3", value: 60  },
-  { week: "WEEK 4", value: 100 },
-];
+import { useState, useEffect } from 'react';
+import PageLayout from '../components/Layout/PageLayout';
+import DashboardSidebar from '../components/Mentorship/MentorSideBar';
+import { useAuth } from '../context/AuthContext';
+import axiosInstance from '../services/axiosConfig';
 
 // ── Earnings Line Graph ──
 function EarningsGraph({ data }) {
   const w = 300, h = 80;
-  const max = Math.max(...data.map(d => d.value));
+  const max = Math.max(...data.map(d => d.value), 1);
   const pts = data.map((d, i) => {
     const x = (i / (data.length - 1)) * w;
     const y = h - (d.value / max) * h;
@@ -52,178 +41,122 @@ function EarningsGraph({ data }) {
 }
 
 export default function MentorWallet() {
-  const [available, setAvailable] = useState(true);
+  const { user } = useAuth();
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
+  const [earningsData, setEarningsData] = useState([]);
+  const [allTimeEarned, setAllTimeEarned] = useState(0);
+  const [mentorLevel, setMentorLevel] = useState('Bronze');
+  const [mentorScore, setMentorScore] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.id) return;
+      try {
+        const [balRes, txRes, earnRes, dashRes] = await Promise.all([
+          axiosInstance.get(`/wallet/${user.id}`),
+          axiosInstance.get(`/wallet/${user.id}/transactions?limit=20`),
+          axiosInstance.get('/mentors/dashboard/earnings'),
+          axiosInstance.get('/mentors/dashboard'),
+        ]);
+
+        if (balRes.data.success) {
+          setBalance(balRes.data.balance);
+        }
+
+        if (txRes.data.success) {
+          setTransactions(txRes.data.transactions || []);
+        }
+
+        const monthly = earnRes.data?.monthly_breakdown || [];
+        setEarningsData(monthly.map(m => ({
+          week: m.Month ? m.Month.slice(-2) + '/' + m.Month.slice(0,4) : 'N/A',
+          value: Number(m.Total_Earned) || 0,
+        })));
+        setAllTimeEarned(Number(earnRes.data?.all_time_earned) || 0);
+
+        // Get best level and score from skill_stats
+        const skills = dashRes.data?.skill_stats || [];
+        if (skills.length > 0) {
+          const levels = { bronze: 1, silver: 2, gold: 3, platinum: 4, diamond: 5 };
+          const best = skills.reduce((max, s) => {
+            const lvl = levels[s.Mentor_Level?.toLowerCase()] || 0;
+            return lvl > (levels[max.Mentor_Level?.toLowerCase()] || 0) ? s : max;
+          }, skills[0]);
+          setMentorLevel(best.Mentor_Level || 'Bronze');
+          setMentorScore(Number(best.Score) || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch wallet data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
+  const last30DaysTotal = earningsData.reduce((s, d) => s + d.value, 0);
+
+  const skillColorMap = {
+    PYTHON: '#3B82F6', REACT: '#06B6D4', JAVASCRIPT: '#F59E0B',
+    'UX DESIGN': '#8B5CF6', 'UI/UX': '#8B5CF6', TYPESCRIPT: '#3178C6',
+    NODE: '#10B981', 'NODE.JS': '#10B981', DEFAULT: '#6B7280',
+  };
+  const skillBgMap = {
+    PYTHON: '#EFF6FF', REACT: '#ECFEFF', JAVASCRIPT: '#FFFBEB',
+    'UX DESIGN': '#F5F3FF', 'UI/UX': '#F5F3FF', TYPESCRIPT: '#EEF2FF',
+    NODE: '#ECFDF5', 'NODE.JS': '#ECFDF5', DEFAULT: '#F9FAFB',
+  };
+
+  const parseTransaction = (tx) => {
+    const isCredit = tx.type === 'CREDIT';
+    const reason = tx.reason || '';
+    const learnerMatch = reason.match(/with\s(.+)$/);
+    const skillMatch = reason.match(/completed:\s(.+?)\swith/);
+    const bookedSkillMatch = reason.match(/Booked session:\s(.+?)\swith/);
+    const skill = skillMatch?.[1] || bookedSkillMatch?.[1] || (reason.includes('Skill verified') ? 'VERIFICATION' : '');
+    const learner = learnerMatch?.[1] || '';
+    const avatar = learner ? learner.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : (isCredit ? '💰' : '💳');
+    const skillKey = Object.keys(skillColorMap).find(k => skill.toUpperCase().includes(k)) || 'DEFAULT';
+    const skillColor = skillColorMap[skillKey] || skillColorMap.DEFAULT;
+    const skillBg = skillBgMap[skillKey] || skillBgMap.DEFAULT;
+    return {
+      id: tx.transaction_id || tx.id,
+      learner: learner || (isCredit ? 'Earned' : 'Spent'),
+      avatar,
+      skill,
+      skillColor,
+      skillBg,
+      amount: isCredit ? tx.amount : -tx.amount,
+      status: isCredit ? 'done' : 'pending',
+    };
+  };
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="dash-layout">
+          <DashboardSidebar user={user} />
+          <div className="dash-content">
+            <div className="dash-main" style={{ padding: "28px 32px" }}>
+              <p style={{ textAlign: "center", color: "#16a34a", padding: "3rem" }}>Loading wallet...</p>
+            </div>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F5F7F5", fontFamily: "Arial, sans-serif" }}>
-
-      {/* ── Navbar ── */}
-      <nav style={{
-        background: "#fff", borderBottom: "1px solid #E8E8E8",
-        padding: "0 32px", height: "60px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{
-            width: "28px", height: "28px", background: "#1D9E75",
-            borderRadius: "8px", display: "flex", alignItems: "center",
-            justifyContent: "center", color: "#fff", fontWeight: "bold", fontSize: "14px",
-          }}>E</div>
-          <span style={{ fontWeight: "bold", fontSize: "16px" }}>EduConnect</span>
-        </div>
-
-        {/* Nav links */}
-        <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-          {[
-            { label: "Dashboard", path: "/dashboard" },
-            { label: "Sessions", path: "/MySessions" },
-            { label: "Messages", path: "/session-room#messages" }
-          ].map(link => (
-            <Link key={link.label} to={link.path} style={{
-              fontSize: "14px", cursor: "pointer",
-              color: link.label === "Sessions" ? "#1D9E75" : "#666",
-              fontWeight: link.label === "Sessions" ? "600" : "400",
-              borderBottom: link.label === "Sessions" ? "2px solid #1D9E75" : "none",
-              paddingBottom: "4px",
-              textDecoration: 'none'
-            }}>{link.label}</Link>
-          ))}
-        </div>
-
-        {/* Right */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{
-            display: "flex", border: "1px solid #E0E0E0",
-            borderRadius: "20px", overflow: "hidden", fontSize: "13px",
-          }}>
-            <span style={{
-              padding: "6px 14px", background: "#1D9E75",
-              color: "#fff", cursor: "pointer", fontWeight: "500",
-            }}>Mentor Mode</span>
-            <span style={{ padding: "6px 14px", cursor: "pointer", color: "#666" }}>Learner</span>
-          </div>
-          <div style={{
-            display: "flex", alignItems: "center", gap: "6px",
-            background: "#E1F5EE", padding: "6px 14px",
-            borderRadius: "20px", fontSize: "13px",
-            fontWeight: "600", color: "#0F6E56",
-          }}>
-            🪙 100 Skill Coins
-          </div>
-          <span style={{ fontSize: "20px", cursor: "pointer" }}>🔔</span>
-          <div style={{
-            width: "36px", height: "36px", borderRadius: "50%",
-            background: "#2D4A3E", display: "flex",
-            alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: "bold", fontSize: "14px",
-          }}>M</div>
-        </div>
-      </nav>
-
-      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
-
-        {/* ── Left Sidebar ── */}
-        <div style={{
-          width: "220px", flexShrink: 0,
-          background: "#fff", borderRight: "1px solid #E8E8E8",
-          padding: "24px 16px",
-          display: "flex", flexDirection: "column", gap: "4px",
-        }}>
-          {/* Title */}
-          <p style={{ margin: "0 0 2px", fontWeight: "700", fontSize: "15px", color: "#1D9E75" }}>
-            Session Manager
-          </p>
-          <p style={{ margin: "0 0 20px", fontSize: "12px", color: "#aaa" }}>
-            Manage your learning sessions
-          </p>
-
-          {/* Nav items */}
-          {[
-            { label: "Dashboard",    icon: "📊", active: false },
-            { label: "Sessions",     icon: "👥", active: true  },
-            { label: "Availability", icon: "🕐", active: false },
-            { label: "Earnings",     icon: "💰", active: false },
-            { label: "Settings",     icon: "⚙️", active: false },
-          ].map(item => (
-            <div key={item.label} style={{
-              display: "flex", alignItems: "center", gap: "10px",
-              padding: "10px 12px", borderRadius: "8px",
-              background: item.active ? "#E1F5EE" : "transparent",
-              color: item.active ? "#1D9E75" : "#555",
-              cursor: "pointer", fontSize: "14px",
-              fontWeight: item.active ? "600" : "400",
-            }}>
-              <span style={{ fontSize: "15px" }}>{item.icon}</span>
-              {item.label}
-            </div>
-          ))}
-
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
-
-          {/* Availability toggle */}
-          <div style={{
-            padding: "12px", border: "1px solid #E8E8E8",
-            borderRadius: "12px", marginBottom: "12px",
-          }}>
-            <p style={{
-              margin: "0 0 6px", fontSize: "10px",
-              color: "#aaa", textTransform: "uppercase", letterSpacing: "0.5px",
-            }}>Availability</p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>
-                Accepting new requests
-              </p>
-              <div
-                onClick={() => setAvailable(!available)}
-                style={{
-                  width: "38px", height: "20px",
-                  background: available ? "#1D9E75" : "#ccc",
-                  borderRadius: "20px", position: "relative",
-                  cursor: "pointer", transition: "background 0.2s",
-                }}
-              >
-                <div style={{
-                  position: "absolute",
-                  left: available ? "20px" : "2px",
-                  top: "2px",
-                  width: "16px", height: "16px",
-                  background: "#fff", borderRadius: "50%",
-                  transition: "left 0.2s",
-                }} />
-              </div>
-            </div>
-          </div>
-
-          {/* Daily Earnings card */}
-          <div style={{
-            background: "#0F2D27", borderRadius: "12px",
-            padding: "16px", color: "#fff",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-              <span style={{ fontSize: "12px" }}>🟢</span>
-              <p style={{ margin: 0, fontSize: "11px", color: "#aaa" }}>Daily Earnings</p>
-            </div>
-            <p style={{ margin: "0 0 14px" }}>
-              <span style={{ fontSize: "24px", fontWeight: "bold" }}>150 </span>
-              <span style={{ fontSize: "13px", color: "#1D9E75", fontWeight: "500" }}>Skill Coins</span>
-            </p>
-            <button style={{
-              width: "100%", padding: "9px",
-              background: "#1D9E75", border: "none",
-              borderRadius: "8px", color: "#fff",
-              fontWeight: "600", fontSize: "13px", cursor: "pointer",
-              display: "flex", alignItems: "center",
-              justifyContent: "center", gap: "6px",
-            }}>
-              📡 Go Live
-            </button>
-          </div>
-        </div>
-
-        {/* ── Main Content ── */}
-        <div style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
+    <PageLayout>
+      <div className="dash-layout">
+        <DashboardSidebar user={user} />
+        <div className="dash-content">
+          <div className="dash-main" style={{ padding: "28px 32px" }}>
 
           {/* ── Top Row — Balance + Graph ── */}
           <div style={{
@@ -237,7 +170,6 @@ export default function MentorWallet() {
               border: "1px solid #E8E8E8", padding: "24px",
               position: "relative", overflow: "hidden",
             }}>
-              {/* Big circle decoration */}
               <div style={{
                 position: "absolute", top: "-30px", right: "-30px",
                 width: "140px", height: "140px", borderRadius: "50%",
@@ -248,11 +180,11 @@ export default function MentorWallet() {
                 color: "#aaa", textTransform: "uppercase", letterSpacing: "0.5px",
               }}>Current Balance</p>
               <p style={{ margin: "0 0 16px" }}>
-                <span style={{ fontSize: "44px", fontWeight: "bold" }}>150 </span>
+                <span style={{ fontSize: "44px", fontWeight: "bold" }}>{balance.toLocaleString()} </span>
                 <span style={{ fontSize: "20px", color: "#1D9E75", fontWeight: "600" }}>SC</span>
               </p>
               <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>
-                Total Lifetime Earnings: <strong style={{ color: "#1a1a1a" }}>1,240 SC</strong>
+                Total Lifetime Earnings: <strong style={{ color: "#1a1a1a" }}>{allTimeEarned.toLocaleString()} SC</strong>
               </p>
             </div>
 
@@ -268,16 +200,15 @@ export default function MentorWallet() {
                 <div>
                   <p style={{ margin: "0 0 2px", fontSize: "13px", color: "#888" }}>Last 30 Days</p>
                   <p style={{ margin: 0, fontSize: "26px", fontWeight: "bold", color: "#1D9E75" }}>
-                    +340 SC
+                    +{last30DaysTotal.toLocaleString()} SC
                   </p>
                 </div>
-                <span style={{
-                  background: "#E1F5EE", color: "#0F6E56",
-                  fontSize: "11px", fontWeight: "600",
-                  padding: "3px 10px", borderRadius: "20px",
-                }}>+12% vs LY</span>
               </div>
-              <EarningsGraph data={graphData} />
+              {earningsData.length > 0 ? (
+                <EarningsGraph data={earningsData} />
+              ) : (
+                <p style={{ textAlign: "center", color: "#aaa", fontSize: "13px", paddingTop: "2rem" }}>No earnings data yet</p>
+              )}
             </div>
           </div>
 
@@ -288,7 +219,7 @@ export default function MentorWallet() {
           }}>
 
             {/* Recent Activity */}
-            <div style={{
+            <div id="recent-activity" style={{
               background: "#fff", borderRadius: "16px",
               border: "1px solid #E8E8E8", overflow: "hidden",
             }}>
@@ -312,63 +243,68 @@ export default function MentorWallet() {
               </div>
 
               {/* Rows */}
-              {mentorTransactions.map(tx => (
-                <div key={tx.id} style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 130px 110px 80px",
-                  padding: "13px 20px",
-                  borderBottom: "1px solid #F9F9F9",
-                  alignItems: "center",
-                }}>
-                  {/* Learner */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div style={{
-                      width: "34px", height: "34px", borderRadius: "50%",
-                      background: "#E1F5EE", display: "flex",
-                      alignItems: "center", justifyContent: "center",
-                      fontSize: "13px", fontWeight: "bold", color: "#0F6E56",
-                      overflow: "hidden",
-                    }}>
-                      {tx.avatar}
-                    </div>
-                    <span style={{ fontSize: "14px" }}>{tx.learner}</span>
-                  </div>
-
-                  {/* Skill badge */}
-                  <span style={{
-                    fontSize: "10px", fontWeight: "700",
-                    padding: "3px 10px", borderRadius: "20px",
-                    background: tx.skillBg, color: tx.skillColor,
-                    display: "inline-block", width: "fit-content",
-                  }}>{tx.skill}</span>
-
-                  {/* Amount */}
-                  <span style={{
-                    fontWeight: "700", fontSize: "14px",
-                    color: tx.amount > 0 ? "#1D9E75" : "#E24B4A",
-                  }}>
-                    {tx.amount > 0 ? "+" : ""}{tx.amount} SC
-                  </span>
-
-                  {/* Status */}
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    {tx.status === "done"
-                      ? <span style={{
-                          width: "22px", height: "22px", borderRadius: "50%",
-                          border: "2px solid #1D9E75", display: "flex",
-                          alignItems: "center", justifyContent: "center",
-                          color: "#1D9E75", fontSize: "12px",
-                        }}>✓</span>
-                      : <span style={{
-                          width: "22px", height: "22px", borderRadius: "50%",
-                          border: "2px solid #aaa", display: "flex",
-                          alignItems: "center", justifyContent: "center",
-                          color: "#aaa", fontSize: "12px",
-                        }}>🕐</span>
-                    }
-                  </div>
+              {transactions.length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", color: "#aaa", fontSize: "13px" }}>
+                  No transactions yet
                 </div>
-              ))}
+              ) : (
+                transactions.map(tx => {
+                  const parsed = parseTransaction(tx);
+                  return (
+                    <div key={parsed.id} style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 130px 110px 80px",
+                      padding: "13px 20px",
+                      borderBottom: "1px solid #F9F9F9",
+                      alignItems: "center",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{
+                          width: "34px", height: "34px", borderRadius: "50%",
+                          background: "#E1F5EE", display: "flex",
+                          alignItems: "center", justifyContent: "center",
+                          fontSize: "13px", fontWeight: "bold", color: "#0F6E56",
+                          overflow: "hidden",
+                        }}>
+                          {parsed.avatar}
+                        </div>
+                        <span style={{ fontSize: "14px" }}>{parsed.learner}</span>
+                      </div>
+
+                      <span style={{
+                        fontSize: "10px", fontWeight: "700",
+                        padding: "3px 10px", borderRadius: "20px",
+                        background: parsed.skillBg, color: parsed.skillColor,
+                        display: "inline-block", width: "fit-content",
+                      }}>{parsed.skill || (tx.type === 'CREDIT' ? 'CREDIT' : 'DEBIT')}</span>
+
+                      <span style={{
+                        fontWeight: "700", fontSize: "14px",
+                        color: parsed.amount > 0 ? "#1D9E75" : "#E24B4A",
+                      }}>
+                        {parsed.amount > 0 ? "+" : ""}{parsed.amount} SC
+                      </span>
+
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        {parsed.status === "done"
+                          ? <span style={{
+                              width: "22px", height: "22px", borderRadius: "50%",
+                              border: "2px solid #1D9E75", display: "flex",
+                              alignItems: "center", justifyContent: "center",
+                              color: "#1D9E75", fontSize: "12px",
+                            }}>✓</span>
+                          : <span style={{
+                              width: "22px", height: "22px", borderRadius: "50%",
+                              border: "2px solid #aaa", display: "flex",
+                              alignItems: "center", justifyContent: "center",
+                              color: "#aaa", fontSize: "12px",
+                            }}>🕐</span>
+                        }
+                      </div>
+                    </div>
+                  );
+                })
+              )}
 
               {/* View all */}
               <div style={{ padding: "14px 20px", textAlign: "center" }}>
@@ -385,7 +321,7 @@ export default function MentorWallet() {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
               {/* Payout Info */}
-              <div style={{
+              <div id="payout" style={{
                 background: "#fff", borderRadius: "16px",
                 border: "1px solid #E8E8E8", padding: "20px",
               }}>
@@ -424,70 +360,28 @@ export default function MentorWallet() {
                 padding: "20px", color: "#fff",
               }}>
                 <p style={{ margin: "0 0 10px", fontWeight: "700", fontSize: "14px" }}>
-                  Mentor Level: Platinum
+                  Mentor Level: {mentorLevel}
                 </p>
                 <div style={{
                   height: "6px", background: "rgba(255,255,255,0.15)",
                   borderRadius: "10px", marginBottom: "12px",
                 }}>
                   <div style={{
-                    width: "75%", height: "100%",
+                    width: Math.min(mentorScore, 100) + "%", height: "100%",
                     background: "#1D9E75", borderRadius: "10px",
                   }} />
                 </div>
                 <p style={{ margin: 0, fontSize: "12px", color: "#aaa", lineHeight: "1.6" }}>
-                  You are 260 SC away from Diamond status and a 5% bonus multiplier!
+                  Score: {mentorScore} &mdash; Keep mentoring to unlock the next level!
                 </p>
               </div>
 
             </div>
           </div>
-
-          {/* ── Footer ── */}
-          <div style={{
-            background: "#0F2D27", borderRadius: "16px",
-            padding: "40px 32px", marginTop: "28px",
-            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "32px",
-          }}>
-            {/* Brand */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                <div style={{
-                  width: "28px", height: "28px", background: "#1D9E75",
-                  borderRadius: "8px", display: "flex", alignItems: "center",
-                  justifyContent: "center", color: "#fff", fontWeight: "bold", fontSize: "14px",
-                }}>E</div>
-                <span style={{ fontWeight: "bold", fontSize: "16px", color: "#fff" }}>EduConnect</span>
-              </div>
-              <p style={{ fontSize: "13px", color: "#aaa", lineHeight: "1.7", margin: 0 }}>
-                Empowering University students through peer-to-peer learning and community recognition.
-              </p>
-            </div>
-            {[
-              { title: "Student Center", links: ["Student Registration", "Search Mentors", "Skill Marketplace"] },
-              { title: "Mentorship",     links: ["Mentor Onboarding", "Verification Center", "Teaching Tools", "Mentor Guidelines"] },
-              { title: "Portal",         links: ["About Us", "Privacy Policy", "Terms of Service", "Community Guidelines", "Contact Support", "Help Center"] },
-            ].map(col => (
-              <div key={col.title}>
-                <p style={{ fontWeight: "600", fontSize: "13px", color: "#1D9E75", marginBottom: "12px" }}>
-                  {col.title}
-                </p>
-                {col.links.map(link => (
-                  <p key={link} style={{ fontSize: "13px", color: "#aaa", marginBottom: "8px", cursor: "pointer" }}>
-                    {link}
-                  </p>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {/* Footer bottom */}
-          <p style={{ textAlign: "center", fontSize: "12px", color: "#aaa", marginTop: "16px" }}>
-            © 2026 EduConnect. All rights reserved.
-          </p>
 
         </div>
       </div>
     </div>
+  </PageLayout>
   );
 }
