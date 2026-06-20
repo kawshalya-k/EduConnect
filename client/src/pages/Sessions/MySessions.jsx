@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../services/axiosConfig';
+import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
+import Footer from '../../components/Footer';
 
 
 
