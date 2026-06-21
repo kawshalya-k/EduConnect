@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import PageLayout from '../../components/Layout/PageLayout';
+import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
+import { useAuth } from '../../context/AuthContext';
 import failureHero from '../../Assets/FailedStateImage.jpg';
 
 import './FailedState.css';
@@ -10,6 +12,7 @@ const RETRY_HOURS = 24; // 24 hour cooldown
 export default function VerificationFailed() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const params = new URLSearchParams(location.search);
   const from = params.get('from');
   // Countdown: start from 23:59:58 for demo
@@ -29,7 +32,9 @@ export default function VerificationFailed() {
 
   return (
     <PageLayout>
-      <div className="failed-page">
+      <div className="dash-layout">
+        <DashboardSidebar user={user} />
+        <div className="failed-page" style={{ flex: 1, minWidth: 0 }}>
         {/* Hero image */}
         <div className="failed-hero-image">
           <img src={failureHero} alt="Verification Failure Banner" />
@@ -92,6 +97,7 @@ export default function VerificationFailed() {
             <span className="dot error" />
           </div>
         </div>
+      </div>
       </div>
     </PageLayout>
   );

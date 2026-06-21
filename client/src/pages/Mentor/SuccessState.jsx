@@ -1,19 +1,24 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiCheckCircle } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
+import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
+import { useAuth } from '../../context/AuthContext';
 import './SuccessState.css';
 
 export default function VerificationSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const params = new URLSearchParams(location.search);
   const from = params.get('from');
   const skillId = params.get('skillId');
 
   return (
     <PageLayout>
-      <div className="success-page">
-        <div className="success-center">
+      <div className="dash-layout">
+        <DashboardSidebar user={user} />
+        <div className="success-page" style={{ flex: 1, minWidth: 0 }}>
+          <div className="success-center">
           <div className="success-card">
             {/* Badge Icon */}
             <div className="success-badge-icon">
@@ -71,6 +76,7 @@ export default function VerificationSuccess() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </PageLayout>
   );

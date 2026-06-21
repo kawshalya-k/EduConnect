@@ -66,9 +66,18 @@ export default function DashboardSidebar({ user }) {
 
       <nav className="dash-sidebar-nav">
         {NAV_ITEMS.map((item) => {
-          const isActive = item.exact
-            ? location.pathname === item.path
-            : location.pathname.startsWith(item.path);
+          let isActive = false;
+          if (item.path === '/mentor-dashboard') {
+            isActive = location.pathname === '/mentor-dashboard' || location.pathname === '/dashboard';
+          } else if (item.path === '/verification') {
+            isActive = location.pathname.startsWith('/verification') && location.pathname !== '/verification/add';
+          } else if (item.path === '/verification/add') {
+            isActive = location.pathname === '/verification/add';
+          } else {
+            isActive = item.exact
+              ? location.pathname === item.path
+              : location.pathname.startsWith(item.path);
+          }
           return (
             <Link
               key={item.path}

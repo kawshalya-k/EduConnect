@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageLayout from '../../components/Layout/PageLayout';
 import Breadcrumb from '../../components/Layout/Breadcrumb';
+import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import { FiCheckCircle, FiArrowRight, FiXCircle, FiUploadCloud, FiTrash2, FiClock, FiFileText, FiImage } from 'react-icons/fi';
 import { getQuizForSkill } from '../../utils/quizData';
 import { fetchMentorSkills } from '../../services/mentorApi';
@@ -312,8 +313,10 @@ export default function VerifySkill() {
 
   return (
     <PageLayout>
-      <div className="verify-skill-page">
-        <Breadcrumb
+      <div className="dash-layout">
+        <DashboardSidebar user={user} />
+        <div className="verify-skill-page" style={{ flex: 1, minWidth: 0 }}>
+          <Breadcrumb
           items={[
             { label: 'Dashboard', path: '/dashboard' },
             { label: 'Skills', path: '/verification' },
@@ -637,6 +640,7 @@ export default function VerifySkill() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </PageLayout>
   );
