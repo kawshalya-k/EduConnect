@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import Breadcrumb from '../../components/Layout/Breadcrumb';
+import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import { LoadingState } from '../../components/Layout/LoadingState';
 import { useAuth } from '../../context/AuthContext';
 import { fetchMentorSkills } from '../../services/mentorApi';
@@ -244,8 +245,10 @@ export default function VerificationCenter() {
 
   return (
     <PageLayout>
-      <div className="verification-page">
-        {isAllSkillsView ? (
+      <div className="dash-layout">
+        <DashboardSidebar user={user} />
+        <div className="verification-page" style={{ flex: 1, minWidth: 0 }}>
+          {isAllSkillsView ? (
           <Breadcrumb
             items={[
               { label: 'Dashboard', path: '/mentor-dashboard' },
@@ -377,6 +380,7 @@ export default function VerificationCenter() {
             )}
           </>
         )}
+        </div>
       </div>
     </PageLayout>
   );
