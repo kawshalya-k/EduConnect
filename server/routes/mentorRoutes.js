@@ -27,8 +27,8 @@ router.get('/profile/:mentorId', mentorController.getPublicProfile);
 // Protected
 router.use(protect);
 
-router.get('/profile', profileCtrl.getProfile);        // fixed: was getMyProfile
-router.put('/profile/:id', profileCtrl.updateProfile); // fixed: needs :id param
+router.get('/profile', profileCtrl.getProfile);        
+router.put('/profile/:id', profileCtrl.updateProfile); 
 
 router.get('/skills/all', skillCtrl.getAllSkills);
 router.get('/skills/my', skillCtrl.getMySkills);

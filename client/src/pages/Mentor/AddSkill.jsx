@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiCode } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import Breadcrumb from '../../components/Layout/Breadcrumb';
+import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import { useAuth } from '../../context/AuthContext';
 import { addSkill } from '../../services/mentorApi';
 import API from '../../services/axiosConfig';
@@ -156,8 +157,10 @@ export default function AddSkill() {
 
   return (
     <PageLayout>
-      <div className="add-skill-page">
-        <div className="add-skill-header-container">
+      <div className="dash-layout">
+        <DashboardSidebar user={user} />
+        <div className="add-skill-page" style={{ flex: 1, minWidth: 0 }}>
+          <div className="add-skill-header-container">
           <Breadcrumb
             items={[
               { label: 'Dashboard', path: '/mentor-dashboard' },
@@ -296,6 +299,7 @@ export default function AddSkill() {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </PageLayout>
   );

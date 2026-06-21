@@ -286,3 +286,10 @@
   line-height: 24px;
   color: #0F172A;
 }
+
+/* Common mentor layout wrapper fallback */
+.dash-layout {
+  display: flex;
+  min-height: calc(100vh - 64px);
+  width: 100%;
+}
