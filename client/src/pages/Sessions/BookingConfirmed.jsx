@@ -16,6 +16,65 @@ export default function BookingConfirmed() {
     remainingBalance: bookingData.remainingBalance || "0",
   };
 
+  const handleDownloadICS = () => {
+    const mentorName = session.mentor;
+    const dateStr = bookingData.date; // e.g. "2026-06-25"
+    const timeStr = bookingData.time; // e.g. "10:00 AM - 11:00 AM"
+
+    let startHour = 10;
+    let startMin = 0;
+    if (timeStr) {
+      const parts = timeStr.split(' - ')[0]; // "10:00 AM"
+      const match = parts.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (match) {
+        startHour = parseInt(match[1]);
+        startMin = parseInt(match[2]);
+        const ampm = match[3].toUpperCase();
+        if (ampm === 'PM' && startHour !== 12) startHour += 12;
+        if (ampm === 'AM' && startHour === 12) startHour = 0;
+      }
+    }
+
+    const dateParts = dateStr ? dateStr.split('-') : [];
+    const year = dateParts[0] ? parseInt(dateParts[0]) : 2026;
+    const month = dateParts[1] ? parseInt(dateParts[1]) - 1 : 5;
+    const day = dateParts[2] ? parseInt(dateParts[2]) : 25;
+
+    const startDate = new Date(year, month, day, startHour, startMin);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    const formatDateICS = (d) => {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+    };
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//EduConnect//Mentorship Session//EN",
+      "BEGIN:VEVENT",
+      `UID:session_${Date.now()}@educonnect.com`,
+      `DTSTAMP:${formatDateICS(new Date())}`,
+      `DTSTART:${formatDateICS(startDate)}`,
+      `DTEND:${formatDateICS(endDate)}`,
+      `SUMMARY:Mentorship Session with ${mentorName}`,
+      "DESCRIPTION:Focused mentorship session scheduled on EduConnect.",
+      "LOCATION:EduConnect Virtual Classroom",
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `session_with_${mentorName.replace(/\s+/g, '_')}.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
       <DashboardNavbar />
@@ -42,7 +101,7 @@ export default function BookingConfirmed() {
             
             <div className="text-center max-w-[448px]">
               <p className="text-[#475569] font-normal text-base leading-6">
-                Your session with {session.mentor} has been successfully scheduled. We've sent the meeting link and calendar invite to your email.
+                Your session with {session.mentor} has been successfully scheduled. We've sent the calendar invite to your email.
               </p>
             </div>
           </div>
@@ -148,12 +207,13 @@ export default function BookingConfirmed() {
               </button>
               
               <button 
-                className="flex items-center justify-center gap-2 px-8 py-3 bg-[#F1F5F9] rounded-full text-[#0F172A] font-bold text-base hover:bg-[#e2e8f0] transition-colors w-[147px]"
+                onClick={handleDownloadICS}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#F1F5F9] rounded-full text-[#0F172A] font-bold text-base hover:bg-[#e2e8f0] transition-colors w-[200px]"
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#0F172A]">
-                  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" fill="currentColor"/>
                 </svg>
-                Receipt
+                Add to Calendar
               </button>
             </div>
 

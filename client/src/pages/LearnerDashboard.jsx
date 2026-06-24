@@ -49,6 +49,24 @@ const LearnerDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const [recommendedMentors, setRecommendedMentors] = useState([]);
+  const [loadingRecommended, setLoadingRecommended] = useState(true);
+
+  useEffect(() => {
+    const loadRecommended = async () => {
+      try {
+        const { fetchRecommendedMentors } = await import('../services/mentorApi');
+        const res = await fetchRecommendedMentors();
+        setRecommendedMentors(res.data?.mentors || []);
+      } catch (e) {
+        console.error('Failed to load recommended mentors:', e);
+      } finally {
+        setLoadingRecommended(false);
+      }
+    };
+    loadRecommended();
+  }, []);
+
   useEffect(() => {
     const loadLearningProgress = async () => {
       if (!user?.id) {
@@ -196,6 +214,60 @@ const LearnerDashboard = () => {
                     </Link>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Recommended Mentors (AI-Powered) */}
+            <div className="box-border flex flex-col p-6 gap-4 w-full bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
+              <div className="flex flex-row justify-between items-center w-full">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🤖</span>
+                  <h3 className="font-bold text-lg leading-7 text-[#0F172A]">
+                    Recommended for You (AI)
+                  </h3>
+                </div>
+                <span className="text-xs text-[#10B77F] font-semibold bg-[#10B77F]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  AI Match
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                {loadingRecommended ? (
+                  <>
+                    <div className="h-28 rounded-2xl bg-slate-100 animate-pulse"></div>
+                    <div className="h-28 rounded-2xl bg-slate-100 animate-pulse"></div>
+                  </>
+                ) : recommendedMentors.length > 0 ? (
+                  recommendedMentors.map(m => (
+                    <div 
+                      key={m.userId}
+                      className="flex flex-row items-center p-4 border border-slate-100 hover:border-[#10B77F]/20 rounded-2xl hover:bg-slate-50/50 transition-all gap-4"
+                    >
+                      <img 
+                        src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.firstName || 'mentor'}&backgroundColor=E2E8F0`}
+                        alt={m.name}
+                        className="w-12 h-12 rounded-full object-cover border border-slate-100 shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-[#0F172A] truncate">{m.name || `${m.firstName} ${m.lastName}`}</p>
+                        <p className="text-xs text-[#64748B] truncate">{m.title || 'Expert Mentor'} • {m.university}</p>
+                        <span className="inline-block bg-[#10B77F]/10 text-[#10B77F] font-bold text-[10px] px-2 py-0.5 rounded-full mt-1.5 uppercase">
+                          {m.mentorLevel || 'Bronze'}
+                        </span>
+                      </div>
+                      <Link 
+                        to={`/mentor/${m.userId}`}
+                        className="bg-[#10B77F] text-white font-bold text-xs py-2 px-3 rounded-xl hover:bg-[#0ea873] transition-colors shrink-0"
+                      >
+                        Profile
+                      </Link>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-400 col-span-2 py-2">
+                    No recommendations found. Add learning goals to your profile to get matches.
+                  </p>
+                )}
               </div>
             </div>
 

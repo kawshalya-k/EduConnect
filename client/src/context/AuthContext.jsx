@@ -32,26 +32,6 @@ export function AuthProvider({ children }) {
         setUser(DUMMY_USER);
         localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
       }
-    } else if (!token) {
-      // Auto-login with dummy user but first fetch a dev JWT synchronously
-      (async () => {
-        try {
-          const res = await fetch('http://localhost:5000/dev/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: DUMMY_USER.id })
-          });
-          const data = await res.json();
-          if (data?.token) {
-            localStorage.setItem('token', data.token);
-          }
-        } catch (e) {
-          // ignore
-        }
-
-        setUser(DUMMY_USER);
-        localStorage.setItem('educonnect_user', JSON.stringify(DUMMY_USER));
-      })();
     }
 
     setLoading(false);

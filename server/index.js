@@ -25,6 +25,7 @@ const mentorSearchRoutes       = require('./routes/mentorSearchRoutes');
 app.use('/api/auth',         authRoutes);
 app.use('/api/users',        userRoutes);
 app.use('/api/mentors',      mentorRoutes);
+app.use('/api/mentors',      mentorSearchRoutes);
 app.use('/api/sessions',     sessionRoutes);
 app.use('/api/admin',        adminRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -33,6 +34,19 @@ app.use('/api/wallet',       walletRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.json({ ok: true }));
+
+// Suggested skills endpoint
+app.get('/api/skills/suggested', async (req, res) => {
+  try {
+    const db = require('./config/db');
+    const [rows] = await db.query('SELECT Skill_Name FROM Skill LIMIT 6');
+    const skills = rows.map(r => r.Skill_Name);
+    res.json({ skills: skills.length > 0 ? skills : ['TypeScript', 'Node.js', 'Figma', 'SQL'] });
+  } catch (err) {
+    console.error('Suggested skills fetch error:', err);
+    res.json({ skills: ['TypeScript', 'Node.js', 'Figma', 'SQL'] });
+  }
+});
 
 // Dev-only: issue JWT for local testing (not for production)
 const jwt = require('jsonwebtoken');

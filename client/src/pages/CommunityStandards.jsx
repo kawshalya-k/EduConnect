@@ -6,29 +6,22 @@ import {
   Lock,
   Gavel
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 
 const CommunityStandards = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnboarding = new URLSearchParams(location.search).get('onboarding') === 'true' || location.state?.onboarding;
+
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900 flex flex-col">
       {/* Header - Top Navigation Bar */}
-      <nav className="sticky top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div className="max-w-7xl mx-auto px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="text-base font-bold tracking-tight text-[#0F172A]">EduConnect</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer">
-              <img src="https://ui-avatars.com/api/?name=User&background=0F172A&color=fff" alt="User" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <DashboardNavbar logoOnlyIfLoggedOut={true} logoOnly={isOnboarding} />
 
       {/* Main Content */}
       <main className="flex-1 w-full max-w-[1152px] mx-auto px-6 py-10 space-y-12">
