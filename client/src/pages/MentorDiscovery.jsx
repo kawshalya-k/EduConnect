@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiSliders } from 'react-icons/fi';
 import PageLayout from '../components/Layout/PageLayout';
 import MentorCard from '../components/Mentorship/MentorCard';
 import { LoadingState } from '../components/Layout/LoadingState';
-import { searchMentors, aiMentorSearch } from '../services/mentorApi';
+import {
+  searchMentors,
+  aiMentorSearch,
+  fetchCategories,
+  fetchUserProfile,
+  fetchSuggestedSkills
+} from '../services/mentorApi';
+import { useAuth } from '../context/AuthContext';
 import './MentorDiscovery.css';
 
 const CATEGORIES = [
@@ -17,17 +25,95 @@ const MENTOR_LEVELS = ['GOLD', 'SILVER', 'BRONZE'];
 const SESSION_TYPES = ['Any Type', '1-on-1', 'Group', 'Project Review'];
 
 export default function MentorDiscovery() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState('rating');
   
+  const [categories, setCategories] = useState([
+    'Web Development',
+    'UI/UX Design',
+    'Data Science',
+    'Mobile Development'
+  ]);
+  const [quickTags, setQuickTags] = useState([
+    'Data Structures 101',
+    'Public Speaking',
+    'Python for Finance'
+  ]);
+  const [isAIResult, setIsAIResult] = useState(false);
+  const [aiQueryText, setAiQueryText] = useState('');
+
   // Filters
-  const [selectedCategory, setSelectedCategory] = useState('Web Development');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedLevels, setSelectedLevels] = useState(['GOLD', 'SILVER']);
   const [sessionType, setSessionType] = useState('Any Type');
 
   useEffect(() => {
+    const getCats = async () => {
+      try {
+        const res = await fetchCategories();
+        const fetchedCats = (res.data || []).filter(Boolean);
+        if (fetchedCats.length > 0) {
+          setCategories(fetchedCats);
+        } else {
+          setCategories(['Web Development', 'UI/UX Design', 'Data Science', 'Mobile Development']);
+        }
+      } catch (err) {
+        console.error('Failed to load categories dynamically:', err);
+        setCategories(['Web Development', 'UI/UX Design', 'Data Science', 'Mobile Development']);
+      }
+    };
+    getCats();
+  }, []);
+
+  useEffect(() => {
+    const loadQuickTags = async () => {
+      const fallbackTags = [
+        'Data Structures 101',
+        'Public Speaking',
+        'Python for Finance'
+      ];
+
+      try {
+        if (user && user.id) {
+          try {
+            const res = await fetchUserProfile(user.id);
+            const learnerSkills = (res.data?.skills || [])
+              .filter(s => s.Skill_Role === 'Learner')
+              .map(s => s.Skill_Name)
+              .filter(Boolean);
+            
+            if (learnerSkills.length > 0) {
+              setQuickTags(learnerSkills.slice(0, 5));
+              return;
+            }
+          } catch (profileErr) {
+            console.error('Failed to fetch user profile for quick tags:', profileErr);
+          }
+        }
+
+        // If not logged in, or logged-in user has no learner skills, fetch suggested skills
+        const skillsRes = await fetchSuggestedSkills();
+        const skills = (skillsRes.data?.skills || []).filter(Boolean);
+        if (skills.length > 0) {
+          setQuickTags(skills.slice(0, 5));
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to load quick tags:', err);
+      }
+
+      setQuickTags(fallbackTags);
+    };
+
+    loadQuickTags();
+  }, [user]);
+
+  useEffect(() => {
+    setIsAIResult(false);
     loadMentors();
   }, [selectedCategory, selectedLevels, sessionType, sortBy]);
 
@@ -35,7 +121,7 @@ export default function MentorDiscovery() {
     setLoading(true);
     try {
       const res = await searchMentors({
-        category: selectedCategory,
+        category: selectedCategory || undefined,
         levels: selectedLevels.join(','),
         sessionType: sessionType === 'Any Type' ? null : sessionType,
         sortBy,
@@ -54,6 +140,8 @@ export default function MentorDiscovery() {
     try {
       const res = await aiMentorSearch(searchQuery);
       setMentors(res.data?.mentors || []);
+      setAiQueryText(searchQuery);
+      setIsAIResult(true);
     } catch (err) {
       console.error('AI search error:', err);
     } finally {
@@ -98,22 +186,30 @@ export default function MentorDiscovery() {
               />
             </div>
             <button className="ai-search-btn" onClick={handleAISearch}>
-              🤖 Ask AI
+              <svg className="ai-sparkle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="sparkle-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#059669" />
+                    <stop offset="50%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#34d399" />
+                  </linearGradient>
+                </defs>
+                <path d="M 8 6 Q 8 12 14 12 Q 8 12 8 18 Q 8 12 2 12 Q 8 12 8 6 Z" fill="url(#sparkle-gradient)" />
+                <path d="M 16 5 Q 16 8 19 8 Q 16 8 16 11 Q 16 8 13 8 Q 16 8 16 5 Z" fill="url(#sparkle-gradient)" />
+                <path d="M 17 13 Q 17 16 20 16 Q 17 16 17 19 Q 17 16 14 16 Q 17 16 17 13 Z" fill="url(#sparkle-gradient)" />
+              </svg>
+              <span className="ai-search-btn-text">Ask AI</span>
             </button>
           </div>
 
           {/* Quick Search */}
           <div className="quick-search-tags">
             <p className="quick-label">QUICK SEARCH:</p>
-            <button className="quick-tag" onClick={() => setSearchQuery('Data Structures 101')}>
-              Data Structures 101
-            </button>
-            <button className="quick-tag" onClick={() => setSearchQuery('Public Speaking')}>
-              Public Speaking
-            </button>
-            <button className="quick-tag" onClick={() => setSearchQuery('Python for Finance')}>
-              Python for Finance
-            </button>
+            {quickTags.map((tag) => (
+              <button key={tag} className="quick-tag" onClick={() => setSearchQuery(tag)}>
+                {tag}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -123,12 +219,12 @@ export default function MentorDiscovery() {
             <div className="filter-section">
               <h3 className="filter-title">CATEGORY</h3>
               <div className="filter-checkboxes">
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <label key={cat} className="filter-checkbox">
                     <input
                       type="checkbox"
                       checked={selectedCategory === cat}
-                      onChange={() => setSelectedCategory(cat)}
+                      onChange={() => setSelectedCategory((prev) => (prev === cat ? null : cat))}
                     />
                     <span>{cat}</span>
                   </label>
@@ -185,6 +281,12 @@ export default function MentorDiscovery() {
               </div>
             </div>
 
+            {isAIResult && (
+              <div className="ai-result-tag" style={{ background: '#e0f2fe', color: '#0369a1', padding: '8px 16px', borderRadius: '8px', marginBottom: '16px', display: 'inline-block', fontSize: '14px', fontWeight: '500' }}>
+                🤖 AI results for: <strong>"{aiQueryText}"</strong>
+              </div>
+            )}
+
             {/* Mentors Grid */}
             {loading ? (
               <LoadingState message="Finding mentors..." />
@@ -199,8 +301,19 @@ export default function MentorDiscovery() {
                     key={mentor.id}
                     mentor={mentor}
                     onBooking={(m) => {
-                      // Handle booking logic
-                      console.log('Booking mentor:', m);
+                      if (user) {
+                        navigate('/session-booking', {
+                          state: {
+                            mentorId: m.id || m.userId,
+                            mentorName: m.name,
+                            mentorAvatar: m.avatar,
+                            mentorTitle: m.role || m.department,
+                            mentorUniversity: m.university
+                          }
+                        });
+                      } else {
+                        navigate('/login');
+                      }
                     }}
                   />
                 ))}
