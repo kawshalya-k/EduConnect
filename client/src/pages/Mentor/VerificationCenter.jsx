@@ -19,6 +19,7 @@ import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import { LoadingState } from '../../components/Layout/LoadingState';
 import { useAuth } from '../../context/AuthContext';
 import { fetchMentorSkills } from '../../services/mentorApi';
+import API from '../../services/axiosConfig';
 import './VerificationCenter.css';
 
 // ─── Rank / level helpers ────────────────────────────────────────────────────
@@ -169,15 +170,7 @@ export default function VerificationCenter() {
             localStorage.removeItem(`quiz_start_time_${skill.Skill_Id}`);
             changed = true;
             try {
-              const token = localStorage.getItem('token');
-              await fetch('/api/mentors/skills/verify', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ skillId: skill.Skill_Id, passed: false })
-              });
+              await API.post('/mentors/skills/verify', { skillId: skill.Skill_Id, passed: false });
             } catch (err) {
               console.error('Failed to notify background timeout:', err);
             }
@@ -197,18 +190,18 @@ export default function VerificationCenter() {
   const getSkillStatus = (skill) => {
     if (isVerified(skill)) return 'verified';
 
-    const storedStartTime = localStorage.getItem(`quiz_start_time_${skill.Skill_Id}`);
-    if (storedStartTime) {
-      const elapsed = (Date.now() - parseInt(storedStartTime, 10)) / 1000;
-      if (elapsed >= 3600) {
-        return 'retry';
+    if (skill.Verification_Status === 'Testing') {
+      if (skill.Last_Attempt) {
+        const diffSecs = (Date.now() - new Date(skill.Last_Attempt).getTime()) / 1000;
+        if (diffSecs < 600) {
+          return 'testing';
+        }
       }
-      return 'testing';
     }
 
     if (skill.Last_Attempt) {
-      const diffHours = (Date.now() - new Date(skill.Last_Attempt)) / (1000 * 60 * 60);
-      if (diffHours < 24) return 'retry';
+      const diffHours = (Date.now() - new Date(skill.Last_Attempt).getTime()) / (1000 * 60 * 60);
+      if (diffHours < 4) return 'retry';
     }
 
     return 'available';
@@ -216,17 +209,17 @@ export default function VerificationCenter() {
 
   const formatRetryTime = (lastAttempt) => {
     if (!lastAttempt) return '';
-    const diff = new Date(lastAttempt).getTime() + 24 * 60 * 60 * 1000 - currentTime;
+    const diff = new Date(lastAttempt).getTime() + 4 * 60 * 60 * 1000 - currentTime;
     if (diff <= 0) return '0h 0m';
     const hours = Math.floor(diff / 3600000);
     const mins = Math.floor((diff % 3600000) / 60000);
-    return `${hours}h ${mins}m`;
+    const secs = Math.floor((diff % 60000) / 1000);
+    return `${hours}h ${mins}m ${secs}s`;
   };
 
-  const formatTestingTime = (skillId) => {
-    const storedStartTime = localStorage.getItem(`quiz_start_time_${skillId}`);
-    if (!storedStartTime) return '';
-    const diff = parseInt(storedStartTime, 10) + 60 * 60 * 1000 - currentTime;
+  const formatTestingTime = (lastAttempt) => {
+    if (!lastAttempt) return '';
+    const diff = new Date(lastAttempt).getTime() + 10 * 60 * 1000 - currentTime;
     if (diff <= 0) return '00:00';
     const mins = Math.floor(diff / 60000);
     const secs = Math.floor((diff % 60000) / 1000);
@@ -349,7 +342,7 @@ export default function VerificationCenter() {
                       skill={skill}
                       status={status}
                       retryTime={formatRetryTime(skill.Last_Attempt)}
-                      testingTime={formatTestingTime(skill.Skill_Id)}
+                      testingTime={formatTestingTime(skill.Last_Attempt)}
                     />
                   );
                 })}
@@ -462,13 +455,13 @@ function SkillCard({ skill, status, retryTime, testingTime }) {
           {status === 'available' && (
             <>
               <p className="skill-duration">
-                <FiClock size={12} /> 45 Min Assessment
+                <FiClock size={12} /> 10 Min Quiz
               </p>
               <Link
                 to={`/verification/skill/${skill.Skill_Id}/start`}
                 className="start-verify-btn"
               >
-                Start Verification ▶
+                Start Assessment ▶
               </Link>
             </>
           )}
@@ -483,7 +476,7 @@ function SkillCard({ skill, status, retryTime, testingTime }) {
                 className="start-verify-btn"
                 style={{ background: 'linear-gradient(106.18deg, #006C49 0%, #10B981 100%)', color: '#002113' }}
               >
-                Upload Proof ▶
+                Resume Quiz ▶
               </Link>
             </>
           )}

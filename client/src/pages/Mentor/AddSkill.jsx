@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiX, FiCode } from 'react-icons/fi';
+import { FiX, FiCode } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import Breadcrumb from '../../components/Layout/Breadcrumb';
 import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
@@ -11,55 +11,76 @@ import './AddSkill.css';
 
 const CONFIDENCE_LEVELS = ['BEGINNER', 'NOVICE', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'];
 
+const TARGET_SKILLS = [
+  'JavaScript',
+  'Python',
+  'SQL',
+  'Git',
+  'Figma',
+  'Information Architecture',
+  'Statistics',
+  'NLP',
+  'Android Development',
+  'Flutter'
+];
+
+const SUGGESTED_SKILLS = [
+  'JavaScript',
+  'Python',
+  'SQL',
+  'Git',
+  'Figma',
+  'Flutter'
+];
+
 export default function AddSkill() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState(['React', 'Python', 'UI Design']);
-  const [activeSkill, setActiveSkill] = useState('React');
-  const [confidence, setConfidence] = useState({ React: 0, Python: 0, 'UI Design': 0 });
-  const [suggested, setSuggested] = useState([]);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [activeSkill, setActiveSkill] = useState(null);
+  const [confidence, setConfidence] = useState({});
   const [allSkills, setAllSkills] = useState([]);
+  const [skillIdMap, setSkillIdMap] = useState({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Load all skills from backend to map names to IDs
     const loadAllSkills = async () => {
       try {
         const res = await API.get('/mentors/skills/all');
-        setAllSkills(res.data || []);
+        const skills = res.data || [];
+        setAllSkills(skills);
+
+        // Build the dynamic map from DB
+        const map = {};
+        skills.forEach(skill => {
+          map[skill.Skill_Name.toLowerCase()] = skill.Skill_Id;
+        });
+        setSkillIdMap(map);
       } catch (err) {
         console.error('Failed to load all skills:', err);
       }
     };
 
-    // Load suggested skills from backend
-    const loadSuggested = async () => {
-      try {
-        const res = await API.get('/skills/suggested');
-        setSuggested(res.data?.skills || []);
-      } catch {
-        // fallback matching mockup screenshot
-        setSuggested(['TypeScript', 'Node.js', 'Figma', 'SQL']);
-      }
-    };
-
     loadAllSkills();
-    loadSuggested();
   }, []);
+
+  const resolveSkillId = (skillName) => {
+    const match = allSkills.find(
+      (s) => s.Skill_Name.toLowerCase() === skillName.toLowerCase()
+    );
+    return match ? match.Skill_Id : skillIdMap[skillName.toLowerCase()] || null;
+  };
 
   const addToSelected = (skillName) => {
     if (!selectedSkills.includes(skillName)) {
       const updated = [...selectedSkills, skillName];
       setSelectedSkills(updated);
-      // Default confidence to BEGINNER (index 0)
-      setConfidence((prev) => ({ ...prev, [skillName]: 0 }));
+      setConfidence((prev) => ({ ...prev, [skillName]: 2 }));
       if (selectedSkills.length === 0 || !activeSkill) {
         setActiveSkill(skillName);
       }
     }
-    setSearch('');
   };
 
   const removeSkill = (skillName) => {
@@ -79,22 +100,14 @@ export default function AddSkill() {
     setConfidence((prev) => ({ ...prev, [skillName]: levelIndex }));
   };
 
-  const handleSearchKey = (e) => {
-    if (e.key === 'Enter' && search.trim()) {
-      addToSelected(search.trim());
-    }
-  };
-
   const handleSaveDraft = async () => {
     if (selectedSkills.length === 0) return;
     setSaving(true);
     try {
       for (const skillName of selectedSkills) {
-        const match = allSkills.find(
-          (s) => s.Skill_Name.toLowerCase() === skillName.toLowerCase()
-        );
+        const resolvedSkillId = resolveSkillId(skillName);
         await addSkill(user?.mentorId || user?.id, {
-          skill_id: match ? match.Skill_Id : null,
+          skill_id: resolvedSkillId,
           name: skillName,
           confidence: CONFIDENCE_LEVELS[confidence[skillName] || 0],
           status: 'draft',
@@ -114,24 +127,22 @@ export default function AddSkill() {
     let targetSkillId = null;
     try {
       for (const skillName of selectedSkills) {
-        const match = allSkills.find(
-          (s) => s.Skill_Name.toLowerCase() === skillName.toLowerCase()
-        );
+        const resolvedSkillId = resolveSkillId(skillName);
         try {
           const res = await addSkill(user?.mentorId || user?.id, {
-            skill_id: match ? match.Skill_Id : null,
+            skill_id: resolvedSkillId,
             name: skillName,
             confidence: CONFIDENCE_LEVELS[confidence[skillName] || 0],
             status: 'pending',
           });
 
-          if (!targetSkillId && res.data?.skill_id) {
-            targetSkillId = res.data.skill_id;
+          if (!targetSkillId) {
+            targetSkillId = res.data?.skill_id || resolvedSkillId;
           }
         } catch (singleErr) {
           console.warn(`Error adding skill ${skillName}:`, singleErr);
-          if (!targetSkillId && match) {
-            targetSkillId = match.Skill_Id;
+          if (!targetSkillId) {
+            targetSkillId = resolvedSkillId;
           }
         }
       }
@@ -139,17 +150,15 @@ export default function AddSkill() {
       console.error('Continue error:', err);
     } finally {
       setSaving(false);
-      // Navigate to the verification page regardless of success/failure of individual additions
       if (targetSkillId) {
         navigate(`/verification/skill/${targetSkillId}/start`);
       } else {
-        const match = allSkills.find(
-          (s) => s.Skill_Name.toLowerCase() === selectedSkills[0].toLowerCase()
-        );
-        if (match) {
-          navigate(`/verification/skill/${match.Skill_Id}/start`);
+        const firstSkill = selectedSkills[0];
+        const fallbackId = resolveSkillId(firstSkill);
+        if (fallbackId) {
+          navigate(`/verification/skill/${fallbackId}/start`);
         } else {
-          navigate('/verification/verify');
+          navigate('/verification');
         }
       }
     }
@@ -161,145 +170,173 @@ export default function AddSkill() {
         <DashboardSidebar user={user} />
         <div className="add-skill-page" style={{ flex: 1, minWidth: 0 }}>
           <div className="add-skill-header-container">
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', path: '/mentor-dashboard' },
-              { label: 'Skills', path: '/verification' },
-              { label: 'Add New Skill' },
-            ]}
-          />
-          <h1 className="add-skill-title">Add New Skill</h1>
-          <p className="add-skill-sub">Add a new skill and verify.</p>
-        </div>
-
-        {/* Search & Selection Box */}
-        <div className="add-skill-box">
-          <p className="add-skill-box-label">Search or select your skills</p>
-
-          <div className="skill-search-input-wrap">
-            <FiSearch size={18} className="skill-search-icon" />
-            <input
-              type="text"
-              className="skill-search-input"
-              placeholder="e.g. JavaScript, Product Management, Spanish..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={handleSearchKey}
+            <Breadcrumb
+              items={[
+                { label: 'Dashboard', path: '/mentor-dashboard' },
+                { label: 'Skills', path: '/verification' },
+                { label: 'Add New Skill' },
+              ]}
             />
+            <h1 className="add-skill-title">Add New Skill</h1>
+            <p className="add-skill-sub">Select a skill to verify.</p>
           </div>
 
-          {/* Selected Tags */}
-          {selectedSkills.length > 0 && (
-            <div className="selected-skills-row">
-              {selectedSkills.map((skill) => (
-                <span
-                  key={skill}
-                  className={`selected-skill-tag ${skill === activeSkill ? 'active' : 'inactive'}`}
-                  onClick={() => setActiveSkill(skill)}
-                >
-                  <span className="tag-text">{skill}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeSkill(skill);
-                    }}
-                    className="tag-remove-btn"
-                  >
-                    <FiX size={12} />
-                  </button>
-                </span>
-              ))}
-              <button className="add-more-tag">
-                + Add More
-              </button>
-            </div>
-          )}
+          {/* Selection Box */}
+          <div className="add-skill-box">
+            <p className="add-skill-box-label">Choose a skill from the list</p>
 
-          {/* Divider line before Suggested for you */}
-          <div className="suggested-divider" />
-
-          {/* Suggested */}
-          <div className="suggested-section">
-            <p className="suggested-label">Suggested for you</p>
-            <div className="suggested-tags">
-              {suggested.map((skill) => (
-                <button
-                  key={skill}
-                  className="suggested-tag"
-                  onClick={() => addToSelected(skill)}
-                >
-                  {skill}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Confidence Slider */}
-        {activeSkill && (
-          <div className="confidence-section">
-            <h2 className="confidence-title">Rate your confidence</h2>
-
-            <div className="confidence-card">
-              <div className="confidence-skill-header">
-                <div className="confidence-skill-icon">
-                  <FiCode size={20} />
-                </div>
-                <span className="confidence-skill-name">{activeSkill}</span>
-              </div>
-
-              <div className="confidence-slider-wrap">
-                <input
-                  type="range"
-                  min={0}
-                  max={CONFIDENCE_LEVELS.length - 1}
-                  value={confidence[activeSkill] ?? 0}
-                  onChange={(e) =>
-                    handleConfidenceChange(activeSkill, Number(e.target.value))
+            <div className="skill-search-input-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <select
+                className="skill-select-dropdown"
+                onChange={(e) => {
+                  if (e.target.value) {
+                    addToSelected(e.target.value);
                   }
-                  className="confidence-slider"
-                />
+                }}
+                defaultValue=""
+                disabled={saving}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  background: 'transparent',
+                  padding: '0 40px 0 16px',
+                  fontSize: '16px',
+                  color: '#0F172A',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none'
+                }}
+              >
+                <option value="" disabled>Select a skill...</option>
+                {TARGET_SKILLS.map((skill) => (
+                  <option key={skill} value={skill}>{skill}</option>
+                ))}
+              </select>
+              <div style={{
+                position: 'absolute',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+                color: '#16A34A',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}>
+                ▼
               </div>
+            </div>
 
-              <div className="confidence-levels">
-                {CONFIDENCE_LEVELS.map((level, i) => (
+            {/* Selected Tags */}
+            {selectedSkills.length > 0 && (
+              <div className="selected-skills-row">
+                {selectedSkills.map((skill) => (
                   <span
-                    key={level}
-                    className={`confidence-level-label ${i === (confidence[activeSkill] ?? 0) ? 'active' : ''
-                      }`}
-                    onClick={() => handleConfidenceChange(activeSkill, i)}
+                    key={skill}
+                    className={`selected-skill-tag ${skill === activeSkill ? 'active' : 'inactive'}`}
+                    onClick={() => setActiveSkill(skill)}
                   >
-                    {level}
+                    <span className="tag-text">{skill}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSkill(skill);
+                      }}
+                      className="tag-remove-btn"
+                    >
+                      <FiX size={12} />
+                    </button>
                   </span>
+                ))}
+              </div>
+            )}
+
+            <div className="suggested-divider" />
+
+            {/* Suggested */}
+            <div className="suggested-section">
+              <p className="suggested-label">Suggested for you</p>
+              <div className="suggested-tags">
+                {SUGGESTED_SKILLS.map((skill) => (
+                  <button
+                    key={skill}
+                    className="suggested-tag"
+                    onClick={() => addToSelected(skill)}
+                    disabled={saving}
+                  >
+                    {skill}
+                  </button>
                 ))}
               </div>
             </div>
           </div>
-        )}
 
-        {/* Bottom Actions */}
-        <div className="add-skill-actions">
-          <button className="back-link" onClick={() => navigate('/verification')}>
-            Back
-          </button>
-          <div className="add-skill-right-actions">
-            <button
-              className="save-draft-btn"
-              onClick={handleSaveDraft}
-              disabled={saving || selectedSkills.length === 0}
-            >
-              Save Draft
+          {/* Confidence Slider */}
+          {activeSkill && (
+            <div className="confidence-section">
+              <h2 className="confidence-title">Rate your confidence</h2>
+
+              <div className="confidence-card">
+                <div className="confidence-skill-header">
+                  <div className="confidence-skill-icon">
+                    <FiCode size={20} style={{ color: '#10B981' }} />
+                  </div>
+                  <span className="confidence-skill-name">{activeSkill}</span>
+                </div>
+
+                <div className="confidence-slider-wrap">
+                  <input
+                    type="range"
+                    min={0}
+                    max={CONFIDENCE_LEVELS.length - 1}
+                    value={confidence[activeSkill] ?? 2}
+                    onChange={(e) =>
+                      handleConfidenceChange(activeSkill, Number(e.target.value))
+                    }
+                    className="confidence-slider"
+                  />
+                </div>
+
+                <div className="confidence-levels">
+                  {CONFIDENCE_LEVELS.map((level, i) => (
+                    <span
+                      key={level}
+                      className={`confidence-level-label ${i === (confidence[activeSkill] ?? 2) ? 'active' : ''}`}
+                      onClick={() => handleConfidenceChange(activeSkill, i)}
+                    >
+                      {level}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bottom Actions */}
+          <div className="add-skill-actions">
+            <button className="back-link" onClick={() => navigate('/verification')}>
+              Back
             </button>
-            <button
-              className="continue-btn"
-              onClick={handleContinue}
-              disabled={saving || selectedSkills.length === 0}
-            >
-              {saving ? 'Saving...' : 'Continue'}
-            </button>
+            <div className="add-skill-right-actions">
+              <button
+                className="save-draft-btn"
+                onClick={handleSaveDraft}
+                disabled={saving || selectedSkills.length === 0}
+              >
+                Save Draft
+              </button>
+              <button
+                className="continue-btn"
+                onClick={handleContinue}
+                disabled={saving || selectedSkills.length === 0}
+              >
+                {saving ? 'Saving...' : 'Continue'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </PageLayout>
   );

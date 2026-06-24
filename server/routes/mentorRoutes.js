@@ -20,6 +20,7 @@ const isMentor = (req, res, next) => {
 
 router.get('/', auth, mentorController.getMentors);
 router.post('/skills/verify', auth, upload.single('certificate'), mentorController.verifySkill);
+router.post('/skills/start-quiz', auth, mentorController.startQuiz);
 
 // Public
 router.get('/profile/:mentorId', mentorController.getPublicProfile);

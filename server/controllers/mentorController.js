@@ -88,28 +88,26 @@ exports.getPublicProfile = async (req, res) => {
     const { mentorId } = req.params;
     try {
         const [userRows] = await db.query(
-            `SELECT User_Id, First_Name, Last_Name, University, Bio, Created_At
+            `SELECT User_Id, First_Name, Last_Name, University, Bio, Created_At, Avatar, Role
              FROM User WHERE User_Id = ? AND Status = 'Active'`,
             [mentorId]
         );
         if (userRows.length === 0) return res.status(404).json({ message: "Mentor not found." });
 
         const [skills] = await db.query(
-            `SELECT s.Skill_Id, s.Skill_Name, s.Category,
-                     us.Mentor_Level,
-                     COALESCE(ld.Average_Rating, 0) AS Average_Rating,
-                     COALESCE(ld.Total_Sessions, 0) AS Total_Sessions
+            `SELECT s.Skill_Id, s.Skill_Name, s.Category, s.Description,
+                     us.Mentor_Level, us.Certificates
              FROM User_Skill us
              JOIN Skill s ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld 
                     ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
-             WHERE us.User_Id = ? AND us.Role = 'Mentor' AND us.Verification_Status = 'Verified'`,
+             WHERE us.User_Id = ? AND us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
             [mentorId]
         );
 
         const [reviews] = await db.query(
-            `SELECT se.Rating, se.Feedback,
-                     u.First_Name, u.Last_Name,
+            `SELECT se.Session_Id as id, se.Rating, se.Feedback,
+                     u.First_Name, u.Last_Name, u.Avatar as learnerAvatar,
                      s.Skill_Name, se.Date
              FROM Session se
              JOIN User u  ON u.User_Id  = se.Learner_Id
@@ -128,12 +126,38 @@ exports.getPublicProfile = async (req, res) => {
             [mentorId]
         );
 
-        res.json({
-            ...userRows[0],
-            skills,
-            reviews,
+        const mentorData = {
+            id: userRows[0].User_Id,
+            userId: userRows[0].User_Id,
+            name: `${userRows[0].First_Name} ${userRows[0].Last_Name}`,
+            firstName: userRows[0].First_Name,
+            lastName: userRows[0].Last_Name,
+            university: userRows[0].University || 'University',
+            bio: userRows[0].Bio || '',
+            title: userRows[0].Bio || 'Expert Mentor',
+            avatar: userRows[0].Avatar,
+            level: skills.length > 0 ? (skills[0].Mentor_Level ? skills[0].Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE') : 'BRONZE',
+            verified: true,
+            skills: skills.map(s => ({
+                id: s.Skill_Id,
+                name: s.Skill_Name,
+                category: s.Category,
+                description: s.Description || `Expertise in ${s.Skill_Name}`,
+                level: s.Mentor_Level,
+                technologies: [] // Fallback if no specific tech column
+            })),
+            reviews: reviews.map(r => ({
+                id: r.id,
+                learnerName: `${r.First_Name} ${r.Last_Name}`,
+                learnerAvatar: r.learnerAvatar,
+                sessionTopic: r.Skill_Name,
+                rating: r.Rating,
+                comment: r.Feedback
+            })),
             badges
-        });
+        };
+
+        res.json({ mentor: mentorData });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -192,10 +216,8 @@ exports.getMentors = async (req, res) => {
 
 exports.verifySkill = async (req, res) => {
   try {
-    const { skillId, passed } = req.body;
+    const { skillId, passed, score, level } = req.body;
     const isPassed = String(passed) === 'true' || passed === true;
-    
-    // req.user could be from auth middleware. Handle both id and User_Id.
     const userId = req.user?.User_Id || req.user?.id;
 
     if (!userId) {
@@ -214,53 +236,93 @@ exports.verifySkill = async (req, res) => {
 
     let userSkill = existing.length > 0 ? existing[0] : null;
 
-    if (userSkill && (userSkill.Verification_Status === 1 || userSkill.Verification_Status === true || userSkill.Verification_Status === 'Verified')) {
-      return res.status(400).json({ message: 'Skill is already verified' });
-    }
-
-    // Cooldown check
+    // Cooldown check (4 hours)
     if (userSkill && userSkill.Last_Attempt) {
       const lastAttempt = new Date(userSkill.Last_Attempt);
       const now = new Date();
-      const diffHours = (now - lastAttempt) / (1000 * 60 * 60);
+      const diffMs = now - lastAttempt;
+      const cooldownMs = 4 * 60 * 60 * 1000; // 4 hours
 
-      if (diffHours < 24) {
-        const remainingTime = Math.ceil(24 - diffHours);
+      if (diffMs < cooldownMs) {
+        const remainingMs = cooldownMs - diffMs;
+        const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+        const remainingMinutes = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
         return res.status(403).json({ 
-          message: `Cooldown active. Please try again in ${remainingTime} hours.`,
-          remainingHours: remainingTime
+          message: `Cooldown active. Please try again in ${remainingHours}h ${remainingMinutes}m.`,
+          remainingHours,
+          remainingMinutes,
+          cooldownActive: true
         });
       }
     }
 
     if (isPassed) {
-      // Validate file presence
-      if (!req.file) {
-        return res.status(400).json({ message: 'Certificate proof is required for verification.' });
-      }
+      // Determine Skill Coin reward based on level
+      let coinsAwarded = 0;
+      if (level === 'Beginner') coinsAwarded = 5;
+      else if (level === 'Intermediate') coinsAwarded = 10;
+      else if (level === 'Expert') coinsAwarded = 15;
 
-      const certificatePath = `uploads/certificates/${req.file.filename}`;
-
-      // Handle success
+      // Auto-verify in User_Skill
       if (userSkill) {
         await db.query(
-          'UPDATE User_Skill SET Verification_Status = TRUE, Mentor_Level = ?, Role = ?, Certificates = ?, Last_Attempt = NULL WHERE User_Skill_Id = ?',
-          ['Bronze', 'Mentor', certificatePath, userSkill.User_Skill_Id]
+          "UPDATE User_Skill SET Verification_Status = 'Verified', Role = 'Mentor', Mentor_Level = ?, Last_Attempt = NOW(), Certificates = NULL WHERE User_Skill_Id = ?",
+          [level, userSkill.User_Skill_Id]
         );
       } else {
         await db.query(
-          'INSERT INTO User_Skill (User_Id, Skill_Id, Role, Mentor_Level, Verification_Status, Certificates) VALUES (?, ?, ?, ?, ?, ?)',
-          [userId, skillId, 'Mentor', 'Bronze', true, certificatePath]
+          "INSERT INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status, Mentor_Level, Last_Attempt) VALUES (?, ?, 'Mentor', 'Verified', ?, NOW())",
+          [userId, skillId, level]
         );
       }
 
-      // Update User skill_coins
-      await db.query(
-        'UPDATE User SET skill_coins = skill_coins + 100 WHERE User_Id = ?',
-        [userId]
+      // Upsert Levelling_Data
+      const [existingLvl] = await db.query(
+        'SELECT * FROM Levelling_Data WHERE Mentor_Id = ? AND Skill_Id = ?',
+        [userId, skillId]
       );
+      if (existingLvl.length > 0) {
+        await db.query(
+          "UPDATE Levelling_Data SET Mentor_Level = ?, Last_Evaluation_Date = NOW() WHERE Mentor_Id = ? AND Skill_Id = ?",
+          [level, userId, skillId]
+        );
+      } else {
+        await db.query(
+          "INSERT INTO Levelling_Data (Mentor_Id, Skill_Id, Average_Rating, Total_Sessions, Mentor_Level, Score) VALUES (?, ?, 0.00, 0, ?, ?)",
+          [userId, skillId, level, score || 0]
+        );
+      }
 
-      // Give Bronze Mentor badge
+      // Award Skill Coins
+      if (coinsAwarded > 0) {
+        const [userRows] = await db.query(
+          'SELECT skill_coins, Wallet_Balance FROM User WHERE User_Id = ?',
+          [userId]
+        );
+        if (userRows.length > 0) {
+          const currentCoins = userRows[0].skill_coins !== null ? userRows[0].skill_coins : userRows[0].Wallet_Balance;
+          const newBalance = currentCoins + coinsAwarded;
+          await db.query(
+            'UPDATE User SET skill_coins = ?, Wallet_Balance = ? WHERE User_Id = ?',
+            [newBalance, newBalance, userId]
+          );
+          
+          // Fetch skill name to use in transaction description
+          const [skillRows] = await db.query(
+            'SELECT Skill_Name FROM Skill WHERE Skill_Id = ?',
+            [skillId]
+          );
+          const skillName = skillRows.length > 0 ? skillRows[0].Skill_Name : 'Skill';
+
+          // Record transaction
+          await db.query(
+            `INSERT INTO Wallet_Transaction (User_Id, Transaction_Type, Amount, Description) VALUES (?, 'CREDIT', ?, ?)`,
+            [userId, coinsAwarded, `Skill verified: ${skillName} (${level} level)`]
+          );
+        }
+      }
+
+      // Give Bronze Mentor badge if not already awarded
       let [badges] = await db.query('SELECT Badge_Id FROM Badge WHERE Badge_Name = ?', ['Bronze Mentor']);
       let badgeId;
       if (badges.length === 0) {
@@ -272,32 +334,183 @@ exports.verifySkill = async (req, res) => {
       } else {
         badgeId = badges[0].Badge_Id;
       }
-
-      // Insert User_Badge ignoring duplicates
       await db.query(
-        'INSERT IGNORE INTO User_Badge (User_Id, Badge_Id) VALUES (?, ?)',
+        'INSERT IGNORE INTO User_Badge (user_id, badge_id) VALUES (?, ?)',
         [userId, badgeId]
       );
 
-      return res.status(200).json({ message: 'Skill verified successfully', skill_coins: 100 });
+      // Create notification
+      const [skillRows] = await db.query('SELECT Skill_Name FROM Skill WHERE Skill_Id = ?', [skillId]);
+      const skillName = skillRows.length > 0 ? skillRows[0].Skill_Name : 'Skill';
+      try {
+        const Notification = require('../models/Notification');
+        await Notification.createNotification(
+          userId,
+          'Skill Verified! 🎉',
+          `Congratulations! You passed the assessment for "${skillName}" at ${level} level. +${coinsAwarded} SC credited.`,
+          'gamification'
+        );
+      } catch (notifErr) {
+        console.error('Failed to create notification:', notifErr.message);
+      }
+
+      // Sync embedding to Pinecone
+      try {
+        const { syncMentorEmbedding } = require('../utils/embedMentor');
+        await syncMentorEmbedding(userId, skillId);
+      } catch (err) {
+        console.error('[Pinecone Sync Error] Failed to sync verified skill to Pinecone:', err.message);
+      }
+
+      return res.status(200).json({ message: 'Skill verified successfully.', level, score, coinsAwarded });
     } else {
-      // Handle failure
+      // Handle failure: set to Rejected and start 4-hour cooldown
       if (userSkill) {
         await db.query(
-          'UPDATE User_Skill SET Last_Attempt = NOW(), Verification_Status = FALSE, Certificates = NULL WHERE User_Skill_Id = ?',
+          "UPDATE User_Skill SET Last_Attempt = NOW(), Verification_Status = 'Rejected', Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
           [userSkill.User_Skill_Id]
         );
       } else {
         await db.query(
-          'INSERT INTO User_Skill (User_Id, Skill_Id, Role, Last_Attempt, Verification_Status) VALUES (?, ?, ?, NOW(), ?)',
-          [userId, skillId, 'Student', false]
+          "INSERT INTO User_Skill (User_Id, Skill_Id, Role, Last_Attempt, Verification_Status, Mentor_Level) VALUES (?, ?, 'Student', NOW(), 'Rejected', NULL)",
+          [userId, skillId]
         );
       }
 
-      return res.status(400).json({ message: 'Skill verification failed. 24-hour cooldown started.' });
+      return res.status(400).json({ message: 'Skill verification failed. 4-hour cooldown started.', score });
     }
   } catch (error) {
     console.error('verifySkill error:', error);
     res.status(500).json({ message: 'Server error verifying skill' });
   }
 };
+
+exports.startQuiz = async (req, res) => {
+  try {
+    const { skillId } = req.body;
+    const userId = req.user?.User_Id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized. Please log in to start the quiz.' });
+    }
+
+    if (!skillId) {
+      return res.status(400).json({ message: 'Skill ID is required' });
+    }
+
+    // Check existing User_Skill record
+    const [existing] = await db.query(
+      'SELECT * FROM User_Skill WHERE User_Id = ? AND Skill_Id = ?',
+      [userId, skillId]
+    );
+
+    let userSkill = existing.length > 0 ? existing[0] : null;
+
+    if (userSkill) {
+      // If they already passed and are verified, check 4-hour cooldown for upgrades
+      if (userSkill.Verification_Status === 'Verified') {
+        if (userSkill.Last_Attempt) {
+          const lastAttempt = new Date(userSkill.Last_Attempt);
+          const now = new Date();
+          const diffMs = now - lastAttempt;
+          const cooldownMs = 4 * 60 * 60 * 1000; // 4 hours
+          if (diffMs < cooldownMs) {
+            const remainingMs = cooldownMs - diffMs;
+            const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const remainingMinutes = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            return res.status(403).json({ 
+              message: `Cooldown active. Please try again in ${remainingHours}h ${remainingMinutes}m.`,
+              remainingHours,
+              remainingMinutes,
+              cooldownActive: true,
+              cooldownTimeLeft: remainingMs
+            });
+          }
+        }
+        // Cooldown inactive, allowed to start quiz again (upgrade)
+        await db.query(
+          "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+          [userSkill.User_Skill_Id]
+        );
+        return res.status(200).json({ message: 'Quiz started for upgrade.', quizTimeLeft: 600 });
+      }
+
+      // If they are in 'Testing' state (midquiz)
+      if (userSkill.Verification_Status === 'Testing') {
+        const lastAttempt = new Date(userSkill.Last_Attempt);
+        const now = new Date();
+        const diffSecs = Math.floor((now - lastAttempt) / 1000);
+        const quizDuration = 600; // 10 minutes in seconds
+
+        if (diffSecs < quizDuration) {
+          // Quiz is still active, return the remaining seconds
+          const timeLeft = quizDuration - diffSecs;
+          return res.status(200).json({ message: 'Quiz in progress resumed.', quizTimeLeft: timeLeft });
+        } else {
+          // Time passed, auto-fail it and enter cooldown state
+          await db.query(
+            "UPDATE User_Skill SET Verification_Status = 'Rejected', Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+            [userSkill.User_Skill_Id]
+          );
+          
+          const cooldownMs = 4 * 60 * 60 * 1000;
+          const cooldownRemaining = cooldownMs - (now - lastAttempt);
+          
+          return res.status(400).json({ 
+            message: 'Skill verification failed due to timeout. 4-hour cooldown active.',
+            timeoutExpired: true,
+            cooldownTimeLeft: cooldownRemaining > 0 ? cooldownRemaining : 0
+          });
+        }
+      }
+
+      // If they failed earlier, check the cooldown
+      if (userSkill.Verification_Status === 'Rejected') {
+        if (userSkill.Last_Attempt) {
+          const lastAttempt = new Date(userSkill.Last_Attempt);
+          const now = new Date();
+          const diffMs = now - lastAttempt;
+          const cooldownMs = 4 * 60 * 60 * 1000; // 4 hours
+          if (diffMs < cooldownMs) {
+            const remainingMs = cooldownMs - diffMs;
+            const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const remainingMinutes = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            return res.status(403).json({ 
+              message: `Cooldown active. Please try again in ${remainingHours}h ${remainingMinutes}m.`,
+              remainingHours,
+              remainingMinutes,
+              cooldownActive: true,
+              cooldownTimeLeft: remainingMs
+            });
+          }
+        }
+        // Cooldown passed, update status to 'Testing'
+        await db.query(
+          "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+          [userSkill.User_Skill_Id]
+        );
+        return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });
+      }
+
+      // Default (e.g. Draft)
+      await db.query(
+        "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+        [userSkill.User_Skill_Id]
+      );
+      return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });
+
+    } else {
+      // User_Skill does not exist, insert as 'Testing' and start 10 min quiz
+      await db.query(
+        "INSERT INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status, Last_Attempt) VALUES (?, ?, 'Mentor', 'Testing', NOW())",
+        [userId, skillId]
+      );
+      return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });
+    }
+
+  } catch (error) {
+    console.error('startQuiz error:', error);
+    res.status(500).json({ message: 'Server error starting quiz' });
+  }
+};
+
