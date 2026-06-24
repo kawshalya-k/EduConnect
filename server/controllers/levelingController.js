@@ -6,12 +6,12 @@ const WEIGHTS = {
 };
 
 // ── Level thresholds ─────────────────────────────────────────────────────────
-export const LEVEL_THRESHOLDS = {
+const LEVEL_THRESHOLDS = {
   GOLD:   100,
   SILVER:  50,
 };
 
-export function calculateScore(activity) {
+function calculateScore(activity) {
   const {
     sessionsCompleted = 0,
     avgRating         = 0,
@@ -37,25 +37,25 @@ export function calculateScore(activity) {
   };
 }
 
-export function getLevel(score) {
-  if (score >= LEVEL_THRESHOLDS.GOLD)   return 'gold';
-  if (score >= LEVEL_THRESHOLDS.SILVER) return 'silver';
-  return 'bronze';
+function getLevel(score) {
+  if (score >= LEVEL_THRESHOLDS.GOLD)   return 'Gold';
+  if (score >= LEVEL_THRESHOLDS.SILVER) return 'Silver';
+  return 'Bronze';
 }
 
-export function evaluateMentorLevel(activity) {
+function evaluateMentorLevel(activity) {
   const { score, breakdown } = calculateScore(activity);
   const level = getLevel(score);
 
   let pointsToNext = null;
   let nextLevel    = null;
 
-  if (level === 'bronze') {
+  if (level.toLowerCase() === 'bronze') {
     pointsToNext = Math.ceil(LEVEL_THRESHOLDS.SILVER - score);
-    nextLevel    = 'silver';
-  } else if (level === 'silver') {
+    nextLevel    = 'Silver';
+  } else if (level.toLowerCase() === 'silver') {
     pointsToNext = Math.ceil(LEVEL_THRESHOLDS.GOLD - score);
-    nextLevel    = 'gold';
+    nextLevel    = 'Gold';
   }
 
   return {
@@ -66,3 +66,11 @@ export function evaluateMentorLevel(activity) {
     pointsToNext,  // null if already Gold
   };
 }
+
+module.exports = {
+  WEIGHTS,
+  LEVEL_THRESHOLDS,
+  calculateScore,
+  getLevel,
+  evaluateMentorLevel
+};

@@ -47,7 +47,7 @@ const Hero = () => {
           <Link to="/register" className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all cursor-pointer text-sm inline-block text-center">
             Get Started with Your Student Email
           </Link>
-          <Link to="/register" className="bg-white border-2 border-slate-200 hover:border-slate-300 font-bold py-4 px-8 rounded-xl transition-all cursor-pointer text-sm text-slate-700 inline-block text-center">
+          <Link to="/discovery" className="bg-white border-2 border-slate-200 hover:border-slate-300 font-bold py-4 px-8 rounded-xl transition-all cursor-pointer text-sm text-slate-700 inline-block text-center">
             Explore Mentors
           </Link>
         </div>

@@ -66,6 +66,18 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
+    // Fetch all verified mentor skills for this user and re-sync their embeddings
+    const [userSkills] = await db.query(
+      `SELECT Skill_Id FROM User_Skill WHERE User_Id = ? AND Role = 'Mentor' AND (Verification_Status = 1 OR Verification_Status = 'Verified')`,
+      [userId]
+    );
+    const { syncMentorEmbedding } = require('../utils/embedMentor');
+    for (const row of userSkills) {
+      syncMentorEmbedding(userId, row.Skill_Id).catch(err => {
+        console.error(`[Pinecone Sync Error] Failed to re-sync profile skill ${row.Skill_Id}:`, err.message);
+      });
+    }
+
     res.status(200).json({ message: 'Profile updated successfully' });
   } catch (error) {
     console.error('updateProfile error:', error);

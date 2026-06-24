@@ -104,7 +104,7 @@ async function initDB() {
       Skill_Id INT NOT NULL,
       Role VARCHAR(50),
       Mentor_Level VARCHAR(50),
-      Verification_Status BOOLEAN DEFAULT FALSE,
+      Verification_Status VARCHAR(50) DEFAULT 'Pending',
       Certificates TEXT,
       Last_Attempt DATETIME,
       FOREIGN KEY (User_Id) REFERENCES User(User_Id) ON DELETE CASCADE,
@@ -165,6 +165,13 @@ async function initDB() {
     }
 
     try {
+      await connection.query("ALTER TABLE User_Skill MODIFY COLUMN Verification_Status VARCHAR(50) DEFAULT 'Pending'");
+      console.log("✅ Modified Verification_Status column in User_Skill table to VARCHAR(50).");
+    } catch (e) {
+      console.error('Error modifying Verification_Status column:', e.message);
+    }
+
+    try {
       await connection.query('ALTER TABLE User_Skill ADD COLUMN Last_Attempt DATETIME');
       console.log('✅ Added Last_Attempt column to User_Skill table.');
     } catch (e) {
@@ -189,6 +196,34 @@ async function initDB() {
       if (e.code !== 'ER_DUP_FIELDNAME') {
         console.error('Error adding Created_At column:', e.message);
       }
+    }
+
+    // Seed 10 core skills
+    try {
+      const skillsToSeed = [
+        { name: 'JavaScript', category: 'Web Development', desc: 'Core JavaScript language assessment' },
+        { name: 'Python', category: 'Web Development', desc: 'Core Python programming language assessment' },
+        { name: 'SQL', category: 'Web Development', desc: 'Relational database queries and optimization assessment' },
+        { name: 'Git', category: 'Web Development', desc: 'Distributed version control and collaboration assessment' },
+        { name: 'Figma', category: 'UI/UX Design', desc: 'Interface design and collaborative prototyping assessment' },
+        { name: 'Information Architecture', category: 'UI/UX Design', desc: 'Structuring, labeling, and organizing content assessment' },
+        { name: 'Statistics', category: 'Data Science', desc: 'Quantitative data analysis, probability, and hypothesis testing assessment' },
+        { name: 'NLP', category: 'Data Science', desc: 'Natural language processing and computational linguistics assessment' },
+        { name: 'Android Development', category: 'Mobile Development', desc: 'Native Android application development assessment' },
+        { name: 'Flutter', category: 'Mobile Development', desc: 'Cross-platform mobile development using Flutter and Dart assessment' }
+      ];
+      for (const s of skillsToSeed) {
+        const [existing] = await connection.query('SELECT Skill_Id FROM Skill WHERE Skill_Name = ?', [s.name]);
+        if (existing.length === 0) {
+          await connection.query('INSERT INTO Skill (Skill_Name, Category, Description) VALUES (?, ?, ?)', [s.name, s.category, s.desc]);
+          console.log(`✅ Seeded skill: ${s.name}`);
+        } else {
+          await connection.query('UPDATE Skill SET Category = ?, Description = ? WHERE Skill_Id = ?', [s.category, s.desc, existing[0].Skill_Id]);
+        }
+      }
+      console.log('✅ 10 core verification skills are seeded/verified.');
+    } catch (e) {
+      console.error('Error seeding core skills:', e.message);
     }
 
     connection.release();

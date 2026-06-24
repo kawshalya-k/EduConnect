@@ -5,9 +5,11 @@ const auth = require('../middleware/auth');
 
 router.post('/book', auth, sessionController.bookSession);
 router.get('/my', auth, sessionController.getMySessions);
+router.get('/availability/:mentorId', auth, sessionController.getAvailability);
 router.put('/:sessionId/status', auth, sessionController.updateStatus);
 router.put('/:sessionId/meeting-link', auth, sessionController.addMeetingLink);
 router.get('/:sessionId', auth, sessionController.getSessionById);
 router.post('/:sessionId/rate', auth, sessionController.rateSession);
+router.post('/:sessionId/review', auth, sessionController.submitReview);
 
 module.exports = router;
