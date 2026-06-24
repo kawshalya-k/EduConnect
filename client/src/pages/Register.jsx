@@ -107,10 +107,10 @@ const Register = () => {
 
         {/* Content Container */}
         <div className="relative z-10 max-w-md space-y-12">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 cursor-pointer">
             <img src={logo} alt="EduConnect Logo" className="w-10 h-10" />
             <span className="text-2xl font-bold text-white tracking-tight">EduConnect</span>
-          </div>
+          </Link>
           <h1 className="text-5xl font-black text-white leading-tight">
             Join your university community <span className="text-[#10B981]">today.</span>
           </h1>
@@ -162,7 +162,7 @@ const Register = () => {
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="student@dept.ac.lk" className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:bg-white outline-none transition-all" />
               </div>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                By clicking Continue, you agree to our <Link to="/terms-of-service" className="text-[#10B981] hover:underline">Terms of Service</Link>, <Link to="/privacy-policy" className="text-[#10B981] hover:underline">Privacy Policy</Link>, and <Link to="/community-standards" className="text-[#10B981] hover:underline">Community Standards</Link>.
+                By clicking Continue, you agree to our <Link to="/terms-of-service?onboarding=true" className="text-[#10B981] hover:underline">Terms of Service</Link>, <Link to="/privacy-policy?onboarding=true" className="text-[#10B981] hover:underline">Privacy Policy</Link>, and <Link to="/community-standards?onboarding=true" className="text-[#10B981] hover:underline">Community Standards</Link>.
               </p>
               <button 
                 type="submit"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import API from '../../services/axiosConfig';
 import {
   FiGrid, FiCalendar, FiCheckSquare, FiBookOpen, FiDollarSign, FiBarChart2, FiWifi
 } from 'react-icons/fi';
@@ -30,9 +31,8 @@ export default function DashboardSidebar({ user }) {
     const fetchDailyEarnings = async () => {
       try {
         setEarningsLoading(true);
-        const response = await fetch(`/api/wallet/${mentorId}/transactions`);
-        if (!response.ok) throw new Error('Failed to fetch wallet data');
-        const data = await response.json();
+        const response = await API.get(`/wallet/${mentorId}/transactions`);
+        const data = response.data;
 
         const today = new Date().toISOString().split('T')[0];
 

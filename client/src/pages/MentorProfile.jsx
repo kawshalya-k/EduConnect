@@ -4,11 +4,13 @@ import { FiCheckCircle, FiStar, FiCalendar, FiMessageCircle } from 'react-icons/
 import PageLayout from '../components/Layout/PageLayout';
 import { LoadingState } from '../components/Layout/LoadingState';
 import { fetchMentorProfile } from '../services/mentorApi';
+import { useAuth } from '../context/AuthContext';
 import './MentorProfile.css';
 
 export default function MentorProfile() {
   const { mentorId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [mentor, setMentor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -151,9 +153,31 @@ export default function MentorProfile() {
                 <div className="skills-grid">
                   {mentor.skills.map((skill) => (
                     <div key={skill.id} className="skill-detail-card">
-                      <div className="skill-badge-verified">
-                        <FiCheckCircle size={14} />
-                        <span>VERIFIED SKILL</span>
+                      <div className="flex gap-2 items-center mb-2 flex-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
+                        <div className="skill-badge-verified">
+                          <FiCheckCircle size={14} />
+                          <span>VERIFIED SKILL</span>
+                        </div>
+                        {skill.level && (
+                          <div className={`skill-badge-level skill-badge-level--${skill.level.toLowerCase()}`} style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '4px 10px',
+                            borderRadius: '9999px',
+                            fontWeight: '700',
+                            fontSize: '11px',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase',
+                            background: skill.level.toLowerCase() === 'expert' ? 'rgba(245, 158, 11, 0.12)' :
+                                        skill.level.toLowerCase() === 'intermediate' ? 'rgba(59, 130, 246, 0.12)' :
+                                        'rgba(16, 185, 129, 0.12)',
+                            color: skill.level.toLowerCase() === 'expert' ? '#92400E' :
+                                   skill.level.toLowerCase() === 'intermediate' ? '#1E40AF' :
+                                   '#065F46'
+                          }}>
+                            {skill.level}
+                          </div>
+                        )}
                       </div>
                       <h3 className="skill-detail-name">{skill.name}</h3>
                       <p className="skill-detail-desc">{skill.description}</p>
@@ -249,11 +273,48 @@ export default function MentorProfile() {
                 </div>
               </div>
 
-              <button className="book-session-btn" disabled={!selectedTime}>
+              <button 
+                className="book-session-btn" 
+                disabled={!selectedTime}
+                onClick={() => {
+                  if (user) {
+                    navigate('/session-booking', {
+                      state: {
+                        mentorId: mentor.id || mentor.userId || mentorId,
+                        mentorName: mentor.name,
+                        mentorAvatar: mentor.avatar,
+                        mentorTitle: mentor.title,
+                        mentorUniversity: mentor.university,
+                        date: selectedDate,
+                        time: selectedTime
+                      }
+                    });
+                  } else {
+                    navigate('/login');
+                  }
+                }}
+              >
                 Book a Session
               </button>
 
-              <button className="message-btn">
+              <button 
+                className="message-btn"
+                onClick={() => {
+                  if (user) {
+                    navigate('/messages', {
+                      state: {
+                        recipientId: mentor.id || mentor.userId || mentorId,
+                        recipientName: mentor.name,
+                        recipientAvatar: mentor.avatar,
+                        recipientTitle: mentor.title,
+                        recipientUniversity: mentor.university
+                      }
+                    });
+                  } else {
+                    navigate('/login');
+                  }
+                }}
+              >
                 <FiMessageCircle size={16} />
                 Message {mentor.name?.split(' ')[0]}
               </button>

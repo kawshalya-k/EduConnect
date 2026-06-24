@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, CheckCircle2 } from 'lucide-react';
-import { fetchLeaderboard } from '../services/leaderboardService';
+
+import axiosInstance from '../services/axiosConfig';
 
 const getLevelBadge = (level) => {
   switch(level) {
@@ -23,34 +24,34 @@ const Leaderboard = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadLeaderboard = async () => {
+    const loadFeatured = async () => {
       try {
-        const data = await fetchLeaderboard();
-        if (data.success && data.mentors) {
-          setTotalSessions(data.totalSessions || 0);
-          const formattedMentors = data.mentors.slice(0, 3).map((mentor, index) => ({
-            rank: `#${index + 1}`,
-            name: `${mentor.first_name} ${mentor.last_name}`,
-            faculty: mentor.university || "University",
-            level: mentor.mentor_level ? mentor.mentor_level.toUpperCase() : 'BRONZE',
-            rating: parseFloat(mentor.average_rating) || 5.0,
-            status: "Verified",
-            session_count: mentor.session_count || 0,
-            avatar: mentor.avatar || `https://ui-avatars.com/api/?name=${mentor.first_name}+${mentor.last_name}&background=10B981&color=fff`
-          }));
-          setMentors(formattedMentors);
-        }
+        const res = await axiosInstance.get('/mentors/featured');
+        const data = res.data || [];
+        const formattedMentors = data.slice(0, 3).map((mentor, index) => ({
+          rank: `#${index + 1}`,
+          name: `${mentor.First_Name} ${mentor.Last_Name}`,
+          faculty: mentor.University || "University",
+          level: mentor.Mentor_Level ? mentor.Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE',
+          rating: parseFloat(mentor.Average_Rating) || 5.0,
+          status: "Verified",
+          session_count: mentor.Total_Sessions || 0,
+          avatar: mentor.Avatar || `https://ui-avatars.com/api/?name=${mentor.First_Name}+${mentor.Last_Name}&background=10B981&color=fff`
+        }));
+        setMentors(formattedMentors);
+        
+        // Count total sessions of all featured mentors
+        const total = formattedMentors.reduce((acc, m) => acc + m.session_count, 0);
+        setTotalSessions(total || 12);
       } catch (err) {
-        setError('Failed to load leaderboard data');
+        setError('Failed to load featured mentors');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadLeaderboard();
-    const interval = setInterval(loadLeaderboard, 30000);
-    return () => clearInterval(interval);
+    loadFeatured();
   }, []);
 
   if (loading) {

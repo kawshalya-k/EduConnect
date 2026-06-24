@@ -106,7 +106,7 @@ const FinishSetup = () => {
                 />
               </div>
               <div className="ml-3 text-[14px] leading-[20px] text-[#475569]">
-                I agree to the <Link to="/terms-of-service" className="text-[#10B981] hover:underline">Terms of Service</Link> and <Link to="/privacy-policy" className="text-[#10B981] hover:underline">Privacy Policy</Link>.
+                I agree to the <Link to="/terms-of-service?onboarding=true" className="text-[#10B981] hover:underline">Terms of Service</Link> and <Link to="/privacy-policy?onboarding=true" className="text-[#10B981] hover:underline">Privacy Policy</Link>.
               </div>
             </div>
 
