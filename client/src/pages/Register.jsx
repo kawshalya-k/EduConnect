@@ -39,6 +39,9 @@ const Register = () => {
       });
       setSuccessMsg(res.data.message || 'Account created successfully!');
       
+      // Save email for password setup page
+      localStorage.setItem('temp_register_email', formData.email);
+
       // Bypass OTP for now: go straight to the success page instead of setStep(2)
       setTimeout(() => navigate('/verify-otp'), 1500);
     } catch (err) {

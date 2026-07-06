@@ -1,8 +1,15 @@
 .skills-widget {
   background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
   padding: 18px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.skills-widget:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .skills-widget-header {

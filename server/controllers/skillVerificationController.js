@@ -92,7 +92,7 @@ exports.getMySkills = async (req, res) => {
              JOIN Skill s ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld 
                     ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
-             WHERE us.User_Id = ?
+             WHERE us.User_Id = ? AND us.Role = 'Mentor'
              ORDER BY us.Verification_Status DESC, s.Skill_Name`,
             [userId]
         );

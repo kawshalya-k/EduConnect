@@ -111,6 +111,14 @@ async function initDB() {
       FOREIGN KEY (Skill_Id) REFERENCES Skill(Skill_Id) ON DELETE CASCADE
     )`);
 
+    // Dynamically add Confidence column if not exists
+    try {
+      await connection.query(`ALTER TABLE User_Skill ADD COLUMN Confidence INT DEFAULT 5`);
+      console.log('✅ Added Confidence column to User_Skill table');
+    } catch (e) {
+      // Column might already exist, ignore error
+    }
+
     await connection.query(`CREATE TABLE IF NOT EXISTS User_Badge (
       User_Id INT NOT NULL,
       Badge_Id INT NOT NULL,

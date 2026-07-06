@@ -34,3 +34,8 @@ export const getAllSkills = async () => {
   const res = await axiosInstance.get('/admin/skills');
   return res.data;
 };
+
+export const getAllUserSkills = async () => {
+  const res = await axiosInstance.get('/admin/user-skills');
+  return res.data;
+};
