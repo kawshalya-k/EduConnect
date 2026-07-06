@@ -5,21 +5,21 @@ const db = require('../config/db');
 // Get the logged-in mentor's own profile
 // ─────────────────────────────────────────────
 exports.getMyProfile = async (req, res) => {
-    const userId = req.user.id;
-    try {
-        // Core user info
-        const [userRows] = await db.query(
-            `SELECT User_Id, First_Name, Last_Name, Email, University, Bio, 
+  const userId = req.user.id;
+  try {
+    // Core user info
+    const [userRows] = await db.query(
+      `SELECT User_Id, First_Name, Last_Name, Email, University, Bio, 
                     Wallet_Balance, Status, Created_At
              FROM User WHERE User_Id = ?`,
-            [userId]
-        );
-        if (userRows.length === 0) return res.status(404).json({ message: "User not found." });
-        const profile = userRows[0];
+      [userId]
+    );
+    if (userRows.length === 0) return res.status(404).json({ message: "User not found." });
+    const profile = userRows[0];
 
-        // Verified mentor skills with levelling data
-        const [skills] = await db.query(
-            `SELECT s.Skill_Id, s.Skill_Name, s.Category,
+    // Verified mentor skills with levelling data
+    const [skills] = await db.query(
+      `SELECT s.Skill_Id, s.Skill_Name, s.Category,
                     us.Mentor_Level, us.Verification_Status, us.Certificates,
                     COALESCE(ld.Average_Rating, 0)  AS Average_Rating,
                     COALESCE(ld.Total_Sessions, 0)  AS Total_Sessions,
@@ -30,36 +30,36 @@ exports.getMyProfile = async (req, res) => {
                     ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
              WHERE us.User_Id = ? AND us.Role = 'Mentor'
              ORDER BY s.Skill_Name`,
-            [userId]
-        );
+      [userId]
+    );
 
-        // Badges
-        const [badges] = await db.query(
-            `SELECT b.Badge_Id, b.Badge_Name, b.Description, ub.Awarded_Date
+    // Badges
+    const [badges] = await db.query(
+      `SELECT b.Badge_Id, b.Badge_Name, b.Description, ub.Awarded_Date
              FROM User_Badge ub
              JOIN Badge b ON b.Badge_Id = ub.Badge_Id
              WHERE ub.User_Id = ?`,
-            [userId]
-        );
+      [userId]
+    );
 
-        // Review summary
-        const [reviewSummary] = await db.query(
-            `SELECT COUNT(*) AS Total_Reviews,
+    // Review summary
+    const [reviewSummary] = await db.query(
+      `SELECT COUNT(*) AS Total_Reviews,
                     ROUND(AVG(Rating), 2) AS Overall_Rating
              FROM Session
              WHERE Mentor_Id = ? AND Status = 'Completed' AND Rating IS NOT NULL`,
-            [userId]
-        );
+      [userId]
+    );
 
-        res.json({
-            ...profile,
-            skills,
-            badges,
-            review_summary: reviewSummary[0]
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    res.json({
+      ...profile,
+      skills,
+      badges,
+      review_summary: reviewSummary[0]
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // ─────────────────────────────────────────────
@@ -67,17 +67,17 @@ exports.getMyProfile = async (req, res) => {
 // Update bio and university
 // ─────────────────────────────────────────────
 exports.updateProfile = async (req, res) => {
-    const userId = req.user.id;
-    const { bio, university } = req.body;
-    try {
-        await db.query(
-            `UPDATE User SET Bio = ?, University = ? WHERE User_Id = ?`,
-            [bio, university, userId]
-        );
-        res.json({ message: "Profile updated successfully." });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  const userId = req.user.id;
+  const { bio, university } = req.body;
+  try {
+    await db.query(
+      `UPDATE User SET Bio = ?, University = ? WHERE User_Id = ?`,
+      [bio, university, userId]
+    );
+    res.json({ message: "Profile updated successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // ─────────────────────────────────────────────
@@ -85,28 +85,28 @@ exports.updateProfile = async (req, res) => {
 // Public profile view (for learners/search)
 // ─────────────────────────────────────────────
 exports.getPublicProfile = async (req, res) => {
-    const { mentorId } = req.params;
-    try {
-        const [userRows] = await db.query(
-            `SELECT User_Id, First_Name, Last_Name, University, Bio, Created_At, Avatar, Role
+  const { mentorId } = req.params;
+  try {
+    const [userRows] = await db.query(
+      `SELECT User_Id, First_Name, Last_Name, University, Bio, Created_At, Avatar, Role
              FROM User WHERE User_Id = ? AND Status = 'Active'`,
-            [mentorId]
-        );
-        if (userRows.length === 0) return res.status(404).json({ message: "Mentor not found." });
+      [mentorId]
+    );
+    if (userRows.length === 0) return res.status(404).json({ message: "Mentor not found." });
 
-        const [skills] = await db.query(
-            `SELECT s.Skill_Id, s.Skill_Name, s.Category, s.Description,
+    const [skills] = await db.query(
+      `SELECT s.Skill_Id, s.Skill_Name, s.Category, s.Description,
                      us.Mentor_Level, us.Certificates
              FROM User_Skill us
              JOIN Skill s ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld 
                     ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
              WHERE us.User_Id = ? AND us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
-            [mentorId]
-        );
+      [mentorId]
+    );
 
-        const [reviews] = await db.query(
-            `SELECT se.Session_Id as id, se.Rating, se.Feedback,
+    const [reviews] = await db.query(
+      `SELECT se.Session_Id as id, se.Rating, se.Feedback,
                      u.First_Name, u.Last_Name, u.Avatar as learnerAvatar,
                      s.Skill_Name, se.Date
              FROM Session se
@@ -115,52 +115,52 @@ exports.getPublicProfile = async (req, res) => {
              WHERE se.Mentor_Id = ? AND se.Status = 'Completed' AND se.Rating IS NOT NULL
              ORDER BY se.Date DESC
              LIMIT 10`,
-            [mentorId]
-        );
+      [mentorId]
+    );
 
-        const [badges] = await db.query(
-            `SELECT b.Badge_Name, b.Description, ub.Awarded_Date
+    const [badges] = await db.query(
+      `SELECT b.Badge_Name, b.Description, ub.Awarded_Date
              FROM User_Badge ub
              JOIN Badge b ON b.Badge_Id = ub.Badge_Id
              WHERE ub.User_Id = ?`,
-            [mentorId]
-        );
+      [mentorId]
+    );
 
-        const mentorData = {
-            id: userRows[0].User_Id,
-            userId: userRows[0].User_Id,
-            name: `${userRows[0].First_Name} ${userRows[0].Last_Name}`,
-            firstName: userRows[0].First_Name,
-            lastName: userRows[0].Last_Name,
-            university: userRows[0].University || 'University',
-            bio: userRows[0].Bio || '',
-            title: userRows[0].Bio || 'Expert Mentor',
-            avatar: userRows[0].Avatar,
-            level: skills.length > 0 ? (skills[0].Mentor_Level ? skills[0].Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE') : 'BRONZE',
-            verified: true,
-            skills: skills.map(s => ({
-                id: s.Skill_Id,
-                name: s.Skill_Name,
-                category: s.Category,
-                description: s.Description || `Expertise in ${s.Skill_Name}`,
-                level: s.Mentor_Level,
-                technologies: [] // Fallback if no specific tech column
-            })),
-            reviews: reviews.map(r => ({
-                id: r.id,
-                learnerName: `${r.First_Name} ${r.Last_Name}`,
-                learnerAvatar: r.learnerAvatar,
-                sessionTopic: r.Skill_Name,
-                rating: r.Rating,
-                comment: r.Feedback
-            })),
-            badges
-        };
+    const mentorData = {
+      id: userRows[0].User_Id,
+      userId: userRows[0].User_Id,
+      name: `${userRows[0].First_Name} ${userRows[0].Last_Name}`,
+      firstName: userRows[0].First_Name,
+      lastName: userRows[0].Last_Name,
+      university: userRows[0].University || 'University',
+      bio: userRows[0].Bio || '',
+      title: userRows[0].Bio || 'Expert Mentor',
+      avatar: userRows[0].Avatar,
+      level: skills.length > 0 ? (skills[0].Mentor_Level ? skills[0].Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE') : 'BRONZE',
+      verified: true,
+      skills: skills.map(s => ({
+        id: s.Skill_Id,
+        name: s.Skill_Name,
+        category: s.Category,
+        description: s.Description || `Expertise in ${s.Skill_Name}`,
+        level: s.Mentor_Level,
+        technologies: [] // Fallback if no specific tech column
+      })),
+      reviews: reviews.map(r => ({
+        id: r.id,
+        learnerName: `${r.First_Name} ${r.Last_Name}`,
+        learnerAvatar: r.learnerAvatar,
+        sessionTopic: r.Skill_Name,
+        rating: r.Rating,
+        comment: r.Feedback
+      })),
+      badges
+    };
 
-        res.json({ mentor: mentorData });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    res.json({ mentor: mentorData });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 exports.getMentors = async (req, res) => {
@@ -247,7 +247,7 @@ exports.verifySkill = async (req, res) => {
         const remainingMs = cooldownMs - diffMs;
         const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
         const remainingMinutes = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: `Cooldown active. Please try again in ${remainingHours}h ${remainingMinutes}m.`,
           remainingHours,
           remainingMinutes,
@@ -306,7 +306,7 @@ exports.verifySkill = async (req, res) => {
             'UPDATE User SET skill_coins = ?, Wallet_Balance = ? WHERE User_Id = ?',
             [newBalance, newBalance, userId]
           );
-          
+
           // Fetch skill name to use in transaction description
           const [skillRows] = await db.query(
             'SELECT Skill_Name FROM Skill WHERE Skill_Id = ?',
@@ -418,7 +418,7 @@ exports.startQuiz = async (req, res) => {
             const remainingMs = cooldownMs - diffMs;
             const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
             const remainingMinutes = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-            return res.status(403).json({ 
+            return res.status(403).json({
               message: `Cooldown active. Please try again in ${remainingHours}h ${remainingMinutes}m.`,
               remainingHours,
               remainingMinutes,
@@ -452,11 +452,11 @@ exports.startQuiz = async (req, res) => {
             "UPDATE User_Skill SET Verification_Status = 'Rejected', Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
             [userSkill.User_Skill_Id]
           );
-          
+
           const cooldownMs = 4 * 60 * 60 * 1000;
           const cooldownRemaining = cooldownMs - (now - lastAttempt);
-          
-          return res.status(400).json({ 
+
+          return res.status(400).json({
             message: 'Skill verification failed due to timeout. 4-hour cooldown active.',
             timeoutExpired: true,
             cooldownTimeLeft: cooldownRemaining > 0 ? cooldownRemaining : 0
@@ -475,7 +475,7 @@ exports.startQuiz = async (req, res) => {
             const remainingMs = cooldownMs - diffMs;
             const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
             const remainingMinutes = Math.ceil((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-            return res.status(403).json({ 
+            return res.status(403).json({
               message: `Cooldown active. Please try again in ${remainingHours}h ${remainingMinutes}m.`,
               remainingHours,
               remainingMinutes,
@@ -514,3 +514,94 @@ exports.startQuiz = async (req, res) => {
   }
 };
 
+exports.saveOnboardingDraft = async (req, res) => {
+  const userId = req.user?.User_Id || req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+  }
+
+  const { learningSkills = [], teachingSkills = [] } = req.body;
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 1. Delete existing Draft/Testing teaching skills and Learner skills
+    await connection.query(
+      "DELETE FROM User_Skill WHERE User_Id = ? AND (Role = 'Learner' OR Verification_Status = 'Draft' OR Verification_Status = 'Testing')",
+      [userId]
+    );
+
+    // 2. Insert learning skills (Role = 'Learner')
+    for (const skillName of learningSkills) {
+      if (!skillName) continue;
+      let [rows] = await connection.query('SELECT Skill_Id FROM Skill WHERE Skill_Name = ?', [skillName]);
+      let skillId;
+      if (rows.length > 0) {
+        skillId = rows[0].Skill_Id;
+      } else {
+        const [result] = await connection.query(
+          "INSERT INTO Skill (Skill_Name, Category, Description) VALUES (?, 'Technical', ?)",
+          [skillName, `Assessment of expertise in ${skillName}.`]
+        );
+        skillId = result.insertId;
+      }
+      await connection.query(
+        "INSERT IGNORE INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status) VALUES (?, ?, 'Learner', 'Verified')",
+        [userId, skillId]
+      );
+    }
+
+    // 3. Insert teaching skills (Role = 'Mentor', Verification_Status = 'Draft')
+    const savedSkills = [];
+    for (const skill of teachingSkills) {
+      const skillName = typeof skill === 'string' ? skill : skill.name;
+      const confidence = (typeof skill === 'object' && skill.confidence) ? skill.confidence : 5;
+      if (!skillName) continue;
+
+      let [rows] = await connection.query(
+        'SELECT Skill_Id, Skill_Name, Description FROM Skill WHERE Skill_Name = ?',
+        [skillName]
+      );
+      let skillId, description;
+      if (rows.length > 0) {
+        skillId = rows[0].Skill_Id;
+        description = rows[0].Description;
+      } else {
+        const [result] = await connection.query(
+          "INSERT INTO Skill (Skill_Name, Category, Description) VALUES (?, 'Technical', ?)",
+          [skillName, `Assessment of expertise in ${skillName}.`]
+        );
+        skillId = result.insertId;
+        description = `Assessment of expertise in ${skillName}.`;
+      }
+
+      // INSERT IGNORE (safe — no unique key dependency) then UPDATE confidence separately
+      await connection.query(
+        "INSERT IGNORE INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status, Confidence) VALUES (?, ?, 'Mentor', 'Draft', ?)",
+        [userId, skillId, confidence]
+      );
+
+      // Always update confidence in case the row already existed
+      await connection.query(
+        "UPDATE User_Skill SET Confidence = ?, Verification_Status = 'Draft' WHERE User_Id = ? AND Skill_Id = ? AND Role = 'Mentor'",
+        [confidence, userId, skillId]
+      );
+
+      savedSkills.push({ skillId, skillName, confidence, description });
+    }
+
+    await connection.commit();
+
+    res.status(200).json({
+      message: 'Draft saved successfully.',
+      savedSkills,
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('saveOnboardingDraft error:', error);
+    res.status(500).json({ message: 'Server error saving onboarding draft.' });
+  } finally {
+    connection.release();
+  }
+};

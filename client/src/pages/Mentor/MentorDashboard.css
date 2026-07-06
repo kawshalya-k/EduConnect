@@ -67,10 +67,17 @@
   align-items: center;
   gap: 10px;
   background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
   padding: 10px 16px;
   flex-shrink: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dash-level-badge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .level-badge-info {
@@ -103,12 +110,19 @@
 /* Rating Card */
 .dash-rating-card {
   background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
   padding: 20px;
   display: flex;
   align-items: center;
   gap: 14px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dash-rating-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .rating-card-icon {
@@ -180,9 +194,16 @@
 /* Section Cards */
 .dash-section-card {
   background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
   padding: 18px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dash-section-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .dash-section-header {
@@ -356,9 +377,16 @@
 /* Right Column */
 .mentor-spotlight-card {
   background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
   padding: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.mentor-spotlight-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .spotlight-header {
@@ -420,8 +448,8 @@
 
 .achievement-badge {
   background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
   padding: 12px 10px;
   display: flex;
   flex-direction: column;
@@ -431,6 +459,13 @@
   font-weight: 500;
   color: var(--gray-600);
   text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.achievement-badge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .badge-flame, .badge-star {

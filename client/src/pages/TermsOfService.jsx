@@ -23,9 +23,7 @@ const TermsOfService = () => {
 
   const lastUpdatedDate = "May 10, 2026";
 
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+
 
   return (
     <div className="bg-[#F0FDF4] min-h-screen font-sans text-slate-900 relative">

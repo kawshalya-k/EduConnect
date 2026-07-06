@@ -57,6 +57,9 @@ export const fetchSkillDetail = (mentorId, skillId) =>
 export const addSkill = (mentorId, data) =>
   API.post('/mentors/skills/add', data);
 
+export const saveOnboardingDraft = (data) =>
+  API.post('/mentors/skills/save-draft', data);
+
 export const fetchVerificationProgress = (mentorId) =>
   API.get('/mentors/skills/my');
 

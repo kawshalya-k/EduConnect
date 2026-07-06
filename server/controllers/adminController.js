@@ -162,3 +162,25 @@ exports.deleteSkill = async (req, res) => {
     res.status(500).json({ message: 'Error deleting skill' });
   }
 };
+
+exports.getAllUserSkills = async (req, res) => {
+  try {
+    const [userSkills] = await db.query(`
+      SELECT us.User_Skill_Id, us.Role, us.Verification_Status, us.Mentor_Level, us.Last_Attempt, us.Certificates,
+             u.User_Id, u.First_Name, u.Last_Name, u.Email, u.Avatar,
+             s.Skill_Id, s.Skill_Name, s.Category,
+             COALESCE(ld.Score, 0) AS Score,
+             COALESCE(ld.Average_Rating, 0.0) AS Average_Rating,
+             COALESCE(ld.Total_Sessions, 0) AS Total_Sessions
+      FROM User_Skill us
+      JOIN User u ON u.User_Id = us.User_Id
+      JOIN Skill s ON s.Skill_Id = us.Skill_Id
+      LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
+      ORDER BY us.Last_Attempt DESC, us.User_Skill_Id DESC
+    `);
+    res.status(200).json(userSkills);
+  } catch (err) {
+    console.error('getAllUserSkills error:', err);
+    res.status(500).json({ message: 'Error fetching user skills' });
+  }
+};

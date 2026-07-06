@@ -21,9 +21,7 @@ const PrivacyPolicy = () => {
   const location = useLocation();
   const isOnboarding = new URLSearchParams(location.search).get('onboarding') === 'true' || location.state?.onboarding;
 
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+
 
   const lastUpdatedDate = "May 10, 2026";
 

@@ -1,11 +1,57 @@
 import React, { useState } from 'react';
 import { Check, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 const FinishSetup = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+
+  const [password, setPassword] = useState('');
+  const [rePassword, setRePassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    if (!password || !rePassword) {
+      setError('Please fill in all password fields.');
+      return;
+    }
+    if (password !== rePassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    const email = localStorage.getItem('temp_register_email');
+    if (!email) {
+      setError('Registration session not found. Please sign up again.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      const res = await api.post('/auth/setup-password', {
+        email,
+        password
+      });
+
+      // Log the user in to set the token & user details in Context & LocalStorage
+      login(res.data.user, res.data.token);
+      localStorage.removeItem('temp_register_email');
+
+      // Navigate to the onboarding profile setup page
+      navigate('/profile-setup');
+    } catch (err) {
+      console.error('Password setup error:', err);
+      setError(err.response?.data?.message || 'Failed to complete account setup. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
@@ -47,7 +93,13 @@ const FinishSetup = () => {
             </p>
           </div>
 
-          <form className="w-full flex flex-col gap-6">
+          {error && (
+            <div className="w-full p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium mb-6">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleCreateAccount} className="w-full flex flex-col gap-6">
 
             {/* Password Input */}
             <div className="flex flex-col gap-2">
@@ -61,6 +113,9 @@ const FinishSetup = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                   className="w-full h-full bg-white border border-[#E2E8F0] rounded-lg pl-12 pr-12 text-[16px] text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
                 />
                 <button
@@ -85,6 +140,9 @@ const FinishSetup = () => {
                 <input
                   type={showRePassword ? "text" : "password"}
                   placeholder="••••••••"
+                  value={rePassword}
+                  onChange={(e) => setRePassword(e.target.value)}
+                  disabled={loading}
                   className="w-full h-full bg-white border border-[#E2E8F0] rounded-lg pl-12 pr-12 text-[16px] text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all"
                 />
                 <button
@@ -102,6 +160,7 @@ const FinishSetup = () => {
               <div className="flex items-center h-5">
                 <input
                   type="checkbox"
+                  required
                   className="w-4 h-4 bg-white border border-[#CBD5E1] rounded text-[#10B981] focus:ring-[#10B981] focus:ring-offset-0 cursor-pointer"
                 />
               </div>
@@ -112,17 +171,21 @@ const FinishSetup = () => {
 
             {/* Submit Button */}
             <button
-              type="button"
-              onClick={() => navigate('/profile-setup')}
+              type="submit"
+              disabled={loading}
               className="mt-2 w-full h-[52px] bg-[#10B981] rounded-lg shadow-[0px_10px_15px_-3px_rgba(13,242,89,0.2),0px_4px_6px_-4px_rgba(13,242,89,0.2)] hover:bg-[#0EA5E9] hover:shadow-[0px_10px_15px_-3px_rgba(14,165,233,0.2)] transition-all flex items-center justify-center gap-2 group cursor-pointer"
               style={{ backgroundColor: '#10B981' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.backgroundColor = '#059669';
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) e.currentTarget.style.backgroundColor = '#10B981';
+              }}
             >
               <span className="font-bold text-[16px] text-[#102216]">
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </span>
-              <ArrowRight className="w-5 h-5 text-[#102216] transform group-hover:translate-x-1 transition-transform" />
+              {!loading && <ArrowRight className="w-5 h-5 text-[#102216] transform group-hover:translate-x-1 transition-transform" />}
             </button>
 
           </form>
