@@ -324,7 +324,7 @@ export default function VerificationCenter() {
             <div className="skills-await-section">
               <div className="skills-await-header">
                 <h2 className="skills-await-title">
-                  {isAllSkillsView ? 'My Skills' : 'Skills Awaiting Verification'}
+                  {isAllSkillsView ? 'My Skills' : 'Skills'}
                 </h2>
                 {!isAllSkillsView && (
                   <Link to="/verification?view=all" className="view-all-skills">

@@ -7,60 +7,76 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchMentorSkills } from '../../services/mentorApi';
 import './SuccessState.css';
 
+// Level → accent colour for the medal badge
+const LEVEL_COLOR = {
+  Expert: '#FBBF24', // gold
+  Intermediate: '#94A3B8', // silver
+  Beginner: '#D97706', // bronze-ish amber
+};
+
+const LEVEL_EMOJI = {
+  Expert: '🏆',
+  Intermediate: '🥈',
+  Beginner: '🥉',
+};
+
+const LEVEL_COINS = {
+  Expert: 15,
+  Intermediate: 10,
+  Beginner: 5,
+};
+
 export default function VerificationSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  
+
   const params = new URLSearchParams(location.search);
   const from = params.get('from') || 'dashboard';
-  const skillId = params.get('skillId');
-  const score = params.get('score') || '12';
+  const skillId = params.get('skillId') || '';
+  const score = parseInt(params.get('score') || '12', 10);
+  const total = parseInt(params.get('total') || '15', 10);
   const level = params.get('level') || 'Expert';
 
-  const [cooldownRemaining, setCooldownRemaining] = useState(4 * 60 * 60 * 1000); // default 4 hours
+  const coins = LEVEL_COINS[level] ?? 5;
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+
+  const [cooldownRemaining, setCooldownRemaining] = useState(4 * 60 * 60 * 1000);
   const [cooldownActive, setCooldownActive] = useState(true);
 
-  // Fetch skill info to synchronize cooldown timer with backend Last_Attempt
+  // Sync cooldown with actual Last_Attempt from backend
   useEffect(() => {
-    const checkSkillCooldown = async () => {
+    const check = async () => {
       const userId = user?.mentorId || user?.id;
-      if (userId && skillId) {
-        try {
-          const res = await fetchMentorSkills(userId);
-          const skillsList = Array.isArray(res.data) ? res.data : (res.data?.skills || []);
-          const target = skillsList.find(s => (s.Skill_Id || s.id || '').toString() === skillId.toString());
-          if (target && target.Last_Attempt) {
-            const lastAttempt = new Date(target.Last_Attempt).getTime();
-            const elapsed = Date.now() - lastAttempt;
-            const cooldownMs = 4 * 60 * 60 * 1000;
-            if (elapsed < cooldownMs) {
-              setCooldownRemaining(cooldownMs - elapsed);
-              setCooldownActive(true);
-            } else {
-              setCooldownActive(false);
-              setCooldownRemaining(0);
-            }
+      if (!userId || !skillId) return;
+      try {
+        const res = await fetchMentorSkills(userId);
+        const list = Array.isArray(res.data) ? res.data : (res.data?.skills || []);
+        const target = list.find(s => (s.Skill_Id || s.id || '').toString() === skillId.toString());
+        if (target?.Last_Attempt) {
+          const elapsed = Date.now() - new Date(target.Last_Attempt).getTime();
+          const remaining = 4 * 60 * 60 * 1000 - elapsed;
+          if (remaining > 0) {
+            setCooldownRemaining(remaining);
+            setCooldownActive(true);
+          } else {
+            setCooldownActive(false);
+            setCooldownRemaining(0);
           }
-        } catch (err) {
-          console.error('Failed to fetch skill for cooldown check:', err);
         }
+      } catch (err) {
+        console.error('Cooldown check failed:', err);
       }
     };
-
-    checkSkillCooldown();
+    check();
   }, [user, skillId]);
 
-  // Cooldown ticking
+  // Countdown tick
   useEffect(() => {
     if (!cooldownActive || cooldownRemaining <= 0) return;
     const timer = setInterval(() => {
       setCooldownRemaining(prev => {
-        if (prev <= 1000) {
-          clearInterval(timer);
-          setCooldownActive(false);
-          return 0;
-        }
+        if (prev <= 1000) { clearInterval(timer); setCooldownActive(false); return 0; }
         return prev - 1000;
       });
     }, 1000);
@@ -68,19 +84,25 @@ export default function VerificationSuccess() {
   }, [cooldownActive, cooldownRemaining]);
 
   const formatCooldown = (ms) => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-    return `${hours}h ${minutes}m ${seconds}s`;
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return `${h}h ${m}m ${s}s`;
   };
 
-  const getLevelCoins = (lvl) => {
-    if (lvl === 'Beginner') return 5;
-    if (lvl === 'Intermediate') return 10;
-    return 15; // Expert
+  const handleDashboard = () => {
+    if (from === 'onboarding') {
+      navigate(`/profile-setup?verified_skill=${encodeURIComponent(skillId)}`);
+    } else {
+      navigate('/dashboard');
+    }
   };
 
-  const coins = getLevelCoins(level);
+  const handleRedo = () => {
+    if (!cooldownActive && skillId) {
+      navigate(`/verification/skill/${skillId}/start`);
+    }
+  };
 
   return (
     <PageLayout>
@@ -89,10 +111,14 @@ export default function VerificationSuccess() {
         <div className="success-page" style={{ flex: 1, minWidth: 0 }}>
           <div className="success-center">
             <div className="success-card">
-              {/* Badge Icon */}
+
+              {/* ── Medal badge ── */}
               <div className="success-badge-icon">
-                <div className="badge-medal" style={{ background: level === 'Expert' ? '#FBBF24' : level === 'Intermediate' ? '#94A3B8' : '#D97706' }}>
-                  <span className="medal-icon">🎖</span>
+                <div
+                  className="badge-medal"
+                  style={{ background: LEVEL_COLOR[level] || '#D97706' }}
+                >
+                  <span className="medal-icon">{LEVEL_EMOJI[level] || '🎖'}</span>
                 </div>
                 <div className="badge-check">
                   <FiCheckCircle size={18} />
@@ -102,14 +128,26 @@ export default function VerificationSuccess() {
               <h1 className="success-title">Skill Verified! 🎉</h1>
               <p className="success-subtitle">{level} Level Achieved</p>
 
-              {/* Score Display */}
-              <div className="success-score-box" style={{ margin: '16px 0', padding: '10px 24px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'inline-block' }}>
-                <span style={{ fontSize: '15px', color: '#64748B', fontWeight: '500' }}>Score: </span>
-                <strong style={{ fontSize: '18px', color: '#0F172A' }}>{score} / 15 ({Math.round((score / 15) * 100)}%)</strong>
+              {/* ── Score ── */}
+              <div
+                className="success-score-box"
+                style={{
+                  margin: '16px 0',
+                  padding: '10px 24px',
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: 12,
+                  border: '1px solid #E2E8F0',
+                  display: 'inline-block',
+                }}
+              >
+                <span style={{ fontSize: 15, color: '#64748B', fontWeight: 500 }}>Score: </span>
+                <strong style={{ fontSize: 18, color: '#0F172A' }}>
+                  {score} / {total} ({pct}%)
+                </strong>
               </div>
 
-              {/* Reward Box */}
-              <div className="success-reward-box" style={{ marginTop: '8px' }}>
+              {/* ── Rewards ── */}
+              <div className="success-reward-box" style={{ marginTop: 8 }}>
                 <p className="reward-label">REWARDS CREDITED</p>
                 <div className="reward-coins">
                   <span className="reward-coin-icon">🪙</span>
@@ -117,53 +155,56 @@ export default function VerificationSuccess() {
                 </div>
               </div>
 
+              {/* ── Level breakdown hint ── */}
+              <div
+                style={{
+                  margin: '12px 0',
+                  padding: '10px 16px',
+                  background: '#F0FDF4',
+                  borderRadius: 10,
+                  border: '1px solid #BBF7D0',
+                  fontSize: 13,
+                  color: '#065F46',
+                  lineHeight: 1.6,
+                  textAlign: 'left',
+                }}
+              >
+                <strong>Level thresholds (15 questions):</strong><br />
+                🥉 Beginner: 6–8 correct (+5 SC)&nbsp;&nbsp;
+                🥈 Intermediate: 9–11 correct (+10 SC)&nbsp;&nbsp;
+                🏆 Expert: 12–15 correct (+15 SC)
+              </div>
+
               <p className="success-message">
-                Congratulations! You successfully completed the quiz. You have been awarded the <strong>{level}</strong> badge level for this skill, and <strong>{coins} SC</strong> has been credited to your wallet balance.
+                Congratulations! You successfully completed the assessment. You have been awarded the{' '}
+                <strong>{level}</strong> badge for this skill, and <strong>{coins} SC</strong> has
+                been credited to your wallet.
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '16px' }}>
-                <button
-                  className="go-dashboard-btn"
-                  onClick={() => {
-                    if (from === 'onboarding') {
-                      navigate(`/profile-setup?verified_skill=${encodeURIComponent(skillId)}`);
-                    } else {
-                      navigate('/dashboard');
-                    }
-                  }}
-                  style={{ width: '100%' }}
-                >
+              {/* ── Actions ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', marginTop: 16 }}>
+                <button className="go-dashboard-btn" onClick={handleDashboard} style={{ width: '100%' }}>
                   {from === 'onboarding' ? 'Return to Profile Setup →' : 'Go to Dashboard →'}
                 </button>
 
                 <button
                   className={`redo-quiz-btn ${cooldownActive ? 'locked' : ''}`}
-                  onClick={() => {
-                    if (!cooldownActive && skillId) {
-                      navigate(`/verification/skill/${skillId}/start`);
-                    }
-                  }}
+                  onClick={handleRedo}
                   disabled={cooldownActive}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    height: '48px',
-                    borderRadius: '12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    width: '100%', height: 48, borderRadius: 12,
                     border: cooldownActive ? '1px solid #E2E8F0' : '1px solid #10B981',
                     background: cooldownActive ? '#F8FAFC' : '#FFFFFF',
                     color: cooldownActive ? '#94A3B8' : '#10B981',
-                    fontWeight: '700',
-                    cursor: cooldownActive ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s'
+                    fontWeight: 700, cursor: cooldownActive ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
                   }}
                 >
                   {cooldownActive ? (
                     <>
                       <FiClock />
-                      <span>Redo Quiz (Locked: {formatCooldown(cooldownRemaining)})</span>
+                      <span>Improve Level (Locked: {formatCooldown(cooldownRemaining)})</span>
                     </>
                   ) : (
                     <>
@@ -174,8 +215,8 @@ export default function VerificationSuccess() {
                 </button>
               </div>
 
-              {/* Community */}
-              <div className="success-community-row" style={{ marginTop: '24px' }}>
+              {/* ── Community row ── */}
+              <div className="success-community-row" style={{ marginTop: 24 }}>
                 <div className="community-avatars">
                   <div className="community-avatar c1" />
                   <div className="community-avatar c2" />

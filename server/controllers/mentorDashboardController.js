@@ -1,9 +1,8 @@
 const db = require('../config/db');
 
-// ─────────────────────────────────────────────
 // GET /api/mentor/dashboard
 // Full dashboard stats for the logged-in mentor
-// ─────────────────────────────────────────────
+
 exports.getDashboard = async (req, res) => {
     const mentorId = req.user.id;
     try {
@@ -23,13 +22,13 @@ exports.getDashboard = async (req, res) => {
 
         // 2. Per-skill performance
         const [skillStats] = await db.query(
-             `SELECT s.Skill_Name, s.Category,
-                      ld.level AS Mentor_Level, ld.average_rating AS Average_Rating, ld.session_count AS Total_Sessions, ld.score AS Score,
-                      ld.updated_at AS Last_Evaluation_Date
-                  FROM levelling_data ld
-                  JOIN Skill s ON s.Skill_Id = ld.skill_id
-                  WHERE ld.user_id = ?
-                  ORDER BY ld.score DESC`,
+            `SELECT s.Skill_Name, s.Category,
+                      ld.Mentor_Level, ld.Average_Rating, ld.Total_Sessions, ld.Score,
+                      ld.Last_Evaluation_Date
+                  FROM Levelling_Data ld
+                  JOIN Skill s ON s.Skill_Id = ld.Skill_Id
+                  WHERE ld.Mentor_Id = ?
+                  ORDER BY ld.Score DESC`,
             [mentorId]
         );
 
@@ -64,10 +63,10 @@ exports.getDashboard = async (req, res) => {
         );
 
         res.json({
-            session_stats:   sessionStats[0],
-            skill_stats:     skillStats,
+            session_stats: sessionStats[0],
+            skill_stats: skillStats,
             recent_sessions: recentSessions,
-            wallet_balance:  walletRow[0]?.Wallet_Balance ?? 0,
+            wallet_balance: walletRow[0]?.Wallet_Balance ?? 0,
             badges
         });
     } catch (err) {
@@ -75,10 +74,9 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────────
 // GET /api/mentor/dashboard/earnings
 // Monthly earnings breakdown (last 6 months)
-// ─────────────────────────────────────────────
+
 exports.getEarnings = async (req, res) => {
     const mentorId = req.user.id;
     try {
@@ -103,17 +101,16 @@ exports.getEarnings = async (req, res) => {
 
         res.json({
             monthly_breakdown: monthly,
-            all_time_earned:   allTime[0]?.All_Time_Earned ?? 0
+            all_time_earned: allTime[0]?.All_Time_Earned ?? 0
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-// ─────────────────────────────────────────────
 // GET /api/mentor/dashboard/reviews
 // All reviews received by the mentor
-// ─────────────────────────────────────────────
+
 exports.getReviews = async (req, res) => {
     const mentorId = req.user.id;
     try {

@@ -10,6 +10,45 @@ import { useAuth } from '../../context/AuthContext';
 import { quizQuestions } from '../../data/quizData';
 import './VerifySkill.css';
 
+// ─── Skill name → quiz key mapping ───────────────────────────────────────────
+// Add any new skills here so their name maps to a quizQuestions key.
+const QUIZ_KEY_MAP = [
+  { pattern: /javascript|js\b/i, key: 'JavaScript' },
+  { pattern: /python/i, key: 'Python' },
+  { pattern: /\bsql\b|database/i, key: 'SQL' },
+  { pattern: /\bgit\b/i, key: 'Git' },
+  { pattern: /figma/i, key: 'Figma' },
+  { pattern: /information architecture|^ia$/i, key: 'Information Architecture' },
+  { pattern: /statistic/i, key: 'Statistics' },
+  { pattern: /\bnlp\b|natural language/i, key: 'NLP' },
+  { pattern: /android/i, key: 'Android Development' },
+  { pattern: /flutter/i, key: 'Flutter' },
+];
+
+function getQuizKey(skillName) {
+  if (!skillName) return 'JavaScript';
+  for (const { pattern, key } of QUIZ_KEY_MAP) {
+    if (pattern.test(skillName)) return key;
+  }
+  // Fallback: try an exact match (case-insensitive) against available keys
+  const lower = skillName.toLowerCase();
+  const directMatch = Object.keys(quizQuestions).find(k => k.toLowerCase() === lower);
+  return directMatch || 'JavaScript';
+}
+
+// ─── Score → level helper (15 questions) ─────────────────────────────────────
+// Expert      : 12-15 correct  (80-100%)
+// Intermediate: 9-11  correct  (60-73%)
+// Beginner    : 6-8   correct  (40-53%)
+// Failed      : 0-5   correct  (<40%)
+function scoreToLevel(correct) {
+  if (correct >= 12) return 'Expert';
+  if (correct >= 9) return 'Intermediate';
+  if (correct >= 6) return 'Beginner';
+  return 'Failed';
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function VerifySkill() {
   const navigate = useNavigate();
   const { skillId } = useParams();
@@ -17,162 +56,159 @@ export default function VerifySkill() {
 
   const [loading, setLoading] = useState(true);
   const [skillName, setSkillName] = useState('');
-  const [quizState, setQuizState] = useState('start'); // 'start', 'quiz', 'submitting', 'cooldown'
+  const [quizState, setQuizState] = useState('start'); // 'start' | 'quiz' | 'submitting' | 'cooldown'
   const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0);
 
-  // Quiz questions and selection state
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [quizTimeLeft, setQuizTimeLeft] = useState(600); // 10 minutes in seconds
+  const [quizTimeLeft, setQuizTimeLeft] = useState(600);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
   const params = new URLSearchParams(window.location.search);
   const from = params.get('from') || 'dashboard';
 
-  const getQuizKey = (name) => {
-    if (!name) return 'JavaScript';
-    const norm = name.toLowerCase();
-    if (norm.includes('javascript') || norm.includes('js')) return 'JavaScript';
-    if (norm.includes('python')) return 'Python';
-    if (norm.includes('sql') || norm.includes('database')) return 'SQL';
-    if (norm.includes('git')) return 'Git';
-    if (norm.includes('figma')) return 'Figma';
-    if (norm.includes('information architecture') || norm.includes('ia')) return 'Information Architecture';
-    if (norm.includes('statistics') || norm.includes('stat')) return 'Statistics';
-    if (norm.includes('nlp') || norm.includes('natural language')) return 'NLP';
-    if (norm.includes('android')) return 'Android Development';
-    if (norm.includes('flutter')) return 'Flutter';
-    return 'JavaScript'; // fallback
-  };
-
+  // ── Load skill info ──────────────────────────────────────────────────────────
   useEffect(() => {
     const loadSkillInfo = async () => {
       const userId = user?.mentorId || user?.id;
-      if (userId) {
-        setLoading(true);
-        try {
-          const res = await fetchMentorSkills(userId);
-          const skills = Array.isArray(res.data) ? res.data : (res.data?.skills || []);
-          let targetSkill = null;
+      if (!userId) return;
+      setLoading(true);
 
-          if (skillId) {
-            targetSkill = skills.find(s => (s.Skill_Id || s.id || '').toString() === skillId.toString());
-          } else {
-            targetSkill = skills.find(s => !(s.Verification_Status === 1 || s.Verification_Status === true || s.Verification_Status === 'Verified' || s.verified));
-          }
+      try {
+        const res = await fetchMentorSkills(userId);
+        const skills = Array.isArray(res.data) ? res.data : (res.data?.skills || []);
 
-          if (targetSkill) {
-            const name = targetSkill.Skill_Name || targetSkill.name;
-            setSkillName(name);
-            
-            // Check for cooldown / active resume
-            if (targetSkill.Verification_Status === 'Testing') {
-              try {
-                const startRes = await API.post('/mentors/skills/start-quiz', { skillId: targetSkill.Skill_Id });
-                const startData = startRes.data;
-                if (startData.quizTimeLeft) {
-                  setQuestions(quizQuestions[getQuizKey(name)] || quizQuestions['JavaScript']);
-                  setQuizTimeLeft(startData.quizTimeLeft);
-                  setQuizState('quiz');
-                } else {
-                  setQuizState('start');
-                }
-              } catch (startErr) {
-                const startData = startErr.response?.data || {};
-                if (startData.timeoutExpired || startData.cooldownActive) {
-                  setQuizState('cooldown');
-                  setCooldownTimeLeft(startData.cooldownTimeLeft || 4 * 60 * 60 * 1000);
-                } else {
-                  console.error('Failed to resume quiz:', startErr);
-                  setQuizState('start');
-                }
-              }
-            } else if (targetSkill.Last_Attempt) {
-              const lastAttempt = new Date(targetSkill.Last_Attempt);
-              const now = new Date();
-              const diffMs = now - lastAttempt;
-              const cooldownMs = 4 * 60 * 60 * 1000; // 4 hours
-              if (diffMs < cooldownMs) {
-                setQuizState('cooldown');
-                setCooldownTimeLeft(cooldownMs - diffMs);
-              } else {
-                setQuizState('start');
-              }
+        let targetSkill = null;
+        if (skillId) {
+          targetSkill = skills.find(
+            s => (s.Skill_Id || s.id || '').toString() === skillId.toString()
+          );
+        }
+        if (!targetSkill) {
+          // Fallback: first unverified skill
+          targetSkill = skills.find(
+            s => !(s.Verification_Status === 1 || s.Verification_Status === true || s.Verification_Status === 'Verified')
+          );
+        }
+
+        if (targetSkill) {
+          const name = targetSkill.Skill_Name || targetSkill.name || '';
+          setSkillName(name);
+          loadQuestionsForSkill(name);
+
+          // Handle cooldown / mid-quiz resume
+          if (targetSkill.Verification_Status === 'Testing') {
+            await attemptResume(targetSkill.Skill_Id, name);
+          } else if (targetSkill.Last_Attempt) {
+            const diffMs = Date.now() - new Date(targetSkill.Last_Attempt).getTime();
+            if (diffMs < 4 * 60 * 60 * 1000) {
+              setQuizState('cooldown');
+              setCooldownTimeLeft(4 * 60 * 60 * 1000 - diffMs);
             } else {
               setQuizState('start');
             }
-
-            // Get questions for this skill
-            const key = getQuizKey(name);
-            setQuestions(quizQuestions[key] || quizQuestions['JavaScript']);
           } else {
-            setSkillName('General Mentor Skill');
-            setQuestions(quizQuestions['JavaScript']);
             setQuizState('start');
           }
-        } catch (err) {
-          console.error('Failed to load skills:', err);
+        } else {
+          // No skill found — show start screen with fallback questions
           setSkillName('General Mentor Skill');
-          setQuestions(quizQuestions['JavaScript']);
-        } finally {
-          setLoading(false);
+          loadQuestionsForSkill('JavaScript');
+          setQuizState('start');
         }
+      } catch (err) {
+        console.error('Failed to load skill info:', err);
+        setSkillName('General Mentor Skill');
+        loadQuestionsForSkill('JavaScript');
+        setQuizState('start');
+      } finally {
+        setLoading(false);
       }
     };
 
     loadSkillInfo();
   }, [user, skillId]);
 
-  // Cooldown timer tick
+  function loadQuestionsForSkill(name) {
+    const key = getQuizKey(name);
+    const qs = quizQuestions[key];
+    if (!qs || qs.length === 0) {
+      console.warn(`No questions found for key "${key}", falling back to JavaScript`);
+      setQuestions(quizQuestions['JavaScript'] || []);
+    } else {
+      setQuestions(qs);
+    }
+  }
+
+  async function attemptResume(id, name) {
+    try {
+      const startRes = await API.post('/mentors/skills/start-quiz', { skillId: id });
+      const data = startRes.data;
+      // Backend may return updated skillName — prefer it
+      if (data.skillName) setSkillName(data.skillName);
+      loadQuestionsForSkill(data.skillName || name);
+      if (data.quizTimeLeft) {
+        setQuizTimeLeft(data.quizTimeLeft);
+        setQuizState('quiz');
+      } else {
+        setQuizState('start');
+      }
+    } catch (err) {
+      const data = err.response?.data || {};
+      if (data.timeoutExpired || data.cooldownActive) {
+        setQuizState('cooldown');
+        setCooldownTimeLeft(data.cooldownTimeLeft || 4 * 60 * 60 * 1000);
+      } else {
+        setQuizState('start');
+      }
+    }
+  }
+
+  // ── Cooldown ticker ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (quizState !== 'cooldown' || cooldownTimeLeft <= 0) return;
     const timer = setInterval(() => {
       setCooldownTimeLeft(prev => {
-        if (prev <= 1000) {
-          clearInterval(timer);
-          setQuizState('start');
-          return 0;
-        }
+        if (prev <= 1000) { clearInterval(timer); setQuizState('start'); return 0; }
         return prev - 1000;
       });
     }, 1000);
     return () => clearInterval(timer);
   }, [quizState, cooldownTimeLeft]);
 
-  // Quiz timer tick
+  // ── Quiz countdown ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (quizState !== 'quiz') return;
     const timer = setInterval(() => {
       setQuizTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          submitQuizAnswers(true);
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(timer); submitQuizAnswers(true); return 0; }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [quizState]);
+  }, [quizState]); // eslint-disable-line
 
+  // ── Start quiz ────────────────────────────────────────────────────────────────
   const handleStartQuiz = async () => {
     setLoading(true);
     setSubmitError('');
     try {
-      const targetSkillId = skillId || '1'; // fallback
-      const response = await API.post('/mentors/skills/start-quiz', {
-        skillId: targetSkillId
-      });
-
+      const targetSkillId = skillId || '1';
+      const response = await API.post('/mentors/skills/start-quiz', { skillId: targetSkillId });
       const data = response.data;
-      setQuizState('quiz');
+
+      // Use skill name returned from backend to load the correct question set
+      const resolvedSkillName = data.skillName || skillName;
+      setSkillName(resolvedSkillName);
+      loadQuestionsForSkill(resolvedSkillName);
+
       setCurrentQuestionIndex(0);
       setSelectedAnswers({});
       setQuizTimeLeft(data.quizTimeLeft || 600);
+      setQuizState('quiz');
     } catch (err) {
-      console.error(err);
       const data = err.response?.data || {};
       setSubmitError(data.message || 'Failed to start assessment.');
       if (data.cooldownActive || data.timeoutExpired) {
@@ -184,64 +220,44 @@ export default function VerifySkill() {
     }
   };
 
-
   const handleSelectOption = (optionIndex) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [currentQuestionIndex]: optionIndex
-    }));
+    setSelectedAnswers(prev => ({ ...prev, [currentQuestionIndex]: optionIndex }));
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-    }
+    if (currentQuestionIndex < questions.length - 1) setCurrentQuestionIndex(i => i + 1);
   };
 
   const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
-    }
+    if (currentQuestionIndex > 0) setCurrentQuestionIndex(i => i - 1);
   };
 
+  // ── Submit ────────────────────────────────────────────────────────────────────
   const submitQuizAnswers = async (isTimeOut = false) => {
     setIsSubmitting(true);
     setSubmitError('');
     setQuizState('submitting');
 
-    // Calculate score
     let correctCount = 0;
     questions.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.answerIndex) {
-        correctCount++;
-      }
+      if (selectedAnswers[idx] === q.answerIndex) correctCount++;
     });
 
-    const passed = correctCount >= 6; // 40% of 15 is 6
-
-    let level = 'Failed';
-    if (correctCount >= 12) level = 'Expert';
-    else if (correctCount >= 9) level = 'Intermediate';
-    else if (correctCount >= 6) level = 'Beginner';
-
+    const level = scoreToLevel(correctCount);
+    const passed = level !== 'Failed';
     const actualSkillId = skillId || '1';
-    const queryStr = `?from=${from}&skillId=${encodeURIComponent(actualSkillId)}&score=${correctCount}&level=${level}`;
+    const queryStr = `?from=${from}&skillId=${encodeURIComponent(actualSkillId)}&score=${correctCount}&total=${questions.length}&level=${level}`;
 
     try {
-      const response = await API.post('/mentors/skills/verify', {
+      await API.post('/mentors/skills/verify', {
         skillId: actualSkillId,
         passed,
         score: correctCount,
-        level
+        level,
       });
 
-      if (passed) {
-        navigate(`/verification/success${queryStr}`);
-      } else {
-        navigate(`/verification/failed${queryStr}`);
-      }
+      navigate(passed ? `/verification/success${queryStr}` : `/verification/failed${queryStr}`);
     } catch (err) {
-      console.error(err);
       const data = err.response?.data || {};
       setSubmitError(data.message || 'An error occurred while submitting. Please try again.');
       setQuizState('quiz');
@@ -250,19 +266,21 @@ export default function VerifySkill() {
     }
   };
 
+  // ── Formatting ────────────────────────────────────────────────────────────────
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   const formatCooldownTime = (ms) => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-    return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
   };
 
+  // ── Loading screen ────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <PageLayout>
@@ -282,6 +300,7 @@ export default function VerifySkill() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progressPercent = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+  const answeredCount = Object.keys(selectedAnswers).length;
 
   return (
     <PageLayout>
@@ -296,36 +315,34 @@ export default function VerifySkill() {
             ]}
           />
 
+          {/* ── Cooldown ── */}
           {quizState === 'cooldown' && (
             <div className="verify-skill-center" style={{ marginTop: '60px' }}>
               <div className="verify-skill-card-focused text-center">
                 <div className="verify-check-container" style={{ margin: '0 auto 24px' }}>
-                  <div className="verify-check-blur" style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }} />
-                  <div className="verify-check-background" style={{ background: 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)' }}>
-                    <FiClock className="verify-check-svg" style={{ width: '48px', height: '48px' }} />
+                  <div className="verify-check-blur" style={{ backgroundColor: 'rgba(239,68,68,0.2)' }} />
+                  <div className="verify-check-background" style={{ background: 'linear-gradient(135deg,#EF4444 0%,#B91C1C 100%)' }}>
+                    <FiClock className="verify-check-svg" style={{ width: 48, height: 48 }} />
                   </div>
                 </div>
-                <h2 className="verify-skill-title">Redo Cooldown Active</h2>
-                <p className="verify-skill-desc" style={{ maxWidth: '400px', margin: '16px auto' }}>
-                  You have recently attempted this assessment. To upgrade your level or try again, please wait for the 4-hour cooldown period to complete.
+                <h2 className="verify-skill-title">Cooldown Active</h2>
+                <p className="verify-skill-desc" style={{ maxWidth: 400, margin: '16px auto' }}>
+                  You have recently attempted this assessment. Please wait for the 4-hour cooldown period before trying again.
                 </p>
-                <div className="failed-countdown-box" style={{ width: '100%', margin: '24px 0', padding: '16px' }}>
-                  <p className="countdown-label" style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748B', letterSpacing: '1px' }}>TIME REMAINING</p>
-                  <p className="countdown-timer" style={{ fontSize: '28px', fontWeight: 'bold', color: '#1E293B', margin: '8px 0 0 0' }}>
+                <div className="failed-countdown-box" style={{ width: '100%', margin: '24px 0', padding: 16 }}>
+                  <p className="countdown-label" style={{ fontSize: 11, fontWeight: 'bold', color: '#64748B', letterSpacing: 1 }}>TIME REMAINING</p>
+                  <p className="countdown-timer" style={{ fontSize: 28, fontWeight: 'bold', color: '#1E293B', margin: '8px 0 0' }}>
                     {formatCooldownTime(cooldownTimeLeft)}
                   </p>
                 </div>
-                <button
-                  className="take-quiz-btn"
-                  style={{ backgroundColor: '#64748B', cursor: 'not-allowed' }}
-                  disabled
-                >
+                <button className="take-quiz-btn" style={{ backgroundColor: '#64748B', cursor: 'not-allowed' }} disabled>
                   Assessment Locked
                 </button>
               </div>
             </div>
           )}
 
+          {/* ── Start screen ── */}
           {quizState === 'start' && (
             <div className="verify-start-layout">
               <div className="verify-decor-top" />
@@ -339,17 +356,20 @@ export default function VerifySkill() {
                   </p>
                 </div>
                 <div className="verify-hero-right">
-                  <button
-                    className="take-quiz-btn-gradient"
-                    onClick={handleStartQuiz}
-                  >
+                  <button className="take-quiz-btn-gradient" onClick={handleStartQuiz}>
                     <span className="btn-text">Start Assessment</span>
                     <FiArrowRight size={18} style={{ color: '#002113' }} />
                   </button>
                 </div>
               </div>
 
-              {/* Detailed Instructions Section */}
+              {submitError && (
+                <div className="quiz-error-message" style={{ margin: '16px 0' }}>
+                  <FiAlertCircle size={16} />
+                  <span>{submitError}</span>
+                </div>
+              )}
+
               <div className="verify-instructions-card">
                 <div className="instructions-header">
                   <div className="instructions-icon-container">
@@ -364,26 +384,23 @@ export default function VerifySkill() {
                 <div className="instructions-steps-row">
                   <div className="step-card">
                     <h4 className="step-title">15 Questions</h4>
-                    <p className="step-text">Multiple-choice questions covering core concepts and scenarios.</p>
+                    <p className="step-text">Multiple-choice questions covering core concepts and real-world scenarios for <strong>{skillName}</strong>.</p>
                     <span className="step-number">01</span>
                   </div>
-
                   <div className="step-card">
                     <h4 className="step-title">10 Minutes</h4>
-                    <p className="step-text">Strict 10-minute time limit. The quiz will auto-submit when the timer hits 0.</p>
+                    <p className="step-text">Strict time limit. The quiz auto-submits when the timer reaches 0.</p>
                     <span className="step-number">02</span>
                   </div>
-
                   <div className="step-card">
                     <h4 className="step-title">Scoring Levels</h4>
                     <p className="step-text">
-                      Beginner: 6-8 correct<br />
-                      Intermediate: 9-11 correct<br />
-                      Expert: 12-15 correct
+                      Beginner: 6–8 correct<br />
+                      Intermediate: 9–11 correct<br />
+                      Expert: 12–15 correct
                     </p>
                     <span className="step-number">03</span>
                   </div>
-
                   <div className="step-card">
                     <h4 className="step-title">Rewards & Cooldown</h4>
                     <p className="step-text">Earn up to 15 Skill Coins upon verification. 4-hour cooldown between attempts.</p>
@@ -394,14 +411,20 @@ export default function VerifySkill() {
             </div>
           )}
 
+          {/* ── Quiz ── */}
           {quizState === 'quiz' && (
-            <div className="verify-skill-center" style={{ marginTop: '20px' }}>
+            <div className="verify-skill-center" style={{ marginTop: 20 }}>
               <div className="quiz-wizard-card">
-                {/* Quiz Header */}
+                {/* Header */}
                 <div className="quiz-header">
                   <div>
                     <h2 className="quiz-skill-title">{skillName} Assessment</h2>
-                    <p className="quiz-question-counter">Question {currentQuestionIndex + 1} of {questions.length}</p>
+                    <p className="quiz-question-counter">
+                      Question {currentQuestionIndex + 1} of {questions.length}
+                      <span style={{ marginLeft: 12, color: '#64748B', fontSize: 13 }}>
+                        ({answeredCount} answered)
+                      </span>
+                    </p>
                   </div>
                   <div className={`quiz-timer-badge ${quizTimeLeft <= 120 ? 'timer-low-alert' : ''}`}>
                     <FiClock className="timer-icon" />
@@ -409,16 +432,15 @@ export default function VerifySkill() {
                   </div>
                 </div>
 
-                {/* Progress Bar */}
+                {/* Progress bar */}
                 <div className="quiz-progress-bar-container">
                   <div className="quiz-progress-bar-fill" style={{ width: `${progressPercent}%` }} />
                 </div>
 
-                {/* Question Area */}
+                {/* Question */}
                 {currentQuestion ? (
                   <div className="quiz-question-container">
                     <h3 className="quiz-question-text">{currentQuestion.question}</h3>
-                    
                     <div className="quiz-options-list">
                       {currentQuestion.options.map((option, idx) => {
                         const isSelected = selectedAnswers[currentQuestionIndex] === idx;
@@ -438,7 +460,9 @@ export default function VerifySkill() {
                     </div>
                   </div>
                 ) : (
-                  <p>Loading question...</p>
+                  <p style={{ padding: 24, textAlign: 'center', color: '#64748B' }}>
+                    No questions available for this skill yet.
+                  </p>
                 )}
 
                 {submitError && (
@@ -448,7 +472,7 @@ export default function VerifySkill() {
                   </div>
                 )}
 
-                {/* Footer Navigation */}
+                {/* Navigation */}
                 <div className="quiz-footer-actions">
                   <button
                     className="quiz-prev-btn"
@@ -474,28 +498,50 @@ export default function VerifySkill() {
                       onClick={() => submitQuizAnswers(false)}
                       disabled={selectedAnswers[currentQuestionIndex] === undefined || isSubmitting}
                     >
-                      {isSubmitting ? 'Submitting...' : 'Submit Assessment'}
+                      {isSubmitting ? 'Submitting…' : 'Submit Assessment'}
                     </button>
                   )}
+                </div>
+
+                {/* Question navigator dots */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 16, justifyContent: 'center' }}>
+                  {questions.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentQuestionIndex(idx)}
+                      style={{
+                        width: 28, height: 28, borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                        background: idx === currentQuestionIndex ? '#10B981'
+                          : selectedAnswers[idx] !== undefined ? '#D1FAE5'
+                            : '#F1F5F9',
+                        color: idx === currentQuestionIndex ? '#fff'
+                          : selectedAnswers[idx] !== undefined ? '#065F46'
+                            : '#64748B',
+                      }}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           )}
 
+          {/* ── Submitting ── */}
           {quizState === 'submitting' && (
-            <div className="verify-skill-center" style={{ marginTop: '60px' }}>
+            <div className="verify-skill-center" style={{ marginTop: 60 }}>
               <div className="verify-skill-card-focused text-center">
                 <div className="verify-grading-pulse">
                   <div className="verify-check-container" style={{ margin: '0 auto 24px' }}>
                     <div className="verify-check-blur" />
                     <div className="verify-check-background">
-                      <FiCheckSquare className="verify-check-svg" style={{ width: '48px', height: '48px' }} />
+                      <FiCheckSquare className="verify-check-svg" style={{ width: 48, height: 48 }} />
                     </div>
                   </div>
                 </div>
-                <h2 className="verify-skill-title">Grading Your Answers...</h2>
-                <p className="verify-skill-desc" style={{ maxWidth: '300px', margin: '16px auto' }}>
-                  Please wait while our engine scores your assessment and updates your credentials.
+                <h2 className="verify-skill-title">Grading Your Answers…</h2>
+                <p className="verify-skill-desc" style={{ maxWidth: 300, margin: '16px auto' }}>
+                  Please wait while we score your assessment and update your credentials.
                 </p>
               </div>
             </div>

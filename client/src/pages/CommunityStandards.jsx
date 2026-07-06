@@ -14,9 +14,7 @@ const CommunityStandards = () => {
   const location = useLocation();
   const isOnboarding = new URLSearchParams(location.search).get('onboarding') === 'true' || location.state?.onboarding;
 
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+
 
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900 flex flex-col">

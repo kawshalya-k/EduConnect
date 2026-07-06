@@ -30,6 +30,7 @@ import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
 import Notifications from './pages/Notifications';
 import DevMenu from './components/DevMenu';
+import ScrollToTop from './components/ScrollToTop';
 //Mentor
 import MentorDashboard from './pages/Mentor/MentorDashboard';
 import VerificationCenter from './pages/Mentor/VerificationCenter';
@@ -63,6 +64,7 @@ function App() {
   const { mode } = useAuth();
   return (
     <div className="App">
+      <ScrollToTop />
       <DevMenu />
       <Routes>
         {/* Public Routes */}
@@ -83,7 +85,7 @@ function App() {
         <Route path="/mentor/:mentorId" element={<MentorProfile />} />
 
         {/* Protected Routes */}
-        <Route path="/verify-otp" element={<ProtectedRoute><FinishSetup /></ProtectedRoute>} />
+        <Route path="/verify-otp" element={<FinishSetup />} />
         <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/account-success" element={<ProtectedRoute><AccountSuccess /></ProtectedRoute>} />

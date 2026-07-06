@@ -168,3 +168,39 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// --- 6. SETUP PASSWORD (ONBOARDING) ---
+exports.setupPassword = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+        
+        // Find user
+        const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
+        const user = rows[0];
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update DB
+        await db.query(
+            "UPDATE User SET Password = ? WHERE User_Id = ?",
+            [hashedPassword, user.User_Id]
+        );
+
+        // Create Token
+        const token = jwt.sign({ id: user.User_Id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+        res.status(200).json({
+            token,
+            user: { id: user.User_Id, name: `${user.First_Name} ${user.Last_Name}`, coins: user.skill_coins }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+

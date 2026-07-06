@@ -11,13 +11,19 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { addSkill } from '../services/mentorApi';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 
 const AccountSuccess = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+
+
   React.useEffect(() => {
-    window.scrollTo(0, 0);
+    // Clean up onboarding local storage keys since they have already been saved to the DB
+    localStorage.removeItem('onboarding_teaching_skills');
+    localStorage.removeItem('onboarding_learning_skills');
   }, []);
 
   const [learningSkills] = React.useState(() => {

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { X, Plus } from 'lucide-react';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
 import { fetchLeaderboard } from '../services/leaderboardService';
 import { getMySessions } from '../services/sessionService';
 import { useAuth } from '../context/AuthContext';
+import { fetchLearningSkills, addLearningSkill, removeLearningSkill, fetchAllSkills } from '../services/learnerApi';
 
 const LearnerDashboard = () => {
   const [topMentors, setTopMentors] = useState([]);
@@ -52,18 +54,20 @@ const LearnerDashboard = () => {
   const [recommendedMentors, setRecommendedMentors] = useState([]);
   const [loadingRecommended, setLoadingRecommended] = useState(true);
 
+  const loadRecommended = async () => {
+    setLoadingRecommended(true);
+    try {
+      const { fetchRecommendedMentors } = await import('../services/mentorApi');
+      const res = await fetchRecommendedMentors();
+      setRecommendedMentors(res.data?.mentors || []);
+    } catch (e) {
+      console.error('Failed to load recommended mentors:', e);
+    } finally {
+      setLoadingRecommended(false);
+    }
+  };
+
   useEffect(() => {
-    const loadRecommended = async () => {
-      try {
-        const { fetchRecommendedMentors } = await import('../services/mentorApi');
-        const res = await fetchRecommendedMentors();
-        setRecommendedMentors(res.data?.mentors || []);
-      } catch (e) {
-        console.error('Failed to load recommended mentors:', e);
-      } finally {
-        setLoadingRecommended(false);
-      }
-    };
     loadRecommended();
   }, []);
 
@@ -121,6 +125,80 @@ const LearnerDashboard = () => {
 
     loadLearningProgress();
   }, [user?.id]);
+
+  const [wishlistSkills, setWishlistSkills] = useState([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(true);
+  const [allSkills, setAllSkills] = useState([]);
+  const [selectedSkillId, setSelectedSkillId] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loadWishlist = async () => {
+    console.log("[WISH-DEBUG] loadWishlist starting. user:", user);
+    if (!user?.id) {
+      console.log("[WISH-DEBUG] loadWishlist aborted - no user.id");
+      return;
+    }
+    try {
+      console.log("[WISH-DEBUG] loadWishlist calling fetchLearningSkills...");
+      const res = await fetchLearningSkills();
+      console.log("[WISH-DEBUG] loadWishlist response data:", res.data);
+      setWishlistSkills(res.data || []);
+    } catch (err) {
+      console.error('[WISH-DEBUG] Failed to load wishlist skills:', err);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
+
+  const loadAllSkills = async () => {
+    try {
+      const res = await fetchAllSkills();
+      setAllSkills(res.data || []);
+    } catch (err) {
+      console.error("Failed to load all available skills:", err);
+    }
+  };
+
+  useEffect(() => {
+    console.log("[WISH-DEBUG] useEffect triggered. user?.id:", user?.id);
+    loadWishlist();
+    loadAllSkills();
+  }, [user?.id]);
+
+  const handleDeleteSkill = async (skillId) => {
+    try {
+      await removeLearningSkill(skillId);
+      setWishlistSkills(prev => prev.filter(s => s.Skill_Id !== skillId));
+      loadRecommended();
+    } catch (err) {
+      console.error('Failed to delete wishlist skill:', err);
+    }
+  };
+
+  const handleAddSkillSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedSkillId) return;
+    setIsSubmitting(true);
+    try {
+      const res = await addLearningSkill(Number(selectedSkillId));
+      const newSkill = {
+        Skill_Id: res.data.Skill_Id,
+        Skill_Name: res.data.Skill_Name
+      };
+      setWishlistSkills(prev => {
+        if (prev.some(s => s.Skill_Id === newSkill.Skill_Id)) return prev;
+        return [...prev, newSkill];
+      });
+      setSelectedSkillId('');
+      setIsAdding(false);
+      loadRecommended();
+    } catch (err) {
+      console.error('Failed to add wishlist skill:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-['Inter']">
@@ -430,6 +508,94 @@ const LearnerDashboard = () => {
                     View Learning Path
                   </span>
                 </button>
+              </div>
+            </div>
+
+            {/* Skill Wishlist Card */}
+            <div className="box-border flex flex-col items-start p-6 gap-4 w-full bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
+              <div className="flex flex-row items-center gap-2 w-full h-7">
+                <span className="text-xl">🎯</span>
+                <h3 className="font-bold text-lg leading-7 flex items-center text-[#0F172A]">
+                  Skill Wishlist
+                </h3>
+              </div>
+
+              <div className="flex flex-col items-start gap-4 w-full">
+                <p className="font-normal text-sm leading-relaxed text-[#64748B] -mt-2">
+                  Based on your interests, we'll recommend mentors.
+                </p>
+
+                <div className="flex flex-col gap-2 w-full">
+                  {loadingWishlist ? (
+                    <div className="h-20 w-full bg-slate-50 animate-pulse rounded-2xl"></div>
+                  ) : wishlistSkills.length > 0 ? (
+                    wishlistSkills.map((skill) => (
+                      <div 
+                        key={skill.Skill_Id} 
+                        className="flex flex-row justify-between items-center py-2.5 px-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all border border-slate-100/50"
+                      >
+                        <span className="text-sm font-semibold text-[#0F172A]">
+                          {skill.Skill_Name}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteSkill(skill.Skill_Id)}
+                          className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-xl transition-colors cursor-pointer animate-none"
+                          title="Remove Skill"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400 italic py-1">
+                      No wishlist skills added yet.
+                    </p>
+                  )}
+                </div>
+
+                {isAdding ? (
+                  <form onSubmit={handleAddSkillSubmit} className="flex flex-col gap-2.5 w-full mt-2 animate-none">
+                    <select
+                      value={selectedSkillId}
+                      onChange={(e) => setSelectedSkillId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-[#E2E8F0] focus:border-[#10B77F] focus:outline-none rounded-xl text-sm bg-slate-50 focus:bg-white transition-colors text-slate-800 font-medium"
+                      autoFocus
+                    >
+                      <option value="">-- Select a Skill --</option>
+                      {allSkills
+                        .filter(s => !wishlistSkills.some(ws => ws.Skill_Id === s.Skill_Id))
+                        .map(s => (
+                          <option key={s.Skill_Id} value={s.Skill_Id}>
+                            {s.Skill_Name}
+                          </option>
+                        ))
+                      }
+                    </select>
+                    <div className="flex gap-2 justify-end w-full">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || !selectedSkillId}
+                        className="px-4 py-2 bg-[#10B77F] hover:bg-[#059669] text-white font-bold text-sm rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAdding(false); setSelectedSkillId(''); }}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-sm rounded-xl transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setIsAdding(true)}
+                    className="flex flex-row items-center gap-1.5 mt-1 text-sm font-bold text-[#10B77F] hover:text-[#059669] transition-colors py-1 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> Add Skill
+                  </button>
+                )}
               </div>
             </div>
 
