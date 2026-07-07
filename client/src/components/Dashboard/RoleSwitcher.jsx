@@ -55,7 +55,7 @@ const RoleSwitcher = () => {
     <div className="flex flex-row items-center p-1 gap-2 bg-[#F1F5F9] rounded-lg h-9">
       <button
         onClick={() => handleRoleChange('mentor')}
-        className={`flex flex-col justify-center items-center py-1.5 px-3 rounded-md font-['Inter'] font-semibold text-xs leading-4 transition-colors
+        className={`flex flex-col justify-center items-center py-1.5 px-3 rounded-md font-sans font-semibold text-xs leading-4 transition-colors
           ${currentRole === 'mentor'
             ? 'bg-[#10B981] shadow-sm text-white hover:bg-[#059669]'
             : 'text-[#64748B] hover:bg-slate-200'
@@ -65,7 +65,7 @@ const RoleSwitcher = () => {
       </button>
       <button
         onClick={() => handleRoleChange('learner')}
-        className={`flex flex-row justify-center items-center py-1.5 px-[11px] rounded-md font-['Inter'] font-semibold text-xs leading-4 transition-colors
+        className={`flex flex-row justify-center items-center py-1.5 px-[11px] rounded-md font-sans font-semibold text-xs leading-4 transition-colors
           ${currentRole === 'learner'
             ? 'bg-[#10B981] shadow-sm text-white hover:bg-[#059669]'
             : 'text-[#64748B] hover:bg-slate-200'

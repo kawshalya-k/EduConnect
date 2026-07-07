@@ -101,7 +101,7 @@ export default function Profile() {
   if (loading) return <div className="min-h-screen bg-[#F6F8F7] flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
       
       <main className="flex-1 w-full max-w-[1024px] mx-auto py-10 px-6">
