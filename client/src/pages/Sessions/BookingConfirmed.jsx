@@ -76,7 +76,7 @@ export default function BookingConfirmed() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
       
       <main className="flex flex-col items-center flex-grow py-10 px-6">

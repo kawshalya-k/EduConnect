@@ -33,7 +33,7 @@ const WalletWidget = () => {
         </svg>
       </div>
       <div className="flex flex-col items-start h-5">
-        <span className="font-['Lexend'] font-bold text-sm leading-5 flex items-center text-[#10B981]">
+        <span className="font-sans font-bold text-sm leading-5 flex items-center text-[#10B981]">
           {balance != null ? balance.toLocaleString() : '100'} Skill Coins
         </span>
       </div>

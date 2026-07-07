@@ -96,7 +96,7 @@ export default function SessionFeedback() {
   const skillName = session?.Skill_Name || "Expertise";
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter'] relative">
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans relative">
       <DashboardNavbar />
 
       <main className="flex flex-col items-center flex-grow py-12 px-6">
