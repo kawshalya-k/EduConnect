@@ -216,7 +216,7 @@ export default function MySessions() {
                         </div>
                         <button
                           className={`border font-bold text-xs leading-4 py-1.5 px-4 rounded-2xl transition-colors ${btnClasses}`}
-                          onClick={() => isCompleted ? navigate('/session-feedback') : null}
+                          onClick={() => isCompleted ? navigate('/session-feedback', { state: { sessionId: session.Session_Id, mentorName: session.mentor_name || 'Your Mentor' } }) : null}
                         >
                           {isCompleted ? "Rate Mentor" : "Feedback"}
                         </button>
