@@ -54,7 +54,7 @@ const FindMentor = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-['Inter']">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Top Navigation */}
       <MentorNav />
 

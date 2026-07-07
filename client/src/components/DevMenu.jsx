@@ -17,7 +17,7 @@ export default function DevMenu() {
   return (
     <div className="fixed bottom-6 right-6 z-[9999]">
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-64 max-h-[70vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 font-['Inter'] text-sm">
+        <div className="absolute bottom-16 right-0 w-64 max-h-[70vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 font-sans text-sm">
           <div className="flex justify-between items-center mb-4 sticky top-0 bg-white pb-2 border-b border-gray-100 z-10">
             <h3 className="font-bold text-gray-800">Page Directory</h3>
             <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-800 font-bold">✕</button>

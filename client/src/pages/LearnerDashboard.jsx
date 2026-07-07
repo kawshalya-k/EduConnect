@@ -201,7 +201,7 @@ const LearnerDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-['Inter']">
+    <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
       <main className="flex flex-col items-center pt-8 pb-[293px] px-8 w-full max-w-[1280px] mx-auto z-0">

@@ -44,7 +44,7 @@ export default function Wallet() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
         <DashboardNavbar />
         <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
           <div className="animate-pulse space-y-4">
@@ -60,7 +60,7 @@ export default function Wallet() {
 
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
         <DashboardNavbar />
         <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
           <div className="text-red-500 text-center">{error}</div>
@@ -71,7 +71,7 @@ export default function Wallet() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
       <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
