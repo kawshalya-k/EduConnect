@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
+import { rateSession } from '../../services/sessionService';
 
 const tags = [
   "Clear Communication",
@@ -23,10 +24,20 @@ export default function SessionFeedback() {
     );
   };
 
-  const handleSubmit = () => {
-    alert('Feedback submitted! Thank you 🎉');
-    navigate('/my-sessions');
-  };
+  const location = useLocation();
+const sessionId = location.state?.sessionId;
+
+const handleSubmit = async () => {
+    try {
+      if (sessionId) {
+        await rateSession(sessionId, rating, feedback);
+      }
+      navigate('/my-sessions');
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      alert('Failed to submit feedback. Please try again.');
+    }
+};
 
   const getRatingText = () => {
     const val = hovered || rating;
