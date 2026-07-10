@@ -66,6 +66,18 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
+    // Fetch all verified mentor skills for this user and re-sync their embeddings
+    const [userSkills] = await db.query(
+      `SELECT Skill_Id FROM User_Skill WHERE User_Id = ? AND Role = 'Mentor' AND (Verification_Status = 1 OR Verification_Status = 'Verified')`,
+      [userId]
+    );
+    const { syncMentorEmbedding } = require('../utils/embedMentor');
+    for (const row of userSkills) {
+      syncMentorEmbedding(userId, row.Skill_Id).catch(err => {
+        console.error(`[Pinecone Sync Error] Failed to re-sync profile skill ${row.Skill_Id}:`, err.message);
+      });
+    }
+
     res.status(200).json({ message: 'Profile updated successfully' });
   } catch (error) {
     console.error('updateProfile error:', error);
@@ -111,5 +123,109 @@ exports.getPublicStats = async (req, res) => {
   } catch (error) {
     console.error('getPublicStats error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getLearningSkills = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log("[DEBUG] getLearningSkills for user ID:", userId);
+    const [rows] = await db.query(
+      `SELECT s.Skill_Id, s.Skill_Name, s.Category, s.Description
+       FROM User_Skill us
+       JOIN Skill s ON us.Skill_Id = s.Skill_Id
+       WHERE us.User_Id = ? AND us.Role = 'Learner'
+       ORDER BY s.Skill_Name`,
+      [userId]
+    );
+    console.log("[DEBUG] getLearningSkills retrieved rows:", rows);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('getLearningSkills error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.addLearningSkill = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { skillId, skillName } = req.body;
+    console.log("[DEBUG] addLearningSkill for user ID:", userId, "skillId:", skillId, "skillName:", skillName);
+
+    let targetSkillId = skillId;
+    let targetSkillName = skillName;
+
+    if (!targetSkillId && !targetSkillName) {
+      return res.status(400).json({ message: 'Skill ID or name is required' });
+    }
+
+    if (targetSkillId) {
+      const [rows] = await db.query('SELECT Skill_Name FROM Skill WHERE Skill_Id = ?', [targetSkillId]);
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'Skill not found' });
+      }
+      targetSkillName = rows[0].Skill_Name;
+    } else {
+      const trimmedName = targetSkillName.trim();
+      let [rows] = await db.query('SELECT Skill_Id FROM Skill WHERE Skill_Name = ?', [trimmedName]);
+      if (rows.length > 0) {
+        targetSkillId = rows[0].Skill_Id;
+      } else {
+        const [result] = await db.query(
+          "INSERT INTO Skill (Skill_Name, Category, Description) VALUES (?, 'Technical', ?)",
+          [trimmedName, `Assessment of expertise in ${trimmedName}.`]
+        );
+        targetSkillId = result.insertId;
+      }
+      targetSkillName = trimmedName;
+    }
+
+    // 2. Insert into User_Skill
+    await db.query(
+      "INSERT IGNORE INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status) VALUES (?, ?, 'Learner', 'Verified')",
+      [userId, targetSkillId]
+    );
+
+    console.log("[DEBUG] addLearningSkill success, skillId:", targetSkillId);
+    res.status(200).json({ 
+      message: 'Learning skill added successfully', 
+      Skill_Id: targetSkillId, 
+      Skill_Name: targetSkillName 
+    });
+  } catch (error) {
+    console.error('addLearningSkill error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.removeLearningSkill = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { skillId } = req.params;
+    console.log("[DEBUG] removeLearningSkill for user ID:", userId, "skillId:", skillId);
+
+    await db.query(
+      "DELETE FROM User_Skill WHERE User_Id = ? AND Skill_Id = ? AND Role = 'Learner'",
+      [userId, skillId]
+    );
+
+    console.log("[DEBUG] removeLearningSkill success");
+    res.status(200).json({ message: 'Learning skill removed successfully' });
+  } catch (error) {
+    console.error('removeLearningSkill error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.debugSkills = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT us.*, s.Skill_Name 
+       FROM User_Skill us 
+       LEFT JOIN Skill s ON us.Skill_Id = s.Skill_Id`
+    );
+    res.status(200).json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

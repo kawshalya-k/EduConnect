@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  Info, 
-  Users, 
-  Coins, 
-  BookOpen, 
+import {
+  Info,
+  Users,
+  Coins,
+  BookOpen,
   Scale,
   Shield,
   UserCheck,
@@ -13,33 +13,26 @@ import {
   CheckSquare,
   TriangleAlert
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 
 const TermsOfService = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnboarding = new URLSearchParams(location.search).get('onboarding') === 'true' || location.state?.onboarding;
+
+  const lastUpdatedDate = "May 10, 2026";
+
+
+
   return (
     <div className="bg-[#F0FDF4] min-h-screen font-sans text-slate-900 relative">
       {/* Header - Top Navigation Bar */}
-      <nav className="sticky top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div className="max-w-7xl mx-auto px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="text-base font-bold tracking-tight text-[#0F172A]">EduConnect</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer">
-              <img src="https://ui-avatars.com/api/?name=User&background=0F172A&color=fff" alt="User" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <DashboardNavbar logoOnlyIfLoggedOut={true} logoOnly={isOnboarding} />
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-10 py-12 flex flex-col lg:flex-row gap-16 relative">
-        
+
         {/* Aside - Sidebar Table of Contents */}
         <aside className="w-[292px] shrink-0 hidden lg:block">
           <div className="sticky top-28 space-y-6">
@@ -71,14 +64,14 @@ const TermsOfService = () => {
 
             <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
               <div className="text-xs font-medium text-[#0F172A] mb-1">Last Updated</div>
-              <div className="text-sm font-bold text-[#0F172A]">October 24, 2023</div>
+              <div className="text-sm font-bold text-[#0F172A]">{lastUpdatedDate}</div>
             </div>
           </div>
         </aside>
 
         {/* Main Content Area */}
         <main className="flex-1 w-full max-w-[876px] space-y-16 pb-32">
-          
+
           {/* Hero Header */}
           <div className="space-y-4">
             <h1 className="text-[48px] font-extrabold tracking-tight text-[#0F172A] leading-none">Terms of Service</h1>
@@ -109,7 +102,7 @@ const TermsOfService = () => {
               <span className="text-2xl font-bold text-[#10B981]">02</span>
               <h2 className="text-2xl font-bold text-[#0F172A]">User Conduct & Community Standards</h2>
             </div>
-            
+
             <div className="space-y-6">
               {/* Academic Integrity Card */}
               <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 relative overflow-hidden isolate">
@@ -131,7 +124,7 @@ const TermsOfService = () => {
                     Maintain respectful, constructive, and inclusive communication. Treat all mentors and peers with dignity regardless of their background or skill level.
                   </p>
                 </div>
-                
+
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="w-4 h-4 text-slate-700" />
@@ -151,14 +144,14 @@ const TermsOfService = () => {
               <span className="text-2xl font-bold text-[#10B981]">03</span>
               <h2 className="text-2xl font-bold text-[#0F172A]">Skill Coin Usage Policy</h2>
             </div>
-            
+
             <p className="text-slate-700 leading-relaxed">
               Skill Coins (SC) are the internal utility tokens of the EduConnect ecosystem. They are designed to quantify value exchange within the platform.
             </p>
 
             <ul className="space-y-2 pl-4">
               <li className="text-slate-700 leading-relaxed">
-                <span className="font-bold">Earning SC:</span> Users earn coins by providing mentorship, contributing to open-source project logs, or achieving certified learning milestones.
+                <span className="font-bold">Earning SC:</span> Users earn coins by providing mentorship, contributing to open-source project logs, or achieving certified learning milestones. Specifically, verifying a teaching skill by passing its assessment quiz rewards mentors based on the level achieved: Beginner grants 5 SC, Intermediate grants 10 SC, and Expert grants 15 SC.
               </li>
               <li className="text-slate-700 leading-relaxed">
                 <span className="font-bold">Spending SC:</span> Coins can be redeemed for 1-on-1 mentorship sessions, premium learning resources, or platform-exclusive digital credentials.
@@ -185,7 +178,7 @@ const TermsOfService = () => {
               <span className="text-2xl font-bold text-[#10B981]">04</span>
               <h2 className="text-2xl font-bold text-[#0F172A]">Mentorship Guidelines</h2>
             </div>
-            
+
             <p className="text-slate-700 leading-relaxed">
               Our mentorship program is the heart of the EduConnect experience. Both Mentors and Mentees must adhere to the following quality standards:
             </p>
@@ -235,7 +228,7 @@ const TermsOfService = () => {
               <span className="text-2xl font-bold text-[#10B981]">05</span>
               <h2 className="text-2xl font-bold text-[#0F172A]">Dispute Resolution & Legal Terms</h2>
             </div>
-            
+
             <div className="space-y-6">
               <div>
                 <h4 className="font-bold text-[#0F172A] mb-2">Arbitration Agreement</h4>
@@ -274,8 +267,8 @@ const TermsOfService = () => {
                 By clicking 'I Accept the Terms', you acknowledge that you have read and understood our Terms of Service.
               </p>
             </div>
-            <button 
-              onClick={() => navigate('/community-standards')}
+            <button
+              onClick={() => navigate(`/community-standards${isOnboarding ? '?onboarding=true' : ''}`, { state: { onboarding: isOnboarding } })}
               className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-900/50 transition-all shrink-0 cursor-pointer"
             >
               I Accept the Terms

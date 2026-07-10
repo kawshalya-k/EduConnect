@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  GraduationCap, 
-  Search, 
-  X, 
+import {
+  GraduationCap,
+  Search,
+  X,
   Sparkles,
   Share2,
   ShieldCheck,
@@ -12,27 +12,66 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
+import { saveOnboardingDraft, fetchMentorSkills } from '../services/mentorApi';
 
 const ProfileSetup = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [learningSkills, setLearningSkills] = useState(["Data Science", "Digital Marketing", "Public Speaking"]);
+  const [learningSkills, setLearningSkills] = useState([]);
   const [learnInput, setLearnInput] = useState("");
 
-  const [teachingSkills, setTeachingSkills] = useState([
-    { name: "UX Design & Research", confidence: 8, isVerified: false },
-    { name: "Python Development", confidence: 6, isVerified: false }
-  ]);
+  const [teachingSkills, setTeachingSkills] = useState([]);
   const [teachInput, setTeachInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+
+
+  // Fetch current drafts from DB on mount
+  React.useEffect(() => {
+    const loadDrafts = async () => {
+      const userId = user?.mentorId || user?.id;
+      if (!userId) return;
+      try {
+        const res = await fetchMentorSkills(userId);
+        const skillsList = Array.isArray(res.data) ? res.data : (res.data?.skills || []);
+
+        const teach = [];
+        const learn = [];
+
+        skillsList.forEach(s => {
+          const role = s.Role || s.Skill_Role;
+          if (role === 'Mentor') {
+            teach.push({
+              name: s.Skill_Name || s.name,
+              confidence: s.Confidence || s.confidence || 5,
+              isVerified: s.Verification_Status === 'Verified' || s.Verification_Status === 1
+            });
+          } else if (role === 'Learner') {
+            learn.push(s.Skill_Name || s.name);
+          }
+        });
+
+        if (teach.length > 0) setTeachingSkills(teach);
+        if (learn.length > 0) setLearningSkills(learn);
+      } catch (err) {
+        console.error('Failed to load drafts from database:', err);
+      }
+    };
+
+    if (user) {
+      loadDrafts();
+    }
+  }, [user]);
 
   // Check URL for verified skills
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
     const verifiedSkill = params.get('verified_skill');
     if (verifiedSkill) {
-      setTeachingSkills(prev => 
-        prev.map(skill => 
+      setTeachingSkills(prev =>
+        prev.map(skill =>
           skill.name === verifiedSkill ? { ...skill, isVerified: true } : skill
         )
       );
@@ -42,10 +81,16 @@ const ProfileSetup = () => {
   }, [location.search, navigate]);
 
   // Handlers for Learning Skills
+  const addLearningSkill = (skillName) => {
+    if (!learningSkills.some(s => s.toLowerCase() === skillName.toLowerCase())) {
+      setLearningSkills([...learningSkills, skillName]);
+    }
+  };
+
   const handleLearnKeyDown = (e) => {
     if (e.key === 'Enter' && learnInput.trim() !== '') {
       e.preventDefault();
-      setLearningSkills([...learningSkills, learnInput.trim()]);
+      addLearningSkill(learnInput.trim());
       setLearnInput('');
     }
   };
@@ -55,15 +100,17 @@ const ProfileSetup = () => {
   };
 
   // Handlers for Teaching Skills
+  const addTeachingSkill = (skillName) => {
+    if (!teachingSkills.some(s => s.name.toLowerCase() === skillName.toLowerCase())) {
+      setTeachingSkills([...teachingSkills, { name: skillName, confidence: 5, isVerified: false }]);
+    }
+  };
+
   const handleTeachKeyDown = (e) => {
     if (e.key === 'Enter' && teachInput.trim() !== '') {
       e.preventDefault();
-      const newSkillName = teachInput.trim();
-      setTeachingSkills([...teachingSkills, { name: newSkillName, confidence: 5, isVerified: false }]);
+      addTeachingSkill(teachInput.trim());
       setTeachInput('');
-      
-      // Automatically jump to verification quiz right after entering the skill
-      navigate(`/verification/skill/${encodeURIComponent(newSkillName)}/start?from=onboarding`);
     }
   };
 
@@ -77,41 +124,62 @@ const ProfileSetup = () => {
     setTeachingSkills(updated);
   };
 
+  const handleSaveDraft = async () => {
+    setIsSaving(true);
+    try {
+      localStorage.setItem('onboarding_learning_skills', JSON.stringify(learningSkills));
+      localStorage.setItem('onboarding_teaching_skills', JSON.stringify(teachingSkills));
+
+      await saveOnboardingDraft({
+        learningSkills,
+        teachingSkills
+      });
+
+      alert('Draft saved successfully! You can continue later.');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Failed to save draft:', err);
+      alert('Failed to save draft. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleContinue = async () => {
+    setIsSaving(true);
+    try {
+      localStorage.setItem('onboarding_learning_skills', JSON.stringify(learningSkills));
+      localStorage.setItem('onboarding_teaching_skills', JSON.stringify(teachingSkills));
+
+      await saveOnboardingDraft({
+        learningSkills,
+        teachingSkills
+      });
+
+      navigate('/privacy-policy?onboarding=true', { state: { onboarding: true } });
+    } catch (err) {
+      console.error('Full error:', err);
+      console.error('Response data:', err?.response?.data);
+      console.error('Response status:', err?.response?.status);
+      alert(`Error: ${JSON.stringify(err?.response?.data) || err.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FAFC] relative overflow-hidden font-sans">
-      
+
       {/* Background Decorative Blurs */}
       <div className="absolute w-[400px] h-[400px] -right-16 -top-24 bg-[#10B981]/5 filter blur-[50px] rounded-full pointer-events-none" />
       <div className="absolute w-[400px] h-[400px] -left-16 -bottom-24 bg-[#10B981]/5 filter blur-[50px] rounded-full pointer-events-none" />
 
-      {/* Header */}
-      <header className="w-full h-16 bg-white/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-50 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#10B981] rounded-xl flex items-center justify-center text-white font-bold text-xl">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 12.8L4.34 8.64L12 4.48L19.65 8.64L12 12.8Z" fill="white"/>
-              <path d="M4 11.83V16.66L12 21L20 16.66V11.83L12 16.16L4 11.83Z" fill="white"/>
-            </svg>
-          </div>
-          <span className="text-2xl font-bold text-slate-900 tracking-tight">EduConnect</span>
-        </div>
-        
-        {/* Profile */}
-        <div className="flex items-center gap-4">
-          <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center border-2 border-slate-200">
-            {user?.avatar ? (
-              <img src={user.avatar} alt={user?.name || 'User'} className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <User className="w-5 h-5 text-slate-600" />
-            )}
-          </div>
-        </div>
-      </header>
+      <DashboardNavbar logoOnly={true} />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col items-center w-full pb-32 pt-10 z-10">
         <div className="w-full max-w-[1280px] px-6 lg:px-8">
-          
+
           {/* Page Title */}
           <div className="mb-10 space-y-2">
             <h1 className="font-black text-4xl text-[#0F172A]">Profile Setup</h1>
@@ -122,10 +190,10 @@ const ProfileSetup = () => {
 
           {/* Cards Container */}
           <div className="flex flex-col lg:flex-row gap-8 w-full">
-            
+
             {/* Left Card: Learner Wishlist */}
             <div className="flex-1 bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-8 flex flex-col gap-6">
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#10B981]/10 rounded-full flex items-center justify-center text-[#10B981]">
                   <GraduationCap className="w-5 h-5" />
@@ -136,9 +204,9 @@ const ProfileSetup = () => {
               {/* Input */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search skills (press Enter to add...)" 
+                <input
+                  type="text"
+                  placeholder="Search skills (press Enter to add...)"
                   value={learnInput}
                   onChange={(e) => setLearnInput(e.target.value)}
                   onKeyDown={handleLearnKeyDown}
@@ -156,9 +224,43 @@ const ProfileSetup = () => {
                     </button>
                   </div>
                 ))}
-                {learningSkills.length === 0 && (
-                  <span className="text-slate-400 text-sm italic">No skills added yet.</span>
-                )}
+              </div>
+
+              {/* Suggestions */}
+              <div className="flex flex-col gap-3 w-full mt-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Suggested skills to learn:</span>
+                <div className="flex flex-wrap gap-2">
+                  {["Data Science", "Digital Marketing", "Public Speaking", "UI/UX Design"].map((s, i) => {
+                    const isAdded = learningSkills.some(ls => ls.toLowerCase() === s.toLowerCase());
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => addLearningSkill(s)}
+                        disabled={isAdded}
+                        className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all cursor-pointer ${isAdded
+                            ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-75"
+                            : "bg-[#F8FAFC] hover:bg-[#10B981]/10 text-slate-600 hover:text-[#10B981] border-slate-200 hover:border-[#10B981]/20"
+                          }`}
+                      >
+                        {isAdded ? "Added" : `+ ${s}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Empty State / Add more */}
+              <div
+                className="mt-2 border-2 border-dashed border-slate-200 rounded-xl py-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  const inputEl = document.querySelector('input[placeholder*="Search skills"]');
+                  if (inputEl) inputEl.focus();
+                }}
+              >
+                <span className="text-sm text-slate-400 font-medium">
+                  {learningSkills.length === 0 ? "Add skills to build your learning profile" : "Add more skills to build your learning profile"}
+                </span>
               </div>
 
               {/* Hint Box */}
@@ -173,7 +275,7 @@ const ProfileSetup = () => {
 
             {/* Right Card: Mentor Expertise */}
             <div className="flex-1 bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-8 flex flex-col gap-6">
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#10B981]/10 rounded-full flex items-center justify-center text-[#10B981]">
                   <Share2 className="w-5 h-5" />
@@ -184,9 +286,9 @@ const ProfileSetup = () => {
               {/* Input */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search expertise you can share (press Enter to add...)" 
+                <input
+                  type="text"
+                  placeholder="Search expertise you can share (press Enter to add...)"
                   value={teachInput}
                   onChange={(e) => setTeachInput(e.target.value)}
                   onKeyDown={handleTeachKeyDown}
@@ -196,7 +298,7 @@ const ProfileSetup = () => {
 
               {/* Added Expertise Items */}
               <div className="flex flex-col gap-4">
-                
+
                 {teachingSkills.map((skill, idx) => (
                   <div key={idx} className="bg-[#F8FAFC]/50 border border-slate-100 rounded-xl p-4 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
@@ -208,38 +310,35 @@ const ProfileSetup = () => {
                             <span className="font-semibold text-xs uppercase tracking-wider">Verified</span>
                           </div>
                         ) : (
-                          <button 
-                            onClick={() => navigate(`/verification/skill/${encodeURIComponent(skill.name)}/start?from=onboarding`)}
-                            className="flex items-center gap-1.5 text-[#10B981] hover:text-[#059669] transition-colors"
-                          >
-                            <ShieldCheck className="w-4 h-4" />
-                            <span className="font-semibold text-sm hidden sm:inline">Verify Skill</span>
-                          </button>
+                          <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                            <ShieldCheck className="w-4 h-4 text-slate-400" />
+                            <span className="font-semibold text-xs uppercase tracking-wider text-slate-600">Unverified</span>
+                          </div>
                         )}
                         <button onClick={() => removeTeachingSkill(idx)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Remove Skill">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 relative">
                       <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
                         <span className="text-slate-500">Confidence Level</span>
                         <span className="text-[#10B981]">{skill.confidence} / 10</span>
                       </div>
-                      
+
                       {/* Interactive Slider */}
                       <div className="h-1.5 w-full bg-[#E2E8F0] rounded-full relative">
                         <div className="absolute top-0 left-0 h-full bg-[#10B981] rounded-full" style={{ width: `${skill.confidence * 10}%` }}></div>
-                        <div 
-                          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#10B981] rounded-full border-2 border-white shadow-sm pointer-events-none" 
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#10B981] rounded-full border-2 border-white shadow-sm pointer-events-none"
                           style={{ left: `calc(${skill.confidence * 10}% - 8px)` }}
                         ></div>
-                        <input 
-                          type="range" 
-                          min="1" 
-                          max="10" 
-                          value={skill.confidence} 
+                        <input
+                          type="range"
+                          min="1"
+                          max="10"
+                          value={skill.confidence}
                           onChange={(e) => updateConfidence(idx, parseInt(e.target.value))}
                           className="absolute top-1/2 -translate-y-1/2 left-0 w-full opacity-0 cursor-pointer h-6"
                         />
@@ -248,14 +347,38 @@ const ProfileSetup = () => {
                   </div>
                 ))}
 
+                {/* Suggestions */}
+                <div className="flex flex-col gap-3 mt-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Suggested skills to teach:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {["UI/UX Design", "Python Development", "Data Science", "Web Development"].map((s, i) => {
+                      const isAdded = teachingSkills.some(ts => ts.name.toLowerCase() === s.toLowerCase());
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => addTeachingSkill(s)}
+                          disabled={isAdded}
+                          className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all cursor-pointer ${isAdded
+                              ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-75"
+                              : "bg-[#F8FAFC] hover:bg-[#10B981]/10 text-slate-600 hover:text-[#10B981] border-slate-200 hover:border-[#10B981]/20"
+                            }`}
+                        >
+                          {isAdded ? "Added" : `+ ${s}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
               </div>
 
               {/* Empty State / Add more */}
-              <div 
+              <div
                 className="mt-2 border-2 border-dashed border-slate-200 rounded-xl py-4 flex justify-center items-center cursor-pointer hover:bg-slate-50 transition-colors"
                 onClick={() => {
                   const inputEl = document.querySelector('input[placeholder*="Search expertise"]');
-                  if(inputEl) inputEl.focus();
+                  if (inputEl) inputEl.focus();
                 }}
               >
                 <span className="text-sm text-slate-400 font-medium">
@@ -272,7 +395,7 @@ const ProfileSetup = () => {
       {/* Sticky Action Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0px_-10px_30px_rgba(0,0,0,0.05)] z-40">
         <div className="max-w-[1280px] mx-auto px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          
+
           <div className="flex items-center gap-2 text-slate-500">
             <Info className="w-5 h-5 shrink-0" />
             <span className="text-sm">
@@ -281,14 +404,19 @@ const ProfileSetup = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="font-bold text-slate-900 px-6 py-3 hover:bg-slate-100 rounded-xl transition-colors">
-              Back
+            <button
+              onClick={handleSaveDraft}
+              disabled={isSaving}
+              className="font-bold text-slate-700 hover:text-slate-900 px-6 py-3 hover:bg-slate-100 rounded-xl transition-all border border-slate-200 cursor-pointer"
+            >
+              Save Draft
             </button>
-            <button 
-              onClick={() => navigate('/privacy-policy')}
+            <button
+              onClick={handleContinue}
+              disabled={isSaving}
               className="bg-[#10B981] hover:bg-[#059669] text-white font-bold px-8 py-3 rounded-xl shadow-[0px_10px_15px_-3px_rgba(16,185,129,0.2)] transition-all cursor-pointer"
             >
-              Complete Onboarding
+              {isSaving ? 'Saving...' : 'Continue'}
             </button>
           </div>
 

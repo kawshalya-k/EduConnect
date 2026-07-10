@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllSkills } from '../../services/adminService';
+import { getAllUserSkills } from '../../services/adminService';
 
 const sidebarItems = [
   { icon: "⊞", label: "Dashboard", path: "/admin/dashboard" },
@@ -10,47 +10,76 @@ const sidebarItems = [
   { icon: "⚙️", label: "Settings", path: "/admin/settings" },
 ];
 
-const skills = [
-  { name: "React JS", category: "Advanced Frontend Development", icon: "⚛️", color: "#61dafb", link: "hackerrank.com/edu-react-adv", threshold: 75, quizzes: 12, active: true },
-  { name: "Python", category: "Core Data Science & Scripting", icon: "🐍", color: "#3776ab", link: "hackerrank.com/edu-py-master", threshold: 70, quizzes: 24, active: true },
-  { name: "AWS Cloud", category: "Architecture & Deployment", icon: "☁️", color: "#ff9900", link: "hackerrank.com/edu-cloud-ops", threshold: 80, quizzes: 8, active: true },
-  { name: "UX/UI Design", category: "Visual Design & Research", icon: "🎨", color: "#a259ff", link: "hackerrank.com/edu-ux-standard", threshold: 70, quizzes: 15, active: true },
-];
-
-const pendingRequests = [
-  { name: "Sarah Jenkins", skill: "React JS", level: "Gold", submitted: "2h ago", avatar: "https://i.pravatar.cc/40?img=47", status: "pending" },
-  { name: "Marcus Chen", skill: "AWS Cloud", level: "Silver", submitted: "5h ago", avatar: "https://i.pravatar.cc/40?img=13", status: "pending" },
-  { name: "Jordan Lee", skill: "Python", level: "Bronze", submitted: "1d ago", avatar: "https://i.pravatar.cc/40?img=25", status: "pending" },
-];
-
 export default function SkillVerifications() {
   const [activePage, setActivePage] = useState('Skill Verifications');
-  const [skills, setSkills] = useState([]);
-  const [requests, setRequests] = useState(pendingRequests);
+  const [userSkills, setUserSkills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const data = await getAllSkills();
-        setSkills(data);
+        const data = await getAllUserSkills();
+        setUserSkills(data);
       } catch (err) {
-        console.error('Error fetching skills:', err);
+        console.error('Error fetching user skills:', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchSkills();
   }, []);
 
-  const handleApprove = (i) => {
-    const updated = [...requests];
-    updated[i].status = 'approved';
-    setRequests(updated);
+  // Compute live stats from DB data
+  const totalSubmissions = userSkills.length;
+  const verifiedCount = userSkills.filter(s => s.Verification_Status === 'Verified').length;
+  const pendingCount = userSkills.filter(s => s.Verification_Status === 'Pending').length;
+  const otherCount = userSkills.filter(s => s.Verification_Status !== 'Verified' && s.Verification_Status !== 'Pending').length;
+
+  // Filter skills based on search query and status filter
+  const filteredSkills = userSkills.filter(item => {
+    const userName = `${item.First_Name || ''} ${item.Last_Name || ''}`.toLowerCase();
+    const skillName = (item.Skill_Name || '').toLowerCase();
+    const email = (item.Email || '').toLowerCase();
+    const category = (item.Category || '').toLowerCase();
+    const matchesSearch = 
+      userName.includes(searchQuery.toLowerCase()) || 
+      skillName.includes(searchQuery.toLowerCase()) || 
+      email.includes(searchQuery.toLowerCase()) ||
+      category.includes(searchQuery.toLowerCase());
+
+    const matchesStatus = statusFilter === 'All' || item.Verification_Status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Verified':
+        return { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0' };
+      case 'Pending':
+        return { bg: '#fef3c7', text: '#d97706', border: '#fde68a' };
+      case 'Testing':
+        return { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' };
+      case 'Rejected':
+        return { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca' };
+      default:
+        return { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' };
+    }
   };
 
-  const handleReject = (i) => {
-    const updated = [...requests];
-    updated[i].status = 'rejected';
-    setRequests(updated);
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -96,16 +125,10 @@ export default function SkillVerifications() {
           {/* Header */}
           <div style={{ background: "#fff", padding: "1.5rem 2rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <h1 style={{ margin: "0 0 0.25rem", fontSize: 24, fontWeight: 900, color: "#0f172a" }}>Manage Skill Assessments</h1>
-              <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>Integrate HackerRank workflows and university-approved benchmarks.</p>
+              <h1 style={{ margin: "0 0 0.25rem", fontSize: 24, fontWeight: 900, color: "#0f172a" }}>Manage User Skill Levels</h1>
+              <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>Track automatic mentor skill verifications, attempts, and quiz history.</p>
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <button style={{ padding: "10px 18px", borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", color: "#475569", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                🔄 Sync HackerRank Data
-              </button>
-              <button style={{ padding: "10px 20px", borderRadius: 12, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-                ➕ Add New Skill Quiz
-              </button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Alex Rivera</span>
@@ -118,10 +141,10 @@ export default function SkillVerifications() {
             {/* Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
               {[
-                { label: "Total Active Skills", value: "42", sub: "+3 this month", icon: "🎯", bg: "#f0fdf4", color: "#10b981" },
-                { label: "Avg. Passing Rate", value: "68%", sub: "-2% vs last week", icon: "📊", bg: "#fffbeb", color: "#d97706" },
-                { label: "Verification Requests", value: "1,204", sub: "12k Pending", icon: "📋", bg: "#eff6ff", color: "#3b82f6" },
-                { label: "Cooldown Policy", value: "24 hrs", sub: "Failed attempts limit", icon: "⏱️", bg: "#f5f3ff", color: "#7c3aed" },
+                { label: "Total Skill Attempts", value: totalSubmissions, sub: "All time submissions", icon: "📊", bg: "#eff6ff", color: "#3b82f6" },
+                { label: "Verified Skills", value: verifiedCount, sub: "Successfully verified", icon: "✅", bg: "#f0fdf4", color: "#10b981" },
+                { label: "Pending Verification", value: pendingCount, sub: "Manual review queue", icon: "⏳", bg: "#fffbeb", color: "#d97706" },
+                { label: "Testing / Failed", value: otherCount, sub: "In-progress or cooldown", icon: "⏱️", bg: "#fef2f2", color: "#ef4444" },
               ].map((s, i) => (
                 <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
@@ -134,148 +157,200 @@ export default function SkillVerifications() {
               ))}
             </div>
 
-            {/* Skill Registry + Pending */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "1.25rem" }}>
-
-              {/* Skill Registry Table */}
-              <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
-                <div style={{ background: "linear-gradient(135deg, #14532d 0%, #10b981 100%)", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.15)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📚</div>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#fff" }}>Skill Assessment Registry</h3>
-                      <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>Showing {skills.length} of 42 Skills</p>
-                    </div>
+            {/* Main Table Section */}
+            <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
+              
+              {/* Table Header Controls */}
+              <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", padding: "1.25rem 1.5rem", display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📚</div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#fff" }}>User Skill Registry</h3>
+                    <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>Showing {filteredSkills.length} of {totalSubmissions} records</p>
                   </div>
                 </div>
 
-                {/* Table Header */}
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", padding: "0.875rem 1.5rem", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
-                  {["SKILL & PLATFORM", "INTEGRATION LINK", "THRESHOLD", "QUIZZES", "ACTIONS"].map(h => (
-                    <span key={h} style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>{h}</span>
-                  ))}
-                </div>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  {/* Search Input */}
+                  <input
+                    type="text"
+                    placeholder="Search mentor or skill..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      background: "rgba(255,255,255,0.1)",
+                      color: "#fff",
+                      fontSize: "13px",
+                      outline: "none",
+                      width: "220px",
+                    }}
+                  />
 
-                {skills.map((skill, i) => (
-  <div key={i}
-    style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", padding: "1rem 1.5rem", borderBottom: i < skills.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center", transition: "background 0.15s", cursor: "pointer" }}
-    onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-    onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
-
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <div style={{ width: 38, height: 38, background: "#f0fdf4", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🎯</div>
-      <div>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{skill.Skill_Name}</p>
-        <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{skill.Category}</p>
-      </div>
-    </div>
-
-    <span style={{ fontSize: 12, color: "#10b981", fontWeight: 500 }}>🔗 educonnect.com/skills</span>
-
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <div style={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 3 }}>
-        <div style={{ height: "100%", width: "75%", background: "linear-gradient(90deg, #10b981, #4ade80)", borderRadius: 3 }} />
-      </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color: "#10b981", flexShrink: 0 }}>75%</span>
-    </div>
-
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <span style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>10</span>
-      <span style={{ fontSize: 11, color: "#94a3b8" }}>Active</span>
-    </div>
-
-    <div style={{ display: "flex", gap: 6 }}>
-      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #bbf7d0", background: "#f0fdf4", fontSize: 11, cursor: "pointer", color: "#10b981", fontWeight: 700 }}>Update</button>
-      <button style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", fontSize: 11, cursor: "pointer", color: "#64748b", fontWeight: 600 }}>Link</button>
-    </div>
-  </div>
-))}
-
-                <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Showing 4 of 42 Skills</span>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {['←', '1', '2', '3', '→'].map((p, i) => (
-                      <button key={i} style={{ width: 30, height: 30, borderRadius: 8, border: p === '1' ? "none" : "1px solid #e2e8f0", background: p === '1' ? "#10b981" : "#fff", color: p === '1' ? "#fff" : "#475569", fontSize: 12, fontWeight: p === '1' ? 700 : 400, cursor: "pointer" }}>{p}</button>
-                    ))}
-                  </div>
+                  {/* Status Dropdown */}
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      background: "#1e293b",
+                      color: "#fff",
+                      fontSize: "13px",
+                      outline: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Testing">Testing</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Right Column */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-
-                {/* Pending Requests */}
-                <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
-                  <div style={{ background: "linear-gradient(135deg, #166534 0%, #22c55e 100%)", padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 18 }}>⏳</span>
-                      <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#fff" }}>Pending Requests</h3>
-                    </div>
-                    <span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20 }}>
-                      {requests.filter(r => r.status === 'pending').length} NEW
-                    </span>
-                  </div>
-
-                  <div style={{ padding: "1rem" }}>
-                    {requests.map((req, i) => (
-                      <div key={i} style={{ padding: "0.875rem", marginBottom: "0.75rem", background: req.status === 'approved' ? "#f0fdf4" : req.status === 'rejected' ? "#fef2f2" : "#f8fafc", borderRadius: 12, border: `1px solid ${req.status === 'approved' ? "#bbf7d0" : req.status === 'rejected' ? "#fecaca" : "#f1f5f9"}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: req.status === 'pending' ? "0.75rem" : 0 }}>
-                          <img src={req.avatar} alt={req.name} style={{ width: 34, height: 34, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-                          <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{req.name}</p>
-                            <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{req.skill} • {req.level} • {req.submitted}</p>
-                          </div>
-                          {req.status !== 'pending' && (
-                            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: req.status === 'approved' ? "#dcfce7" : "#fef2f2", color: req.status === 'approved' ? "#10b981" : "#ef4444" }}>
-                              {req.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
-                            </span>
-                          )}
-                        </div>
-                        {req.status === 'pending' && (
-                          <div style={{ display: "flex", gap: 6 }}>
-                            <button onClick={() => handleApprove(i)}
-                              style={{ flex: 1, padding: "7px", borderRadius: 8, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                              ✓ Approve
-                            </button>
-                            <button onClick={() => handleReject(i)}
-                              style={{ flex: 1, padding: "7px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", color: "#ef4444", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                              ✗ Reject
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+              {/* Table Data */}
+              {loading ? (
+                <div style={{ padding: "4rem", textAlign: "center", color: "#64748b" }}>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Loading user skill registry...</p>
                 </div>
-
-                {/* Verification Integrity */}
-                <div style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", border: "1px solid #f1f5f9" }}>
-                  <div style={{ background: "linear-gradient(135deg, #14532d, #166534)", padding: "1rem 1.25rem", display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 18 }}>🛡️</span>
-                    <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#fff" }}>Verification Integrity</h3>
-                  </div>
-                  <div style={{ padding: "1.25rem" }}>
-                    <p style={{ margin: "0 0 1rem", fontSize: 12, color: "#475569", lineHeight: 1.6 }}>All HackerRank integrations must point to tests containing at least 3 algorithmic questions and 1 practical project scenario to qualify for university-certified skill badges.</p>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {["Auto-Sync: Enabled", "Strict Proctoring: ON"].map((tag, i) => (
-                        <span key={i} style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", color: "#10b981", border: "1px solid #bbf7d0" }}>● {tag}</span>
-                      ))}
-                    </div>
-                  </div>
+              ) : filteredSkills.length === 0 ? (
+                <div style={{ padding: "4rem", textAlign: "center", color: "#64748b" }}>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>No user skill records found matching search filters.</p>
                 </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                        <th style={{ padding: "12px 24px", fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>USER</th>
+                        <th style={{ padding: "12px 24px", fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>SKILL</th>
+                        <th style={{ padding: "12px 24px", fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>STATUS</th>
+                        <th style={{ padding: "12px 24px", fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>LEVEL & SCORE</th>
+                        <th style={{ padding: "12px 24px", fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>LAST ATTEMPT</th>
+                        <th style={{ padding: "12px 24px", fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: 1 }}>PROOF</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSkills.map((item, idx) => {
+                        const statusColor = getStatusColor(item.Verification_Status);
+                        return (
+                          <tr
+                            key={idx}
+                            style={{
+                              borderBottom: idx < filteredSkills.length - 1 ? "1px solid #f1f5f9" : "none",
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                            onMouseLeave={e => e.currentTarget.style.background = "#fff"}
+                          >
+                            {/* User details */}
+                            <td style={{ padding: "16px 24px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <img
+                                  src={item.Avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.First_Name}&backgroundColor=E2E8F0`}
+                                  alt="avatar"
+                                  style={{ width: 34, height: 34, borderRadius: "50%", border: "2px solid #e2e8f0" }}
+                                />
+                                <div>
+                                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
+                                    {item.First_Name} {item.Last_Name}
+                                  </p>
+                                  <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{item.Email}</p>
+                                </div>
+                              </div>
+                            </td>
 
-                {/* Global Analytics CTA */}
-                <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #166534 100%)", borderRadius: 20, padding: "1.5rem", overflow: "hidden", position: "relative" }}>
-                  <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "rgba(255,255,255,0.05)", borderRadius: "50%" }} />
-                  <p style={{ margin: "0 0 0.25rem", fontSize: 14, fontWeight: 800, color: "#fff" }}>🌍 Global Skill Analytics</p>
-                  <p style={{ margin: "0 0 1rem", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>View comprehensive student performance across all assessments.</p>
-                  <button style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: "#10b981", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.4)" }}>
-                    Generate Global Report →
-                  </button>
+                            {/* Skill details */}
+                            <td style={{ padding: "16px 24px" }}>
+                              <div>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{item.Skill_Name}</p>
+                                <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{item.Category}</p>
+                              </div>
+                            </td>
+
+                            {/* Status */}
+                            <td style={{ padding: "16px 24px" }}>
+                              <span style={{
+                                display: "inline-block",
+                                padding: "4px 10px",
+                                borderRadius: "20px",
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                background: statusColor.bg,
+                                color: statusColor.text,
+                                border: `1px solid ${statusColor.border}`
+                              }}>
+                                {item.Verification_Status}
+                              </span>
+                            </td>
+
+                            {/* Level and score */}
+                            <td style={{ padding: "16px 24px" }}>
+                              <div>
+                                {item.Mentor_Level ? (
+                                  <span style={{
+                                    display: "inline-block",
+                                    padding: "2px 8px",
+                                    borderRadius: "4px",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    background: "#f0fdf4",
+                                    color: "#16a34a",
+                                    marginBottom: "4px"
+                                  }}>
+                                    {item.Mentor_Level} Level
+                                  </span>
+                                ) : (
+                                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>Unranked</span>
+                                )}
+                                <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>
+                                  Quiz Score: <strong>{item.Score || 0}/15</strong>
+                                </p>
+                              </div>
+                            </td>
+
+                            {/* Last Attempt */}
+                            <td style={{ padding: "16px 24px", fontSize: 12, color: "#64748b" }}>
+                              {formatDate(item.Last_Attempt)}
+                            </td>
+
+                            {/* Proof Certificate */}
+                            <td style={{ padding: "16px 24px" }}>
+                              {item.Certificates ? (
+                                <a
+                                  href={`http://localhost:5000/uploads/${item.Certificates}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#10b981",
+                                    fontWeight: 600,
+                                    textDecoration: "none",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px"
+                                  }}
+                                >
+                                  📄 View Proof
+                                </a>
+                              ) : (
+                                <span style={{ fontSize: "12px", color: "#94a3b8" }}>Quiz Verified</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-
-              </div>
+              )}
             </div>
+
           </div>
         </div>
       </div>

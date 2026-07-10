@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  Database, 
-  Cpu, 
-  ShieldCheck, 
-  UserCheck, 
+import {
+  Database,
+  Cpu,
+  ShieldCheck,
+  UserCheck,
   MessageSquare,
   Sparkles,
   Lock,
@@ -13,33 +13,26 @@ import {
   Mail,
   MapPin
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnboarding = new URLSearchParams(location.search).get('onboarding') === 'true' || location.state?.onboarding;
+
+
+
+  const lastUpdatedDate = "May 10, 2026";
+
   return (
     <div className="bg-[#F1F5F9] min-h-screen font-sans text-slate-900 relative">
       {/* Header - Top Navigation Bar */}
-      <nav className="sticky top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div className="max-w-7xl mx-auto px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="text-base font-bold tracking-tight text-[#0F172A]">EduConnect</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer">
-              <img src="https://ui-avatars.com/api/?name=User&background=0F172A&color=fff" alt="User" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <DashboardNavbar logoOnlyIfLoggedOut={true} logoOnly={isOnboarding} />
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-10 py-12 flex flex-col lg:flex-row gap-16 relative">
-        
+
         {/* Aside - Sticky Navigation */}
         <aside className="w-64 shrink-0 hidden lg:block">
           <div className="sticky top-28 bg-white border border-slate-200 shadow-sm rounded-2xl p-3">
@@ -71,7 +64,7 @@ const PrivacyPolicy = () => {
 
         {/* Main Content Area */}
         <main className="flex-1 w-full max-w-[732px] space-y-20 pb-32">
-          
+
           {/* Hero Header */}
           <div className="border-b border-slate-200 pb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-4 max-w-xl">
@@ -81,7 +74,7 @@ const PrivacyPolicy = () => {
               </p>
             </div>
             <div className="text-sm font-medium text-[#10B981]">
-              Last Updated: October 24, 2023
+              Last Updated: {lastUpdatedDate}
             </div>
           </div>
 
@@ -119,10 +112,10 @@ const PrivacyPolicy = () => {
               </div>
               <h2 className="text-3xl font-bold text-[#0F172A]">2. AI Usage & Processing</h2>
             </div>
-            
+
             <div className="bg-[#065F46] rounded-3xl p-8 shadow-xl relative overflow-hidden isolate border border-white/5">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full -z-10"></div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-white">
                   <Sparkles className="w-6 h-6 text-[#10B981]" />
@@ -131,7 +124,7 @@ const PrivacyPolicy = () => {
                 <p className="text-emerald-100/80 leading-relaxed text-base mb-6">
                   Our platform utilizes a hybrid architecture featuring Google's Gemini Pro for generative insights and Pinecone for vector-based semantic retrieval.
                 </p>
-                
+
                 <div className="space-y-6 pt-2">
                   <div className="flex gap-4">
                     <div className="font-bold text-[#10B981] mt-0.5">01.</div>
@@ -160,7 +153,7 @@ const PrivacyPolicy = () => {
               </div>
               <h2 className="text-3xl font-bold text-[#0F172A]">3. Data Sharing & Security</h2>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 { icon: <Lock className="w-5 h-5 text-[#10B981] mb-4" />, title: "End-to-End Encryption", desc: "All data in transit is encrypted using TLS 1.3 and stored with AES-256 encryption at rest." },
@@ -184,12 +177,12 @@ const PrivacyPolicy = () => {
               </div>
               <h2 className="text-3xl font-bold text-[#0F172A]">4. User Rights</h2>
             </div>
-            
+
             <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 space-y-6">
               <p className="text-slate-600 leading-relaxed text-base">
                 As a user of EduConnect, you retain full control over your data. In accordance with GDPR and CCPA guidelines, you have the right to:
               </p>
-              
+
               <div className="space-y-4">
                 {[
                   "Request a full export of all personal and academic data associated with your account.",
@@ -213,7 +206,7 @@ const PrivacyPolicy = () => {
               </div>
               <h2 className="text-3xl font-bold text-[#0F172A]">5. Contact & Support</h2>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8">
               {/* Need Clarification Card */}
               <div className="bg-[#064E3B] rounded-3xl p-8 relative overflow-hidden isolate shadow-lg">
@@ -235,10 +228,11 @@ const PrivacyPolicy = () => {
                 </div>
                 <h4 className="font-bold text-lg text-[#0F172A] mb-4">Official Mailing Address</h4>
                 <address className="not-italic text-slate-600 leading-loose">
-                  EduConnect Innovation Hub<br />
-                  500 Silicon Alley, Suite 24<br />
-                  Palo Alto, CA 94301<br />
-                  United States
+                  EduConnect Team<br />
+                  Faculty of Computing<br />
+                  Sabaragamuwa University of Sri Lanka<br />
+                  Belihuloya<br />
+                  70140
                 </address>
               </div>
             </div>
@@ -258,8 +252,8 @@ const PrivacyPolicy = () => {
                 By clicking 'I Accept the Terms', you acknowledge that you have read and understood our Terms of Service.
               </p>
             </div>
-            <button 
-              onClick={() => navigate('/terms-of-service')}
+            <button
+              onClick={() => navigate(`/terms-of-service${isOnboarding ? '?onboarding=true' : ''}`, { state: { onboarding: isOnboarding } })}
               className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-900/50 transition-all shrink-0 cursor-pointer"
             >
               I Accept the Terms

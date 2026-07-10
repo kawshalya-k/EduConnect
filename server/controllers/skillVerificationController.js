@@ -62,6 +62,25 @@ exports.getAllSkills = async (req, res) => {
 exports.getMySkills = async (req, res) => {
     const userId = req.user.id;
     try {
+        // Automatically transition any timed out Testing skills to Rejected
+        const [testingSkills] = await db.query(
+            "SELECT User_Skill_Id, Last_Attempt FROM User_Skill WHERE User_Id = ? AND Verification_Status = 'Testing'",
+            [userId]
+        );
+        for (const ts of testingSkills) {
+            if (ts.Last_Attempt) {
+                const lastAttempt = new Date(ts.Last_Attempt);
+                const now = new Date();
+                const diffSecs = (now - lastAttempt) / 1000;
+                if (diffSecs >= 600) { // 10 minutes
+                    await db.query(
+                        "UPDATE User_Skill SET Verification_Status = 'Rejected', Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+                        [ts.User_Skill_Id]
+                    );
+                }
+            }
+        }
+
         const [skills] = await db.query(
             `SELECT us.User_Skill_Id, s.Skill_Id, s.Skill_Name, s.Category, s.Description,
                     us.Mentor_Level, us.Verification_Status, us.Certificates, us.Last_Attempt,
@@ -73,7 +92,7 @@ exports.getMySkills = async (req, res) => {
              JOIN Skill s ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld 
                     ON ld.Mentor_Id = us.User_Id AND ld.Skill_Id = us.Skill_Id
-             WHERE us.User_Id = ?
+             WHERE us.User_Id = ? AND us.Role = 'Mentor'
              ORDER BY us.Verification_Status DESC, s.Skill_Name`,
             [userId]
         );
@@ -82,6 +101,7 @@ exports.getMySkills = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
 
 // ─────────────────────────────────────────────
 // POST /api/mentor/skills/add
@@ -129,10 +149,10 @@ exports.addSkill = async (req, res) => {
             });
         }
 
-        // Insert into User_Skill as Student (unverified)
+        // Insert into User_Skill as Student (unverified Draft)
         await db.query(
             `INSERT INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status)
-             VALUES (?, ?, 'Student', 0)`,
+             VALUES (?, ?, 'Student', 'Draft')`,
             [userId, skill_id]
         );
 
@@ -289,6 +309,69 @@ exports.verifySkill = async (req, res) => {
                 `UPDATE User_Skill SET Mentor_Level = 'Bronze' WHERE User_Skill_Id = ?`,
                 [userSkillId]
             );
+
+            // Fetch skill name to use in transaction description
+            const [skillRows] = await db.query(
+                'SELECT Skill_Name FROM Skill WHERE Skill_Id = ?',
+                [Skill_Id]
+            );
+            const skillName = skillRows.length > 0 ? skillRows[0].Skill_Name : 'Skill';
+
+            // Get user's current coins to compute running balance and update both coins columns
+            const [userRows] = await db.query(
+                'SELECT skill_coins, Wallet_Balance FROM User WHERE User_Id = ?',
+                [User_Id]
+            );
+            if (userRows.length > 0) {
+                const currentCoins = userRows[0].skill_coins !== null ? userRows[0].skill_coins : userRows[0].Wallet_Balance;
+                const newBalance = currentCoins + 100;
+                
+                await db.query(
+                    'UPDATE User SET skill_coins = ?, Wallet_Balance = ? WHERE User_Id = ?',
+                    [newBalance, newBalance, User_Id]
+                );
+
+                // Record transaction
+                await db.query(
+                    `INSERT INTO Wallet_Transaction (User_Id, Transaction_Type, Amount, Description)
+                     VALUES (?, 'CREDIT', 100, ?)`,
+                    [User_Id, `Skill verified: ${skillName}`]
+                );
+            }
+
+            // Give Bronze Mentor badge
+            let [badges] = await db.query('SELECT Badge_Id FROM Badge WHERE Badge_Name = ?', ['Bronze Mentor']);
+            let badgeId;
+            if (badges.length === 0) {
+                const [result] = await db.query(
+                    'INSERT INTO Badge (Badge_Name, Criteria, Description) VALUES (?, ?, ?)',
+                    ['Bronze Mentor', 'Verify first skill', 'Awarded for successfully verifying a skill']
+                );
+                badgeId = result.insertId;
+            } else {
+                badgeId = badges[0].Badge_Id;
+            }
+
+            // Insert User_Badge ignoring duplicates
+            await db.query(
+                'INSERT IGNORE INTO User_Badge (user_id, badge_id) VALUES (?, ?)',
+                [User_Id, badgeId]
+            );
+
+            // Create notification for the user
+            const Notification = require('../models/Notification');
+            Notification.createNotification(
+                User_Id,
+                'Skill Verified! 🎉',
+                `Congratulations! Your proof for "${skillName}" has been approved. You are now a Bronze Mentor! +100 SC credited.`,
+                'gamification'
+            ).catch(err => console.error('Failed to create notification for approved skill:', err.message));
+
+            // Sync embedding to Pinecone
+            const { syncMentorEmbedding } = require('../utils/embedMentor');
+            syncMentorEmbedding(User_Id, Skill_Id).catch(err => {
+                console.error('[Pinecone Sync Error] Failed to sync verified skill to Pinecone:', err.message);
+            });
         }
 
         res.json({
@@ -296,6 +379,7 @@ exports.verifySkill = async (req, res) => {
             status: newStatus
         });
     } catch (err) {
+        console.error("verifySkill approval error:", err);
         res.status(500).json({ error: err.message });
     }
 };

@@ -14,7 +14,7 @@ export const fetchPerformanceChart = (mentorId, period = '7days') =>
 
 // ─── Profile ─────────────────────────────────────────────────
 export const fetchMentorProfile = (mentorId) =>
-  API.get('/mentors/profile');
+  API.get(`/mentors/profile/${mentorId}`);
 
 export const updateMentorProfile = (mentorId, data) =>
   API.put(`/mentors/profile/${mentorId}`, data);
@@ -57,6 +57,9 @@ export const fetchSkillDetail = (mentorId, skillId) =>
 export const addSkill = (mentorId, data) =>
   API.post('/mentors/skills/add', data);
 
+export const saveOnboardingDraft = (data) =>
+  API.post('/mentors/skills/save-draft', data);
+
 export const fetchVerificationProgress = (mentorId) =>
   API.get('/mentors/skills/my');
 
@@ -86,14 +89,24 @@ export const markNotificationRead = (notifId) =>
 
 // ─── Discovery ───────────────────────────────────────────────
 export const searchMentors = (params) =>
-  API.get('/discovery/mentors', { params });
+  API.get('/mentors/search', { params });
 
 export const fetchRecommendedMentors = (params = {}) =>
-  API.get('/discovery/recommended', { params });
+  API.get('/mentors/recommended', { params });
 
 export const aiMentorSearch = (query) =>
-  API.post('/discovery/ai-search', { query });
+  API.get('/mentors/ai-search', { params: { query } });
+
+export const fetchCategories = () =>
+  API.get('/mentors/skills/categories');
 
 // ─── Mode Toggle ─────────────────────────────────────────────
 export const updateUserMode = (userId, mode) =>
   API.patch(`/users/${userId}/mode`, { mode });
+
+// ─── Additional Helpers ───────────────────────────────────────
+export const fetchUserProfile = (userId) =>
+  API.get(`/users/${userId}/profile`);
+
+export const fetchSuggestedSkills = () =>
+  API.get('/skills/suggested');

@@ -757,6 +757,18 @@
   background: rgba(245, 158, 11, 0.12);
   color: #92400E;
 }
+.skill-level-badge--beginner {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065F46;
+}
+.skill-level-badge--intermediate {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1E40AF;
+}
+.skill-level-badge--expert {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400E;
+}
 
 .skill-stat {
   display: inline-flex;

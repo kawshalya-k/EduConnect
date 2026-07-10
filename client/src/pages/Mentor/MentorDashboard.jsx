@@ -29,20 +29,34 @@ export default function MentorDashboard() {
   }, [user]);
 
   const loadDashboard = async () => {
-    if (!user?.mentorId) return;
+    const userId = user?.mentorId || user?.id;
+    if (!userId) return;
     setLoading(true);
     try {
       const [dashRes, chartRes, skillsRes] = await Promise.all([
-        fetchMentorDashboard(user.mentorId),
-        fetchPerformanceChart(user.mentorId, '7days'),
-        fetchMentorSkills(user.mentorId),
+        fetchMentorDashboard(userId),
+        fetchPerformanceChart(userId, '7days'),
+        fetchMentorSkills(userId),
       ]);
       setDashData(dashRes.data);
       setChartData(chartRes.data?.data || []);
-      setSkills(skillsRes.data?.skills || []);
+
+      const skillsArray = Array.isArray(skillsRes.data)
+        ? skillsRes.data
+        : (skillsRes.data?.skills || []);
+      
+      const mappedSkills = skillsArray.map(s => ({
+        id: s.Skill_Id || s.id,
+        name: s.Skill_Name || s.name,
+        level: s.Mentor_Level || 'Bronze',
+        verified: s.Verification_Status === 1 || s.Verification_Status === true || s.Verification_Status === 'Verified',
+        endorsements: s.Total_Sessions || 0
+      }));
+      setSkills(mappedSkills);
+
       // Fetch sessions separately to compute upcoming & pending requests
       try {
-        const sessionsRes = await fetchMentorSessions(user.mentorId);
+        const sessionsRes = await fetchMentorSessions(userId);
         const sessions = sessionsRes.data || [];
 
         // Upcoming = Scheduled or Pending and date >= today
@@ -77,11 +91,12 @@ export default function MentorDashboard() {
   };
 
   const handlePeriodChange = async (period) => {
-    if (!user?.mentorId) return;
+    const userId = user?.mentorId || user?.id;
+    if (!userId) return;
     setChartLoading(true);
     try {
       const map = { 'Last 7 Days': '7days', 'Last 30 Days': '30days', 'This Month': 'month' };
-      const res = await fetchPerformanceChart(user.mentorId, map[period] || '7days');
+      const res = await fetchPerformanceChart(userId, map[period] || '7days');
       setChartData(res.data?.data || []);
     } catch (err) {
       console.error(err);
@@ -228,7 +243,7 @@ export default function MentorDashboard() {
             <div className="dash-section-card">
               <div className="dash-section-header">
                 <h2 className="dash-section-title">Upcoming Sessions</h2>
-                <Link to="/sessions" className="dash-view-all">View All</Link>
+                <Link to="/mentor-sessions" className="dash-view-all">View All</Link>
               </div>
 
               {loading ? (
