@@ -24,6 +24,7 @@ router.get('/analytics', auth, adminController.getAnalytics);
 router.get('/skills', auth, adminController.getAllSkills);
 router.post('/skills', auth, adminController.addSkill);
 router.delete('/skills/:skillId', auth, adminController.deleteSkill);
+router.get('/user-skills', auth, adminController.getAllUserSkills);
 
 // Mentor Management
 router.get('/', skillCtrl.getPendingVerifications);          // GET all pending

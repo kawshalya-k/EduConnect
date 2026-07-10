@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
+import axiosInstance from '../../services/axiosConfig';
 import { rateSession } from '../../services/sessionService';
 
 const tags = [
@@ -12,11 +13,36 @@ const tags = [
 ];
 
 export default function SessionFeedback() {
-  const [rating, setRating] = useState(4);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { sessionId } = location.state || {};
+
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState(5);
   const [hovered, setHovered] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [selectedTags, setSelectedTags] = useState(["Clear Communication", "Deep Expertise"]);
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!sessionId) {
+      setLoading(false);
+      return;
+    }
+    const fetchSessionDetails = async () => {
+      try {
+        const res = await axiosInstance.get(`/sessions/${sessionId}`);
+        setSession(res.data);
+      } catch (err) {
+        console.error('Error fetching session details for feedback:', err);
+        setError('Could not load session details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSessionDetails();
+  }, [sessionId]);
 
   const toggleTag = (tag) => {
     setSelectedTags(prev =>
@@ -24,20 +50,32 @@ export default function SessionFeedback() {
     );
   };
 
-  const location = useLocation();
-const sessionId = location.state?.sessionId;
-
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
+    if (!sessionId) {
+      alert('Invalid session session ID.');
+      navigate('/my-sessions');
+      return;
+    }
+    setLoading(true);
     try {
-      if (sessionId) {
-        await rateSession(sessionId, rating, feedback);
-      }
+      // Append selected tags to feedback text to enrich the feedback
+      const enrichedFeedback = feedback.trim() + 
+        (selectedTags.length > 0 ? ` [Key Strengths: ${selectedTags.join(', ')}]` : '');
+
+      await axiosInstance.post(`/sessions/${sessionId}/rate`, {
+        rating,
+        feedback: enrichedFeedback
+      });
+      
+      alert('Feedback submitted! Thank you 🎉');
       navigate('/my-sessions');
     } catch (err) {
-      console.error('Error submitting feedback:', err);
+      console.error('Error submitting rating:', err);
       alert('Failed to submit feedback. Please try again.');
+    } finally {
+      setLoading(false);
     }
-};
+  };
 
   const getRatingText = () => {
     const val = hovered || rating;
@@ -48,6 +86,15 @@ const handleSubmit = async () => {
     if (val === 5) return "Excellent session! 🎉";
     return "";
   };
+
+  if (loading) {
+    return <div style={{ padding: "3rem", textAlign: "center", color: "#10B77F" }}>Loading session details...</div>;
+  }
+
+  const mentorName = session ? `${session.Mentor_First || ''} ${session.Mentor_Last || ''}`.trim() : "Your Mentor";
+  const mentorAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.Mentor_First || 'mentor'}&backgroundColor=E2E8F0`;
+  const sessionDate = session?.Date ? new Date(session.Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const skillName = session?.Skill_Name || "Expertise";
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter'] relative">
@@ -60,10 +107,10 @@ const handleSubmit = async () => {
           <div className="flex flex-col items-center mb-10">
             {/* Avatar Container */}
             <div className="relative mb-6">
-              <div className="w-[128px] h-[128px] rounded-full border-4 border-[#10B77F]/20 p-1 flex items-center justify-center">
+              <div className="w-[128px] h-[128px] rounded-full border-4 border-[#10B77F]/20 p-1 flex items-center justify-center bg-[#f0f9f4]">
                 <img 
-                  src="https://i.pravatar.cc/250?img=47" 
-                  alt="Dr. Sarah Mitchell" 
+                  src={mentorAvatar} 
+                  alt={mentorName} 
                   className="w-full h-full rounded-full object-cover"
                 />
               </div>
@@ -75,9 +122,11 @@ const handleSubmit = async () => {
             </div>
 
             <div className="text-center flex flex-col items-center gap-1">
-              <h1 className="text-[#0F172A] font-extrabold text-[30px] leading-[36px] tracking-[-0.75px]">Dr. Sarah Mitchell</h1>
-              <h2 className="text-[#10B77F] font-semibold text-[18px] leading-[28px]">UX Strategy Expert</h2>
-              <p className="text-[#64748B] font-normal text-[14px] leading-[20px]">Mentored for 45 mins on Oct 24, 2023</p>
+              <h1 className="text-[#0F172A] font-extrabold text-[30px] leading-[36px] tracking-[-0.75px]">{mentorName}</h1>
+              <h2 className="text-[#10B77F] font-semibold text-[18px] leading-[28px]">{skillName} Expert</h2>
+              {sessionDate && (
+                <p className="text-[#64748B] font-normal text-[14px] leading-[20px]">Mentored on {sessionDate} for 60 mins</p>
+              )}
             </div>
           </div>
 
@@ -91,7 +140,7 @@ const handleSubmit = async () => {
               <div className="text-center">
                 <h3 className="text-[#1E293B] font-bold text-[20px] leading-[28px] mb-1">How was your session?</h3>
                 <p className="text-[#64748B] font-normal text-[14px] leading-[20px] max-w-[384px]">
-                  Your feedback helps Sarah improve and helps others find the right mentor.
+                  Your feedback helps {session?.Mentor_First || 'your mentor'} improve and helps others find the right mentor.
                 </p>
               </div>
 
@@ -139,7 +188,7 @@ const handleSubmit = async () => {
               <textarea
                 value={feedback}
                 onChange={e => setFeedback(e.target.value)}
-                placeholder="What did you learn? How can Sarah improve?"
+                placeholder={`What did you learn? How can ${session?.Mentor_First || 'they'} improve?`}
                 className="w-full h-[160px] resize-none bg-[#F8FAFC] border border-[#E2E8F0] rounded-[16px] p-4 text-[#475569] text-[16px] placeholder:text-[#94A3B8] outline-none focus:border-[#10B77F]/50 focus:ring-1 focus:ring-[#10B77F]/50 transition-all"
               ></textarea>
             </div>
@@ -147,7 +196,7 @@ const handleSubmit = async () => {
             {/* Tags Selection */}
             <div className="flex flex-col gap-3">
               <label className="text-[#334155] font-semibold text-[14px] leading-[20px] ml-1">
-                What did Sarah excel at?
+                What did {session?.Mentor_First || 'they'} excel at?
               </label>
               <div className="flex flex-wrap gap-3">
                 {tags.map(tag => {
@@ -155,6 +204,7 @@ const handleSubmit = async () => {
                   return (
                     <button
                       key={tag}
+                      type="button"
                       onClick={() => toggleTag(tag)}
                       className={`px-4 py-2 rounded-full font-medium text-[14px] leading-[20px] transition-all border ${
                         isSelected 

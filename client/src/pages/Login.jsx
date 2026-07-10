@@ -58,10 +58,10 @@ const Login = () => {
         <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-[#10B981] opacity-20 blur-[64px] rounded-full"></div>
         
         <div className="max-w-md w-full space-y-12 z-10">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 cursor-pointer">
             <img src={logo} alt="EduConnect Logo" className="w-10 h-10" />
             <span className="text-2xl font-bold text-slate-900">EduConnect</span>
-          </div>
+          </Link>
 
           <div className="space-y-6">
              <div className="relative group">
