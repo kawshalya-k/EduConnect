@@ -17,7 +17,7 @@ import { fetchMentorSessions } from '../../services/mentorApi';
 import './MentorDashboard.css';
 
 export default function MentorDashboard() {
-  const { user } = useAuth();
+  const { user, syncWalletBalance } = useAuth();
   const [dashData, setDashData] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -26,7 +26,9 @@ export default function MentorDashboard() {
 
   useEffect(() => {
     loadDashboard();
-  }, [user]);
+    const interval = setInterval(loadDashboard, 30000); // Poll dashboard data every 30s
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   const loadDashboard = async () => {
     const userId = user?.mentorId || user?.id;
@@ -40,6 +42,9 @@ export default function MentorDashboard() {
       ]);
       setDashData(dashRes.data);
       setChartData(chartRes.data?.data || []);
+      if (dashRes.data?.wallet_balance !== undefined) {
+        syncWalletBalance(dashRes.data.wallet_balance);
+      }
 
       const skillsArray = Array.isArray(skillsRes.data)
         ? skillsRes.data
@@ -50,6 +55,7 @@ export default function MentorDashboard() {
         name: s.Skill_Name || s.name,
         level: s.Mentor_Level || 'Bronze',
         verified: s.Verification_Status === 1 || s.Verification_Status === true || s.Verification_Status === 'Verified',
+        status: s.Verification_Status || 'Draft',
         endorsements: s.Total_Sessions || 0
       }));
       setSkills(mappedSkills);
@@ -108,7 +114,7 @@ export default function MentorDashboard() {
   const mentor = { ...user };
   const upcoming = dashData?.upcomingSessions || [];
   const pendingRequests = dashData?.pendingRequests || [];
-  const walletBalance = dashData?.wallet_balance ?? dashData?.walletBalance ?? 0;
+  const walletBalance = user?.skillCoins ?? user?.coins ?? dashData?.wallet_balance ?? dashData?.walletBalance ?? 0;
   const avgRating = dashData?.session_stats?.Overall_Rating ?? null;
   const ratingChange = null;
 
