@@ -236,8 +236,8 @@ exports.verifySkill = async (req, res) => {
 
     let userSkill = existing.length > 0 ? existing[0] : null;
 
-    // Cooldown check (4 hours)
-    if (userSkill && userSkill.Last_Attempt) {
+    // Cooldown check (4 hours) - only if they are not actively testing
+    if (userSkill && userSkill.Verification_Status !== 'Testing' && userSkill.Last_Attempt) {
       const lastAttempt = new Date(userSkill.Last_Attempt);
       const now = new Date();
       const diffMs = now - lastAttempt;
@@ -429,7 +429,7 @@ exports.startQuiz = async (req, res) => {
         }
         // Cooldown inactive, allowed to start quiz again (upgrade)
         await db.query(
-          "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+          "UPDATE User_Skill SET Role = 'Mentor', Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
           [userSkill.User_Skill_Id]
         );
         return res.status(200).json({ message: 'Quiz started for upgrade.', quizTimeLeft: 600 });
@@ -486,7 +486,7 @@ exports.startQuiz = async (req, res) => {
         }
         // Cooldown passed, update status to 'Testing'
         await db.query(
-          "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+          "UPDATE User_Skill SET Role = 'Mentor', Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
           [userSkill.User_Skill_Id]
         );
         return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });
@@ -494,7 +494,7 @@ exports.startQuiz = async (req, res) => {
 
       // Default (e.g. Draft)
       await db.query(
-        "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+        "UPDATE User_Skill SET Role = 'Mentor', Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
         [userSkill.User_Skill_Id]
       );
       return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });
