@@ -44,21 +44,30 @@ const getTransactions = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [count] = await db.query(
-      'SELECT COUNT(*) as total FROM Wallet_Transaction WHERE user_id = ?',
+      'SELECT COUNT(*) as total FROM Wallet_Transaction WHERE User_Id = ?',
       [userId]
     );
 
     const [transactions] = await db.query(
       `SELECT * FROM Wallet_Transaction 
-       WHERE user_id = ? 
-       ORDER BY created_at DESC 
+       WHERE User_Id = ? 
+       ORDER BY Timestamp DESC 
        LIMIT ? OFFSET ?`,
       [userId, limit, offset]
     );
 
+    const mapped = transactions.map(t => ({
+      transaction_id: t.Transaction_Id,
+      user_id: t.User_Id,
+      type: t.Transaction_Type,
+      amount: t.Amount,
+      created_at: t.Timestamp,
+      reason: t.Description
+    }));
+
     res.json({
       success: true,
-      transactions,
+      transactions: mapped,
       total: count[0].total,
       page,
       totalPages: Math.ceil(count[0].total / limit)
