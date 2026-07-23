@@ -170,9 +170,9 @@ export default function VerificationSuccess() {
                 }}
               >
                 <strong>Level thresholds (15 questions):</strong><br />
-                🥉 Beginner: 6–8 correct (+5 SC)&nbsp;&nbsp;
-                🥈 Intermediate: 9–11 correct (+10 SC)&nbsp;&nbsp;
-                🏆 Expert: 12–15 correct (+15 SC)
+                🥉 Beginner: 6–8 correct (+5 SC)&nbsp;&nbsp; <br />
+                🥈 Intermediate: 9–11 correct (+10 SC)&nbsp;&nbsp;  <br />
+                🏆 Expert: 12–15 correct (+15 SC)  <br />
               </div>
 
               <p className="success-message">

@@ -41,7 +41,7 @@ function EarningsGraph({ data }) {
 }
 
 export default function MentorWallet() {
-  const { user } = useAuth();
+  const { user, syncWalletBalance } = useAuth();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [earningsData, setEarningsData] = useState([]);
@@ -49,6 +49,8 @@ export default function MentorWallet() {
   const [mentorLevel, setMentorLevel] = useState('Bronze');
   const [mentorScore, setMentorScore] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const displayBalance = user?.skillCoins ?? user?.coins ?? balance;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +65,7 @@ export default function MentorWallet() {
 
         if (balRes.data.success) {
           setBalance(balRes.data.balance);
+          syncWalletBalance(balRes.data.balance);
         }
 
         if (txRes.data.success) {
@@ -180,7 +183,7 @@ export default function MentorWallet() {
                 color: "#aaa", textTransform: "uppercase", letterSpacing: "0.5px",
               }}>Current Balance</p>
               <p style={{ margin: "0 0 16px" }}>
-                <span style={{ fontSize: "44px", fontWeight: "bold" }}>{balance.toLocaleString()} </span>
+                <span style={{ fontSize: "44px", fontWeight: "bold" }}>{displayBalance.toLocaleString()} </span>
                 <span style={{ fontSize: "20px", color: "#1D9E75", fontWeight: "600" }}>SC</span>
               </p>
               <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>

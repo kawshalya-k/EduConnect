@@ -62,7 +62,22 @@ export function AuthProvider({ children }) {
   //Update skill coins balance 
   const updateSkillCoins = (amount) => {
     setUser((prev) => {
-      const updated = { ...prev, skillCoins: prev.skillCoins + amount };
+      if (!prev) return null;
+      const currentCoins = prev.skillCoins ?? prev.coins ?? 0;
+      const newBalance = currentCoins + amount;
+      const updated = { ...prev, skillCoins: newBalance, coins: newBalance };
+      localStorage.setItem('educonnect_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  //Synchronize real-time balance
+  const syncWalletBalance = (balance) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const parsedBalance = Number(balance) || 0;
+      if (prev.skillCoins === parsedBalance && prev.coins === parsedBalance) return prev;
+      const updated = { ...prev, skillCoins: parsedBalance, coins: parsedBalance };
       localStorage.setItem('educonnect_user', JSON.stringify(updated));
       return updated;
     });
@@ -70,7 +85,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, mode, loading, login, logout, toggleMode, updateSkillCoins, setUser }}
+      value={{ user, mode, loading, login, logout, toggleMode, updateSkillCoins, syncWalletBalance, setUser }}
     >
       {children}
     </AuthContext.Provider>

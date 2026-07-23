@@ -54,11 +54,11 @@ exports.getDashboard = async (req, res) => {
 
         // 5. Badges earned
         const [badges] = await db.query(
-            `SELECT b.name AS Badge_Name, b.description AS Description, ub.awarded_at AS Awarded_Date
-             FROM user_badge ub
-             JOIN badge b ON b.badge_id = ub.badge_id
-             WHERE ub.user_id = ?
-             ORDER BY ub.awarded_at DESC`,
+            `SELECT b.Badge_Name, b.Description, ub.Awarded_Date
+             FROM User_Badge ub
+             JOIN Badge b ON b.Badge_Id = ub.Badge_Id
+             WHERE ub.User_Id = ?
+             ORDER BY ub.Awarded_Date DESC`,
             [mentorId]
         );
 
