@@ -37,9 +37,12 @@ export default function DashboardSidebar({ user }) {
         const today = new Date().toISOString().split('T')[0];
 
         const todayEarnings = (data.transactions || data).reduce((sum, txn) => {
-          const txnDate = new Date(txn.date || txn.createdAt || txn.timestamp).toISOString().split('T')[0];
+          const rawDate = txn.created_at || txn.date || txn.createdAt || txn.timestamp;
+          if (!rawDate) return sum;
+          const txnDate = new Date(rawDate).toISOString().split('T')[0];
           const isToday = txnDate === today;
-          const isCredit = txn.type === 'credit' || txn.type === 'earning' || txn.amount > 0;
+          const typeLower = (txn.type || '').toLowerCase();
+          const isCredit = typeLower === 'credit' || typeLower === 'earning' || txn.amount > 0;
           return isToday && isCredit ? sum + (txn.amount || 0) : sum;
         }, 0);
 
@@ -53,6 +56,8 @@ export default function DashboardSidebar({ user }) {
     };
 
     fetchDailyEarnings();
+    const interval = setInterval(fetchDailyEarnings, 30000);
+    return () => clearInterval(interval);
   }, [mentorId]);
 
   const handleToggle = () => {

@@ -17,23 +17,24 @@ const QUIZ_KEY_MAP = [
   { pattern: /python/i, key: 'Python' },
   { pattern: /\bsql\b|database/i, key: 'SQL' },
   { pattern: /\bgit\b/i, key: 'Git' },
-  { pattern: /figma/i, key: 'Figma' },
+  { pattern: /figma|ui\/ux|design|strategy/i, key: 'Figma' },
   { pattern: /information architecture|^ia$/i, key: 'Information Architecture' },
-  { pattern: /statistic/i, key: 'Statistics' },
+  { pattern: /statistic|data science/i, key: 'Statistics' },
   { pattern: /\bnlp\b|natural language/i, key: 'NLP' },
   { pattern: /android/i, key: 'Android Development' },
   { pattern: /flutter/i, key: 'Flutter' },
+  { pattern: /web development/i, key: 'JavaScript' },
 ];
 
 function getQuizKey(skillName) {
-  if (!skillName) return 'JavaScript';
+  if (!skillName) return null;
   for (const { pattern, key } of QUIZ_KEY_MAP) {
     if (pattern.test(skillName)) return key;
   }
   // Fallback: try an exact match (case-insensitive) against available keys
   const lower = skillName.toLowerCase();
   const directMatch = Object.keys(quizQuestions).find(k => k.toLowerCase() === lower);
-  return directMatch || 'JavaScript';
+  return directMatch || null;
 }
 
 // ─── Score → level helper (15 questions) ─────────────────────────────────────
@@ -85,9 +86,28 @@ export default function VerifySkill() {
           targetSkill = skills.find(
             s => (s.Skill_Id || s.id || '').toString() === skillId.toString()
           );
-        }
-        if (!targetSkill) {
-          // Fallback: first unverified skill
+          
+          if (!targetSkill) {
+            // Fetch name from all skills list if not yet present in user's mentor skills list
+            try {
+              const allRes = await API.get('/mentors/skills/all');
+              const allSkills = allRes.data || [];
+              const matchedSkill = allSkills.find(
+                s => (s.Skill_Id || s.id || '').toString() === skillId.toString()
+              );
+              if (matchedSkill) {
+                targetSkill = {
+                  Skill_Id: matchedSkill.Skill_Id,
+                  Skill_Name: matchedSkill.Skill_Name,
+                  Verification_Status: 'Draft'
+                };
+              }
+            } catch (err) {
+              console.error('Failed to fetch skill name fallback:', err);
+            }
+          }
+        } else {
+          // Fallback: first unverified skill (only if skillId not specified in URL)
           targetSkill = skills.find(
             s => !(s.Verification_Status === 1 || s.Verification_Status === true || s.Verification_Status === 'Verified')
           );
@@ -133,10 +153,10 @@ export default function VerifySkill() {
 
   function loadQuestionsForSkill(name) {
     const key = getQuizKey(name);
-    const qs = quizQuestions[key];
+    const qs = key ? quizQuestions[key] : null;
     if (!qs || qs.length === 0) {
-      console.warn(`No questions found for key "${key}", falling back to JavaScript`);
-      setQuestions(quizQuestions['JavaScript'] || []);
+      console.warn(`No questions found for skill "${name}"`);
+      setQuestions([]);
     } else {
       setQuestions(qs);
     }

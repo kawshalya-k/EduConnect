@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../config/db');
 
 const mentorController = require('../controllers/mentorController');
 const profileCtrl = require('../controllers/userController');
@@ -10,10 +11,17 @@ const upload = require('../utils/uploadProof');
 const protect = require('../middleware/auth');
 const auth = protect;
 
-const isMentor = (req, res, next) => {
+const isMentor = async (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: 'Not authenticated' });
-    if (req.user.role !== 'Mentor') return res.status(403).json({ message: 'Access denied. Mentors only.' });
-    next();
+    try {
+        const [rows] = await db.query("SELECT Role FROM User WHERE User_Id = ?", [req.user.id]);
+        if (rows.length === 0 || rows[0].Role !== 'Mentor') {
+            return res.status(403).json({ message: 'Access denied. Mentors only.' });
+        }
+        next();
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 // ── Public ────────────────────────────────────────────────────────────────────

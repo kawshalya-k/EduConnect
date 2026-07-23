@@ -133,9 +133,9 @@ export default function VerificationFailed() {
               }}
             >
               <strong>Level thresholds (15 questions):</strong><br />
-              🥉 Beginner: 6–8 correct&nbsp;&nbsp;
-              🥈 Intermediate: 9–11 correct&nbsp;&nbsp;
-              🏆 Expert: 12–15 correct
+              🥉 Beginner: 6–8 correct&nbsp;&nbsp;  <br />
+              🥈 Intermediate: 9–11 correct&nbsp;&nbsp;  <br />
+              🏆 Expert: 12–15 correct  <br />
             </div>
 
             {/* Countdown */}
