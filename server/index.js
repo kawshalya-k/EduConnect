@@ -24,8 +24,8 @@ const mentorSearchRoutes = require('./routes/mentorSearchRoutes');
 // ── API Routes ──
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/mentors', mentorRoutes);
 app.use('/api/mentors', mentorSearchRoutes);
+app.use('/api/mentors', mentorRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);

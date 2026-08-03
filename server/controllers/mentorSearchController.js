@@ -336,3 +336,23 @@ exports.getRecommendedMentors = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ─────────────────────────────────────────────
+// GET /api/mentors/verified-count
+// Get total count of unique active, verified mentors
+// ─────────────────────────────────────────────
+exports.getVerifiedMentorsCount = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT COUNT(DISTINCT u.User_Id) AS count
+       FROM User u
+       JOIN User_Skill us ON us.User_Id = u.User_Id
+       WHERE u.Status = 'Active'
+         AND us.Role = 'Mentor'
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`
+    );
+    res.json({ count: rows[0].count || 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
