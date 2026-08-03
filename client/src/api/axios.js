@@ -5,7 +5,7 @@ import NProgress from 'nprogress';
 NProgress.configure({ showSpinner: false, speed: 400, minimum: 0.1 });
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://educonnect-production-c0d9.up.railway.app/api',
   headers: {
     'Content-Type': 'application/json',
   },
