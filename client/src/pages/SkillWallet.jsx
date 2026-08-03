@@ -11,7 +11,7 @@ function EarningsGraph({ data }) {
   const w = 300, h = 80;
   const max = Math.max(...data.map(d => d.value), 1);
   const pts = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * w;
+    const x = data.length > 1 ? (i / (data.length - 1)) * w : w / 2;
     const y = h - (d.value / max) * h;
     return { x, y };
   });
@@ -33,7 +33,7 @@ function EarningsGraph({ data }) {
         <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#1D9E75" />
       ))}
       {data.map((d, i) => (
-        <text key={i} x={(i / (data.length - 1)) * w} y={h + 18}
+        <text key={i} x={data.length > 1 ? (i / (data.length - 1)) * w : w / 2} y={h + 18}
           textAnchor="middle" fontSize="9" fill="#aaa">{d.week}</text>
       ))}
     </svg>
@@ -46,6 +46,7 @@ export default function MentorWallet() {
   const [transactions, setTransactions] = useState([]);
   const [earningsData, setEarningsData] = useState([]);
   const [allTimeEarned, setAllTimeEarned] = useState(0);
+  const [last30DaysEarned, setLast30DaysEarned] = useState(0);
   const [mentorLevel, setMentorLevel] = useState('Bronze');
   const [mentorScore, setMentorScore] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -78,6 +79,7 @@ export default function MentorWallet() {
           value: Number(m.Total_Earned) || 0,
         })));
         setAllTimeEarned(Number(earnRes.data?.all_time_earned) || 0);
+        setLast30DaysEarned(Number(earnRes.data?.last_30_days_earned) || 0);
 
         // Get best level and score from skill_stats
         const skills = dashRes.data?.skill_stats || [];
@@ -102,7 +104,7 @@ export default function MentorWallet() {
     return () => clearInterval(interval);
   }, [user?.id]);
 
-  const last30DaysTotal = earningsData.reduce((s, d) => s + d.value, 0);
+  const last30DaysTotal = last30DaysEarned;
 
   const skillColorMap = {
     PYTHON: '#3B82F6', REACT: '#06B6D4', JAVASCRIPT: '#F59E0B',

@@ -4,7 +4,7 @@ import { FiCheckCircle, FiClock, FiAward, FiArrowRight } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import { useAuth } from '../../context/AuthContext';
-import { fetchMentorSkills } from '../../services/mentorApi';
+import { fetchMentorSkills, fetchVerifiedMentorsCount } from '../../services/mentorApi';
 import './SuccessState.css';
 
 // Level → accent colour for the medal badge
@@ -43,6 +43,35 @@ export default function VerificationSuccess() {
 
   const [cooldownRemaining, setCooldownRemaining] = useState(4 * 60 * 60 * 1000);
   const [cooldownActive, setCooldownActive] = useState(true);
+  const [verifiedCount, setVerifiedCount] = useState(null);
+
+  // Fetch real count of verified mentors
+  useEffect(() => {
+    const getCount = async () => {
+      try {
+        const res = await fetchVerifiedMentorsCount();
+        if (res.data && typeof res.data.count === 'number') {
+          setVerifiedCount(res.data.count);
+        }
+      } catch (err) {
+        console.error('Failed to fetch verified mentors count:', err);
+      }
+    };
+    getCount();
+  }, []);
+
+  const formatCount = (count) => {
+    if (count === null || count === undefined) return '...';
+    if (count >= 1000) {
+      return `+${(count / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+    }
+    return `+${count}`;
+  };
+
+  const formatLabel = (count) => {
+    if (count === null || count === undefined) return 'Join verified mentors';
+    return `Join ${count.toLocaleString()}${count > 1 ? '+' : ''} verified mentor${count !== 1 ? 's' : ''}`;
+  };
 
   // Sync cooldown with actual Last_Attempt from backend
   useEffect(() => {
@@ -220,9 +249,9 @@ export default function VerificationSuccess() {
                 <div className="community-avatars">
                   <div className="community-avatar c1" />
                   <div className="community-avatar c2" />
-                  <span className="community-plus">+12k</span>
+                  <span className="community-plus">{formatCount(verifiedCount)}</span>
                 </div>
-                <span className="community-label">Join 12,000+ verified mentors</span>
+                <span className="community-label">{formatLabel(verifiedCount)}</span>
               </div>
             </div>
           </div>
