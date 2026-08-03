@@ -42,6 +42,9 @@ export function AuthProvider({ children }) {
     setUser(userData);
     localStorage.setItem('educonnect_user', JSON.stringify(userData));
     localStorage.setItem('token', token);
+    setMode('learner');
+    localStorage.setItem('educonnect_mode', 'learner');
+    localStorage.setItem('activeRole', 'learner');
   };
 
   // Logout 
@@ -50,6 +53,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('educonnect_user');
     localStorage.removeItem('token');
     localStorage.removeItem('educonnect_mode');
+    localStorage.removeItem('activeRole');
   };
 
   // Toggle mentor/learner mode 
@@ -57,6 +61,7 @@ export function AuthProvider({ children }) {
     const newMode = mode === 'mentor' ? 'learner' : 'mentor';
     setMode(newMode);
     localStorage.setItem('educonnect_mode', newMode);
+    localStorage.setItem('activeRole', newMode);
   };
 
   //Update skill coins balance 
@@ -85,7 +90,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, mode, loading, login, logout, toggleMode, updateSkillCoins, syncWalletBalance, setUser }}
+      value={{ user, mode, setMode, loading, login, logout, toggleMode, updateSkillCoins, syncWalletBalance, setUser }}
     >
       {children}
     </AuthContext.Provider>

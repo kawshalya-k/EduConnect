@@ -34,13 +34,15 @@ export default function DashboardSidebar({ user }) {
         const response = await API.get(`/wallet/${mentorId}/transactions`);
         const data = response.data;
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date();
+        const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
         const todayEarnings = (data.transactions || data).reduce((sum, txn) => {
           const rawDate = txn.created_at || txn.date || txn.createdAt || txn.timestamp;
           if (!rawDate) return sum;
-          const txnDate = new Date(rawDate).toISOString().split('T')[0];
-          const isToday = txnDate === today;
+          const d = new Date(rawDate);
+          const txnDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const isToday = txnDateStr === todayDateStr;
           const typeLower = (txn.type || '').toLowerCase();
           const isCredit = typeLower === 'credit' || typeLower === 'earning' || txn.amount > 0;
           return isToday && isCredit ? sum + (txn.amount || 0) : sum;
