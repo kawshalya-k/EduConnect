@@ -21,7 +21,7 @@ const NAV_LINKS = {
 const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { user } = useAuth();
+  const { user, mode } = useAuth();
 
   // Determine role reactively based on persistent storage
   const [role, setRole] = useState(() => {
@@ -30,15 +30,15 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
     return currentPath.startsWith('/mentor') ? 'mentor' : 'learner';
   });
 
-  // Re-evaluate whenever the route changes (e.g. going from dashboard to messages)
+  // Re-evaluate whenever the route changes or mode changes
   useEffect(() => {
     const savedRole = localStorage.getItem('activeRole');
     if (savedRole) {
       setRole(savedRole);
     } else {
-      setRole(currentPath.startsWith('/mentor') ? 'mentor' : 'learner');
+      setRole(mode || (currentPath.startsWith('/mentor') ? 'mentor' : 'learner'));
     }
-  }, [currentPath]);
+  }, [currentPath, mode]);
 
   const links = NAV_LINKS[role] || NAV_LINKS.learner;
 
