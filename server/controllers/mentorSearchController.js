@@ -250,58 +250,21 @@ exports.aiSearchMentors = async (req, res) => {
 exports.getRecommendedMentors = async (req, res) => {
   const userId = req.user.id;
   try {
-    const { embedText } = require('../config/gemini');
-    const pineconeIndex = require('../config/pinecone');
+    const { recommendMentorsAI } = require('../config/gemini');
 
-    // 1. Fetch skills the learner wants to learn
+    // 1. Fetch skills the learner wants to learn (wishlist)
     const [learnSkills] = await db.query(
-      `SELECT s.Skill_Name 
+      `SELECT s.Skill_Id, s.Skill_Name, s.Category 
        FROM User_Skill us 
        JOIN Skill s ON s.Skill_Id = us.Skill_Id 
        WHERE us.User_Id = ? AND us.Role = 'Learner'`,
       [userId]
     );
 
-    let queryText = 'highly rated student mentors';
-    if (learnSkills.length > 0) {
-      const list = learnSkills.map(s => s.Skill_Name).join(', ');
-      queryText = `learner interested in learning: ${list}`;
-    }
-
-    // 2. Generate embedding for query
-    const queryVector = await embedText(queryText);
-
-    // 3. Query Pinecone for top 4 matches
-    const results = await pineconeIndex.query({
-      vector: queryVector,
-      topK: 4,
-      includeMetadata: true
-    });
-
-    let matches = results.matches || [];
-
-    // Fallback if empty and mock mode
-    if (matches.length === 0 && !process.env.PINECONE_API_KEY) {
-      const [allVerified] = await db.query(
-        `SELECT us.User_Id, us.Skill_Id 
-         FROM User_Skill us 
-         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified') 
-         LIMIT 4`
-      );
-      matches = allVerified.map(row => ({
-        score: 0.8,
-        metadata: { userId: row.User_Id, skillId: row.Skill_Id }
-      }));
-    }
-
-    const mentorIds = matches.map(m => m.metadata.userId);
-    if (mentorIds.length === 0) return res.json([]);
-
-    // Fetch full data
-    const placeholders = mentorIds.map(() => '?').join(',');
-    const [mentors] = await db.query(
-      `SELECT DISTINCT u.User_Id as id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar as avatar,
-              s.Skill_Name, s.Category, us.Mentor_Level as level,
+    // 2. Fetch all active, verified mentors from MySQL
+    const [allMentors] = await db.query(
+      `SELECT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar as avatar,
+              s.Skill_Name, s.Category, us.Mentor_Level,
               COALESCE(ld.Average_Rating, 5.0) AS rating,
               COALESCE(ld.Total_Sessions, 0) AS reviews,
               '100 Skill Coins' as price
@@ -309,29 +272,77 @@ exports.getRecommendedMentors = async (req, res) => {
        JOIN User_Skill us ON us.User_Id = u.User_Id
        JOIN Skill s ON s.Skill_Id = us.Skill_Id
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
-       WHERE u.User_Id IN (${placeholders}) AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
-      mentorIds
+       WHERE us.Role = 'Mentor' 
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')
+         AND u.Status = 'Active'
+         AND u.User_Id != ?`,
+      [userId]
     );
 
-    // Format fields to match frontend expectations (RecommendedMentorCard / MentorCard)
-    const formatted = mentors.map(row => ({
-      id: row.id,
-      name: `${row.First_Name} ${row.Last_Name}`,
-      avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
-      level: row.level || 'Bronze',
-      role: row.Bio || 'Mentor',
-      rating: Number(row.rating).toFixed(1),
-      reviews: row.reviews,
-      price: row.price,
-      skills: [row.Skill_Name]
-    }));
+    // Group mentors by User_Id to combine multiple skills and avoid duplicate rows
+    const mentorsMap = {};
+    for (const row of allMentors) {
+      if (!mentorsMap[row.User_Id]) {
+        mentorsMap[row.User_Id] = {
+          userId: row.User_Id,
+          name: `${row.First_Name} ${row.Last_Name}`,
+          firstName: row.First_Name,
+          lastName: row.Last_Name,
+          avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
+          mentorLevel: row.Mentor_Level || 'Bronze',
+          title: row.Bio || 'Mentor',
+          university: row.University,
+          rating: Number(row.rating).toFixed(1),
+          reviews: row.reviews,
+          price: row.price,
+          skills: []
+        };
+      }
+      if (row.Skill_Name && !mentorsMap[row.User_Id].skills.includes(row.Skill_Name)) {
+        mentorsMap[row.User_Id].skills.push(row.Skill_Name);
+      }
+    }
+    const mentorsList = Object.values(mentorsMap);
 
-    // Order to match Pinecone relevance
-    const ordered = mentorIds
-      .map(id => formatted.find(m => m.id === id))
-      .filter(Boolean);
+    let recommendedIds = null;
+    if (process.env.GEMINI_API_KEY) {
+      // Pass the wishlist and mentorsList to Gemini for generative matching
+      recommendedIds = await recommendMentorsAI(learnSkills, mentorsList);
+    }
 
-    res.json(ordered);
+    let ordered = [];
+    if (recommendedIds && recommendedIds.length > 0) {
+      ordered = recommendedIds
+        .map(id => mentorsMap[id])
+        .filter(Boolean);
+    }
+
+    // Fallback: If Gemini is not set up or returned no matches, run smart database wishlist-matching
+    if (ordered.length === 0) {
+      console.log('[AI Recommendation] Gemini returned no matches or is not set up. Using database matching fallback.');
+      
+      let allVerified = [];
+      if (learnSkills.length > 0) {
+        const skillNames = learnSkills.map(s => s.Skill_Name.toLowerCase());
+        // Find mentors teaching any of these wishlist skills
+        allVerified = mentorsList.filter(m => 
+          m.skills.some(s => skillNames.includes(s.toLowerCase()))
+        ).slice(0, 4);
+      }
+
+      // If fewer than 4 matches, fill with other mentors
+      if (allVerified.length < 4) {
+        const existingIds = allVerified.map(m => m.userId);
+        const remaining = mentorsList
+          .filter(m => !existingIds.includes(m.userId))
+          .slice(0, 4 - allVerified.length);
+        allVerified.push(...remaining);
+      }
+      
+      ordered = allVerified;
+    }
+
+    res.json({ mentors: ordered });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
