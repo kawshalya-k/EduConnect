@@ -24,3 +24,7 @@ export const getSessionById = async (sessionId) => {
   const res = await axiosInstance.get(`/sessions/${sessionId}`);
   return res.data;
 };
+export const rateSession = async (sessionId, rating, feedback) => {
+  const res = await axiosInstance.post(`/sessions/${sessionId}/rate`, { rating, feedback });
+  return res.data;
+};
