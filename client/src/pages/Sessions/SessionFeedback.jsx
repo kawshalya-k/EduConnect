@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
 import axiosInstance from '../../services/axiosConfig';
+import { rateSession } from '../../services/sessionService';
 
 const tags = [
   "Clear Communication",
