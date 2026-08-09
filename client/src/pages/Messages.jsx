@@ -140,7 +140,7 @@ const Messages = () => {
         >
           {/* Header */}
           <div className="px-5 pt-5 pb-3 border-b border-slate-100 flex-shrink-0">
-            <h2 className="font-['Lexend'] font-bold text-lg text-[#0F172A]">Messages</h2>
+            <h2 className="font-sans font-bold text-lg text-[#0F172A]">Messages</h2>
             <p className="text-xs text-slate-400 mt-0.5">
               {unreadCount > 0 ? `${unreadCount} unread` : 'No unread messages'}
             </p>
@@ -193,7 +193,7 @@ const Messages = () => {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-['Lexend'] font-semibold text-sm text-[#0F172A] truncate">{c.name}</span>
+                      <span className="font-sans font-semibold text-sm text-[#0F172A] truncate">{c.name}</span>
                       {c.lastTime && (
                         <span className="text-[10px] text-slate-400 flex-shrink-0">{c.lastTime}</span>
                       )}
@@ -248,7 +248,7 @@ const Messages = () => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-['Lexend'] font-semibold text-sm text-[#0F172A]">{activeContact.name}</p>
+                  <p className="font-sans font-semibold text-sm text-[#0F172A]">{activeContact.name}</p>
                   {activeContact.role && (
                     <p className="text-xs text-slate-400 mt-0.5">{activeContact.role}</p>
                   )}

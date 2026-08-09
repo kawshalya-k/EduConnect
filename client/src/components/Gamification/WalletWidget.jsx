@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getWalletBalance } from '../../services/walletService';
 
 const WalletWidget = () => {
-  const { user } = useAuth();
+  const { user, syncWalletBalance } = useAuth();
   const [balance, setBalance] = useState(null);
 
   useEffect(() => {
@@ -13,6 +13,7 @@ const WalletWidget = () => {
         const data = await getWalletBalance(user.id);
         if (data.success) {
           setBalance(data.balance);
+          syncWalletBalance(data.balance);
         }
       } catch (err) {
         console.error('Failed to load wallet balance', err);
@@ -33,7 +34,7 @@ const WalletWidget = () => {
         </svg>
       </div>
       <div className="flex flex-col items-start h-5">
-        <span className="font-['Lexend'] font-bold text-sm leading-5 flex items-center text-[#10B981]">
+        <span className="font-sans font-bold text-sm leading-5 flex items-center text-[#10B981]">
           {balance != null ? balance.toLocaleString() : '100'} Skill Coins
         </span>
       </div>

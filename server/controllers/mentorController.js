@@ -126,6 +126,53 @@ exports.getPublicProfile = async (req, res) => {
       [mentorId]
     );
 
+    // Fetch sessions stats
+    const [statsRows] = await db.query(
+      `SELECT 
+         COALESCE(AVG(Rating), 0) as avgRating,
+         COUNT(Session_Id) as sessionsTaught
+       FROM Session
+       WHERE Mentor_Id = ? AND Status = 'Completed'`,
+      [mentorId]
+    );
+    const avgRating = Number(statsRows[0].avgRating || 0);
+    const sessionsTaught = Number(statsRows[0].sessionsTaught || 0);
+
+    // Fetch levelling data
+    const [levellingRows] = await db.query(
+      `SELECT 
+         COALESCE(SUM(Score), 0) as totalScore,
+         MAX(Mentor_Level) as maxLevel
+       FROM Levelling_Data 
+       WHERE Mentor_Id = ?`,
+      [mentorId]
+    );
+    const totalXP = Number(levellingRows[0].totalScore || 0);
+    const dbLevel = (levellingRows[0].maxLevel || 'BRONZE').toUpperCase();
+
+    let calculatedLevel = dbLevel === 'GOLD' || dbLevel === 'SILVER' || dbLevel === 'BRONZE' ? dbLevel : 'BRONZE';
+    let currentXP = totalXP;
+    let nextLevelXP = 200;
+    let levelProgress = 70;
+
+    if (calculatedLevel === 'GOLD') {
+      currentXP = totalXP;
+      nextLevelXP = 1000;
+      levelProgress = Math.min(100, Math.round((totalXP / 1000) * 100)) || 100;
+    } else if (calculatedLevel === 'SILVER') {
+      currentXP = totalXP >= 200 ? totalXP - 200 : totalXP;
+      nextLevelXP = 500;
+      levelProgress = Math.min(100, Math.round((currentXP / 300) * 100)) || 50;
+    } else {
+      currentXP = totalXP;
+      nextLevelXP = 200;
+      levelProgress = Math.min(100, Math.round((totalXP / 200) * 100)) || 20;
+    }
+
+    const memberSinceDate = userRows[0].Created_At
+      ? new Date(userRows[0].Created_At).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      : 'Oct 2023';
+
     const mentorData = {
       id: userRows[0].User_Id,
       userId: userRows[0].User_Id,
@@ -136,7 +183,13 @@ exports.getPublicProfile = async (req, res) => {
       bio: userRows[0].Bio || '',
       title: userRows[0].Bio || 'Expert Mentor',
       avatar: userRows[0].Avatar,
-      level: skills.length > 0 ? (skills[0].Mentor_Level ? skills[0].Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE') : 'BRONZE',
+      level: calculatedLevel,
+      levelProgress: levelProgress,
+      currentXP: currentXP,
+      nextLevelXP: nextLevelXP,
+      sessionsTaught: sessionsTaught,
+      rating: avgRating > 0 ? avgRating : 5.0,
+      memberSince: memberSinceDate,
       verified: true,
       skills: skills.map(s => ({
         id: s.Skill_Id,
@@ -236,8 +289,8 @@ exports.verifySkill = async (req, res) => {
 
     let userSkill = existing.length > 0 ? existing[0] : null;
 
-    // Cooldown check (4 hours)
-    if (userSkill && userSkill.Last_Attempt) {
+    // Cooldown check (4 hours) - only if they are not actively testing
+    if (userSkill && userSkill.Verification_Status !== 'Testing' && userSkill.Last_Attempt) {
       const lastAttempt = new Date(userSkill.Last_Attempt);
       const now = new Date();
       const diffMs = now - lastAttempt;
@@ -429,7 +482,7 @@ exports.startQuiz = async (req, res) => {
         }
         // Cooldown inactive, allowed to start quiz again (upgrade)
         await db.query(
-          "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+          "UPDATE User_Skill SET Role = 'Mentor', Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
           [userSkill.User_Skill_Id]
         );
         return res.status(200).json({ message: 'Quiz started for upgrade.', quizTimeLeft: 600 });
@@ -486,7 +539,7 @@ exports.startQuiz = async (req, res) => {
         }
         // Cooldown passed, update status to 'Testing'
         await db.query(
-          "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+          "UPDATE User_Skill SET Role = 'Mentor', Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
           [userSkill.User_Skill_Id]
         );
         return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });
@@ -494,7 +547,7 @@ exports.startQuiz = async (req, res) => {
 
       // Default (e.g. Draft)
       await db.query(
-        "UPDATE User_Skill SET Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
+        "UPDATE User_Skill SET Role = 'Mentor', Verification_Status = 'Testing', Last_Attempt = NOW(), Certificates = NULL, Mentor_Level = NULL WHERE User_Skill_Id = ?",
         [userSkill.User_Skill_Id]
       );
       return res.status(200).json({ message: 'Quiz started.', quizTimeLeft: 600 });

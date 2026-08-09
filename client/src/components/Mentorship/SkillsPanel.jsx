@@ -20,7 +20,7 @@ export default function SkillsWidget({ skills = [], loading = false }) {
         <div className="skills-list">
           {skills.map((skill) => (
             <Link
-              to="/verification?view=all"
+              to={`/verification/skill/${skill.id}/start`}
               key={skill.id}
               className="skill-item"
             >
@@ -36,11 +36,19 @@ export default function SkillsWidget({ skills = [], loading = false }) {
               <div className="skill-item-info">
                 <p className="skill-item-name">{skill.name}</p>
                 <p className="skill-item-level">
-                  {skill.level} • {skill.endorsements} Endorsements
+                  {skill.verified ? (
+                    `${skill.level} • ${skill.endorsements} Endorsements`
+                  ) : (
+                    'Not Verified Yet'
+                  )}
                 </p>
               </div>
-              {skill.verified && (
+              {skill.verified ? (
                 <FiCheckCircle size={16} className="skill-verified-icon" />
+              ) : (
+                <span className={`skill-status-badge ${(skill.status || 'draft').toLowerCase()}`}>
+                  {skill.status === 'Testing' ? 'Testing' : skill.status === 'Rejected' ? 'Cooldown' : 'Unverified'}
+                </span>
               )}
             </Link>
           ))}

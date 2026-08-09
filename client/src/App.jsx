@@ -52,7 +52,7 @@ import Messages    from './pages/Messages';
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
-    return <div className="min-h-screen bg-[#F6F8F7] flex items-center justify-center font-['Inter']">Loading...</div>;
+    return <div className="min-h-screen bg-[#F6F8F7] flex items-center justify-center font-sans">Loading...</div>;
   }
   if (!user) {
     return <Navigate to="/login" replace />;

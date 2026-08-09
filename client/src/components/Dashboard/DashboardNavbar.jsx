@@ -21,7 +21,7 @@ const NAV_LINKS = {
 const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { user } = useAuth();
+  const { user, mode } = useAuth();
 
   // Determine role reactively based on persistent storage
   const [role, setRole] = useState(() => {
@@ -30,15 +30,15 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
     return currentPath.startsWith('/mentor') ? 'mentor' : 'learner';
   });
 
-  // Re-evaluate whenever the route changes (e.g. going from dashboard to messages)
+  // Re-evaluate whenever the route changes or mode changes
   useEffect(() => {
     const savedRole = localStorage.getItem('activeRole');
     if (savedRole) {
       setRole(savedRole);
     } else {
-      setRole(currentPath.startsWith('/mentor') ? 'mentor' : 'learner');
+      setRole(mode || (currentPath.startsWith('/mentor') ? 'mentor' : 'learner'));
     }
-  }, [currentPath]);
+  }, [currentPath, mode]);
 
   const links = NAV_LINKS[role] || NAV_LINKS.learner;
 
@@ -52,7 +52,7 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
         {/* Logo */}
         <Link to="/" className="flex flex-row items-center gap-[7px] w-[127px] h-[26px]">
           <img src={logo} alt="EduConnect Logo" className="w-[26px] h-[26px]" />
-          <span className="font-['Lexend'] font-bold text-base leading-7 flex items-center tracking-[-0.5px] text-[#0F172A]">
+          <span className="font-sans font-bold text-base leading-7 flex items-center tracking-[-0.5px] text-[#0F172A]">
             EduConnect
           </span>
         </Link>
@@ -72,7 +72,7 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
                         to={to}
                         className={`flex flex-col items-start pb-1 ${active ? 'border-b-2 border-[#10B981]' : ''}`}
                       >
-                        <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${active ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+                        <span className={`font-sans font-medium text-sm leading-5 flex items-center ${active ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
                           {label}
                         </span>
                       </Link>
@@ -116,7 +116,7 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
                   to="/discovery"
                   className={`flex flex-col items-start pb-1 ${currentPath === '/discovery' ? 'border-b-2 border-[#10B981]' : ''}`}
                 >
-                  <span className={`font-['Lexend'] font-medium text-sm leading-5 flex items-center ${currentPath === '/discovery' ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+                  <span className={`font-sans font-medium text-sm leading-5 flex items-center ${currentPath === '/discovery' ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
                     Explore Mentors
                   </span>
                 </Link>

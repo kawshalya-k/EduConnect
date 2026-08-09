@@ -24,8 +24,8 @@ const mentorSearchRoutes = require('./routes/mentorSearchRoutes');
 // ── API Routes ──
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/mentors', mentorRoutes);
 app.use('/api/mentors', mentorSearchRoutes);
+app.use('/api/mentors', mentorRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -65,7 +65,7 @@ app.get('/_routes', (req, res) => {
     if (middleware.route) {
       // routes registered directly on the app
       routes.push(middleware.route.path);
-    } else if (middleware.name === 'router') {
+    } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
       middleware.handle.stack.forEach((handler) => {
         const route = handler.route && handler.route.path;
         if (route) routes.push(route);
@@ -82,7 +82,7 @@ setTimeout(() => {
     app._router.stack.forEach((middleware) => {
       if (middleware.route) {
         registered.push(middleware.route.path);
-      } else if (middleware.name === 'router') {
+      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
         middleware.handle.stack.forEach((handler) => {
           const route = handler.route && handler.route.path;
           if (route) registered.push(route);
