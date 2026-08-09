@@ -20,9 +20,9 @@ export default function SessionBooking() {
   const [topicId, setTopicId] = useState('');
   const [topicName, setTopicName] = useState('');
   
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(stateData.date || "");
   const [slots, setSlots] = useState([]);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(stateData.time || "");
   const [message, setMessage] = useState("");
   
   const [loading, setLoading] = useState(false);
@@ -78,7 +78,9 @@ export default function SessionBooking() {
         
         // Auto-select first available slot if any
         const firstAvailable = fetchedSlots.find(s => s.available);
-        if (firstAvailable) {
+        if (stateData.time && fetchedSlots.some(s => s.value === stateData.time && s.available)) {
+          setSelectedTimeSlot(stateData.time);
+        } else if (firstAvailable) {
           setSelectedTimeSlot(firstAvailable.value);
         } else {
           setSelectedTimeSlot("");
@@ -88,7 +90,7 @@ export default function SessionBooking() {
       }
     };
     fetchSlots();
-  }, [date, mentorId]);
+  }, [date, mentorId, stateData.time]);
 
   const handleBookClick = (e) => {
     e.preventDefault();
