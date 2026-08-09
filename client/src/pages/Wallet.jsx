@@ -6,11 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import { getWalletBalance, getWalletTransactions } from '../services/walletService';
 
 export default function Wallet() {
-  const { user } = useAuth();
+  const { user, syncWalletBalance } = useAuth();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const displayBalance = user?.skillCoins ?? user?.coins ?? balance;
 
   useEffect(() => {
     const loadWalletData = async () => {
@@ -24,6 +26,7 @@ export default function Wallet() {
 
         if (balanceData.success) {
           setBalance(balanceData.balance);
+          syncWalletBalance(balanceData.balance);
         }
 
         if (transactionsData.success) {
@@ -44,7 +47,7 @@ export default function Wallet() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
         <DashboardNavbar />
         <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
           <div className="animate-pulse space-y-4">
@@ -60,7 +63,7 @@ export default function Wallet() {
 
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+      <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
         <DashboardNavbar />
         <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
           <div className="text-red-500 text-center">{error}</div>
@@ -71,7 +74,7 @@ export default function Wallet() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-['Inter']">
+    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
       <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
@@ -95,7 +98,7 @@ export default function Wallet() {
 
           <div className="bg-gradient-to-r from-[#10B77F] to-[#10B981] text-white rounded-[24px] py-6 pl-6 pr-12 min-w-[200px] shadow-lg">
             <p className="text-white/80 font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">Current Balance</p>
-            <p className="font-bold text-[36px] leading-[40px]">{balance.toLocaleString()}</p>
+            <p className="font-bold text-[36px] leading-[40px]">{displayBalance.toLocaleString()}</p>
           </div>
         </div>
 

@@ -42,6 +42,9 @@ export function AuthProvider({ children }) {
     setUser(userData);
     localStorage.setItem('educonnect_user', JSON.stringify(userData));
     localStorage.setItem('token', token);
+    setMode('learner');
+    localStorage.setItem('educonnect_mode', 'learner');
+    localStorage.setItem('activeRole', 'learner');
   };
 
   // Logout 
@@ -50,6 +53,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('educonnect_user');
     localStorage.removeItem('token');
     localStorage.removeItem('educonnect_mode');
+    localStorage.removeItem('activeRole');
   };
 
   // Toggle mentor/learner mode 
@@ -57,12 +61,28 @@ export function AuthProvider({ children }) {
     const newMode = mode === 'mentor' ? 'learner' : 'mentor';
     setMode(newMode);
     localStorage.setItem('educonnect_mode', newMode);
+    localStorage.setItem('activeRole', newMode);
   };
 
   //Update skill coins balance 
   const updateSkillCoins = (amount) => {
     setUser((prev) => {
-      const updated = { ...prev, skillCoins: prev.skillCoins + amount };
+      if (!prev) return null;
+      const currentCoins = prev.skillCoins ?? prev.coins ?? 0;
+      const newBalance = currentCoins + amount;
+      const updated = { ...prev, skillCoins: newBalance, coins: newBalance };
+      localStorage.setItem('educonnect_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  //Synchronize real-time balance
+  const syncWalletBalance = (balance) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const parsedBalance = Number(balance) || 0;
+      if (prev.skillCoins === parsedBalance && prev.coins === parsedBalance) return prev;
+      const updated = { ...prev, skillCoins: parsedBalance, coins: parsedBalance };
       localStorage.setItem('educonnect_user', JSON.stringify(updated));
       return updated;
     });
@@ -70,7 +90,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, mode, loading, login, logout, toggleMode, updateSkillCoins, setUser }}
+      value={{ user, mode, setMode, loading, login, logout, toggleMode, updateSkillCoins, syncWalletBalance, setUser }}
     >
       {children}
     </AuthContext.Provider>

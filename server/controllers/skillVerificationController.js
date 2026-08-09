@@ -149,10 +149,10 @@ exports.addSkill = async (req, res) => {
             });
         }
 
-        // Insert into User_Skill as Student (unverified Draft)
+        // Insert into User_Skill as Mentor (unverified Draft)
         await db.query(
             `INSERT INTO User_Skill (User_Id, Skill_Id, Role, Verification_Status)
-             VALUES (?, ?, 'Student', 'Draft')`,
+             VALUES (?, ?, 'Mentor', 'Draft')`,
             [userId, skill_id]
         );
 

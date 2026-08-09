@@ -18,7 +18,7 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
     <div className={`w-5 h-5 flex items-center justify-center ${active ? 'text-white' : 'text-[#475569]'}`}>
       {icon}
     </div>
-    <span className={`font-['Inter'] font-medium text-sm leading-5 ${active ? 'text-white' : 'text-[#475569]'}`}>
+    <span className={`font-sans font-medium text-sm leading-5 ${active ? 'text-white' : 'text-[#475569]'}`}>
       {label}
     </span>
   </div>
@@ -73,11 +73,11 @@ export default function MySessions() {
       <div className="flex flex-col items-start w-full max-w-[1280px] mx-auto z-0 flex-1">
         {/* Breadcrumbs */}
         <div className="flex flex-row items-center pt-[30px] pb-[10px] pl-[80px] gap-2 w-full h-[60px]">
-          <span className="font-['Lexend'] font-normal text-sm leading-5 text-[#64748B]">Dashboard</span>
+          <span className="font-sans font-normal text-sm leading-5 text-[#64748B]">Dashboard</span>
           <svg viewBox="0 0 4 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[3.7px] h-1.5 text-[#64748B]">
             <path d="M1 1L3 3L1 5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="font-['Lexend'] font-medium text-sm leading-5 text-[#0F172A]">My Sessions</span>
+          <span className="font-sans font-medium text-sm leading-5 text-[#0F172A]">My Sessions</span>
         </div>
 
         {/* Content Container */}
@@ -117,8 +117,8 @@ export default function MySessions() {
           <main className="flex flex-col items-start p-8 gap-8 w-full max-w-[1024px]">
             {/* Title & Desc */}
             <div className="flex flex-col items-start gap-2 w-full max-w-[960px]">
-              <h1 className="font-['Inter'] font-bold text-[30px] leading-9 text-[#0F172A]">My Sessions</h1>
-              <p className="font-['Inter'] font-normal text-base text-[#64748B]">Manage your learning journey and upcoming meetings.</p>
+              <h1 className="font-sans font-bold text-[30px] leading-9 text-[#0F172A]">My Sessions</h1>
+              <p className="font-sans font-normal text-base text-[#64748B]">Manage your learning journey and upcoming meetings.</p>
             </div>
 
             {/* Tabs */}
@@ -127,13 +127,13 @@ export default function MySessions() {
                 className={`box-border flex flex-col justify-center items-center py-4 px-8 h-[54px] transition-colors ${activeTab === 'upcoming' ? 'border-b-2 border-[#10B77F] text-[#10B77F]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
                 onClick={() => setActiveTab('upcoming')}
               >
-                <span className="font-['Inter'] font-bold text-sm leading-5 text-center">Upcoming Sessions</span>
+                <span className="font-sans font-bold text-sm leading-5 text-center">Upcoming Sessions</span>
               </button>
               <button
                 className={`box-border flex flex-col justify-center items-center py-4 px-8 h-[54px] transition-colors ${activeTab === 'past' ? 'border-b-2 border-[#10B77F] text-[#10B77F]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
                 onClick={() => setActiveTab('past')}
               >
-                <span className="font-['Inter'] font-bold text-sm leading-5 text-center">Past Sessions</span>
+                <span className="font-sans font-bold text-sm leading-5 text-center">Past Sessions</span>
               </button>
             </div>
 

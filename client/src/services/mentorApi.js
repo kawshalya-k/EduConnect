@@ -100,6 +100,9 @@ export const aiMentorSearch = (query) =>
 export const fetchCategories = () =>
   API.get('/mentors/skills/categories');
 
+export const fetchVerifiedMentorsCount = () =>
+  API.get('/mentors/verified-count');
+
 // ─── Mode Toggle ─────────────────────────────────────────────
 export const updateUserMode = (userId, mode) =>
   API.patch(`/users/${userId}/mode`, { mode });

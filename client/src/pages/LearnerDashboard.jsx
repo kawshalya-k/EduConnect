@@ -16,19 +16,24 @@ const LearnerDashboard = () => {
   const [walletBalance, setWalletBalance] = useState(null);
   const [upcomingSession, setUpcomingSession] = useState(null);
   const [progressError, setProgressError] = useState('');
-  const { user } = useAuth();
+  const { user, syncWalletBalance } = useAuth();
 
   useEffect(() => {
     const loadWallet = async () => {
       if (!user?.id) return;
       try {
         const { balance, success } = await (await import('../services/walletService')).getWalletBalance(user.id);
-        if (success) setWalletBalance(balance ?? 0);
+        if (success) {
+          setWalletBalance(balance ?? 0);
+          syncWalletBalance(balance ?? 0);
+        }
       } catch (e) {
         console.error('Failed to load wallet balance', e);
       }
     };
     loadWallet();
+    const interval = setInterval(loadWallet, 30000); // Poll wallet balance every 30s
+    return () => clearInterval(interval);
   }, [user?.id]);
 
   useEffect(() => {
@@ -201,7 +206,7 @@ const LearnerDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-['Inter']">
+    <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
       <main className="flex flex-col items-center pt-8 pb-[293px] px-8 w-full max-w-[1280px] mx-auto z-0">
@@ -222,7 +227,7 @@ const LearnerDashboard = () => {
               <div className="flex flex-col items-start h-[82px]">
                 <div className="flex flex-col items-start h-[38px]">
                   <span className="font-bold text-[30px] leading-[38px] flex items-center text-[#0F172A]">
-                    {walletBalance != null ? Number(walletBalance).toLocaleString() : (user?.skillCoins?.toLocaleString() ?? '1,250')}
+                    {(user?.skillCoins ?? user?.coins ?? walletBalance ?? 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex flex-col items-start h-6">

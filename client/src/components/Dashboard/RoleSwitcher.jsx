@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 const RoleSwitcher = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, setUser, mode, setMode } = useAuth();
 
   // Initialize role from localStorage, defaulting based on current path if empty
   const [currentRole, setCurrentRole] = useState(() => {
@@ -19,18 +20,25 @@ const RoleSwitcher = () => {
     if (location.pathname === '/mentor-dashboard') {
       setCurrentRole('mentor');
       localStorage.setItem('activeRole', 'mentor');
-    } else if (location.pathname === '/learner-dashboard' || location.pathname === '/dashboard') {
+      if (setMode) setMode('mentor');
+    } else if (location.pathname === '/learner-dashboard') {
       setCurrentRole('learner');
       localStorage.setItem('activeRole', 'learner');
+      if (setMode) setMode('learner');
+    } else if (location.pathname === '/dashboard') {
+      const currentMode = mode || 'learner';
+      setCurrentRole(currentMode);
+      localStorage.setItem('activeRole', currentMode);
     }
-  }, [location.pathname]);
-
-  const { user, setUser } = useAuth();
+  }, [location.pathname, mode, setMode]);
 
   const handleRoleChange = async (role) => {
     setCurrentRole(role);
     localStorage.setItem('activeRole', role);
     localStorage.setItem('educonnect_mode', role);
+    if (setMode) {
+      setMode(role);
+    }
 
     // Update backend user role if logged in
     if (user && user.id) {
@@ -55,7 +63,7 @@ const RoleSwitcher = () => {
     <div className="flex flex-row items-center p-1 gap-2 bg-[#F1F5F9] rounded-lg h-9">
       <button
         onClick={() => handleRoleChange('mentor')}
-        className={`flex flex-col justify-center items-center py-1.5 px-3 rounded-md font-['Inter'] font-semibold text-xs leading-4 transition-colors
+        className={`flex flex-col justify-center items-center py-1.5 px-3 rounded-md font-sans font-semibold text-xs leading-4 transition-colors
           ${currentRole === 'mentor'
             ? 'bg-[#10B981] shadow-sm text-white hover:bg-[#059669]'
             : 'text-[#64748B] hover:bg-slate-200'
@@ -65,7 +73,7 @@ const RoleSwitcher = () => {
       </button>
       <button
         onClick={() => handleRoleChange('learner')}
-        className={`flex flex-row justify-center items-center py-1.5 px-[11px] rounded-md font-['Inter'] font-semibold text-xs leading-4 transition-colors
+        className={`flex flex-row justify-center items-center py-1.5 px-[11px] rounded-md font-sans font-semibold text-xs leading-4 transition-colors
           ${currentRole === 'learner'
             ? 'bg-[#10B981] shadow-sm text-white hover:bg-[#059669]'
             : 'text-[#64748B] hover:bg-slate-200'

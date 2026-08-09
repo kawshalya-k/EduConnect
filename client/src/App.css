@@ -44,7 +44,7 @@
   --bronze-bg: #fef3c7;
 
   /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --
 
   /* Spacing */
   --space-1: 4px;
@@ -85,7 +85,6 @@ html {
 }
 
 body {
-  font-family: var(--font-family);
   color: var(--gray-800);
   background-color: var(--gray-50);
   line-height: 1.5;
@@ -99,13 +98,11 @@ a {
 
 button {
   cursor: pointer;
-  font-family: var(--font-family);
   border: none;
   outline: none;
 }
 
 input, textarea, select {
-  font-family: var(--font-family);
   outline: none;
 }
 
