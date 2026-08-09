@@ -173,6 +173,15 @@ async function initDB() {
     }
 
     try {
+      await connection.query('ALTER TABLE User ADD COLUMN Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+      console.log('✅ Added Created_At column to User table.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('Error adding Created_At column to User:', e.message);
+      }
+    }
+
+    try {
       await connection.query("ALTER TABLE User_Skill MODIFY COLUMN Verification_Status VARCHAR(50) DEFAULT 'Pending'");
       console.log("✅ Modified Verification_Status column in User_Skill table to VARCHAR(50).");
     } catch (e) {
