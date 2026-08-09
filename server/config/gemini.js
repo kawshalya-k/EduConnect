@@ -34,7 +34,7 @@ ${JSON.stringify(mentorsList, null, 2)}
 
 Instructions:
 1. Analyze the learner's wishlist and match them with mentors who have relevant skills, experience, levels, and good ratings.
-2. Select the top 4 most relevant mentors. If there are fewer than 4 relevant mentors, select the best available ones.
+2. Select and rank all available mentors in order of relevance (best matches first).
 3. Return ONLY a JSON object containing an array of recommended mentor user IDs under the key "recommended_ids".
 4. Do NOT include any markdown code blocks, explanation, or conversational text. Return raw JSON text.
 

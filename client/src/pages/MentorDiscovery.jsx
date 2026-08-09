@@ -298,8 +298,9 @@ export default function MentorDiscovery() {
               <div className="mentors-grid">
                 {mentors.map((mentor) => (
                   <MentorCard
-                    key={mentor.id}
+                    key={mentor.id || mentor.userId || mentor.User_Id}
                     mentor={mentor}
+                    layout="grid"
                     onBooking={(m) => {
                       if (user) {
                         navigate('/session-booking', {
