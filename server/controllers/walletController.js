@@ -51,18 +51,18 @@ const getTransactions = async (req, res) => {
     const [transactions] = await db.query(
       `SELECT * FROM Wallet_Transaction 
        WHERE User_Id = ? 
-       ORDER BY Timestamp DESC 
+       ORDER BY created_at DESC 
        LIMIT ? OFFSET ?`,
       [userId, limit, offset]
     );
 
     const mapped = transactions.map(t => ({
-      transaction_id: t.Transaction_Id,
-      user_id: t.User_Id,
-      type: t.Transaction_Type,
-      amount: t.Amount,
-      created_at: t.Timestamp,
-      reason: t.Description
+      transaction_id: t.transaction_id,
+      user_id: t.user_id,
+      type: t.type,
+      amount: t.amount,
+      created_at: t.created_at,
+      reason: t.reason
     }));
 
     res.json({
