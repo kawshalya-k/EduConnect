@@ -2,10 +2,10 @@ require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  port: process.env.DB_PORT || 3306,
+  host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
+  user: process.env.DB_USER || process.env.MYSQLUSER || 'root',
+  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
+  port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -27,7 +27,7 @@ async function initDB() {
     });
 
     try {
-      await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'educonnect'}\``);
+      await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'}\``);
     } catch (e) {
       console.log('Skipping CREATE DATABASE (likely on a managed cloud DB like Railway without permissions):', e.message);
     }
@@ -35,7 +35,7 @@ async function initDB() {
 
     dbInstance = mysql.createPool({
       ...poolConfig,
-      database: process.env.DB_NAME || 'educonnect'
+      database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'
     });
 
     console.log('✅ EduConnect is successfully connected to the local MySQL Database!');
