@@ -126,16 +126,17 @@ startScheduler();
 // Only start server after DB is ready
 const db = require('./config/db');
 
-async function startServer() {
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+async function verifyDB() {
   try {
-    // Test DB connection first
     await db.query('SELECT 1');
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    console.log('Database connection verified.');
   } catch (err) {
-    console.error('Failed to start server:', err.message);
-    setTimeout(startServer, 1000); // retry after 1 second
+    console.error('Failed to verify DB connection:', err.message);
+    setTimeout(verifyDB, 5000);
   }
 }
 
-startServer();
+verifyDB();
