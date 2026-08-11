@@ -1,11 +1,17 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 
-const poolConfig = {
+const connectionUri = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
+const poolConfig = connectionUri ? { uri: connectionUri } : {
   host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
   user: process.env.DB_USER || process.env.MYSQLUSER || 'root',
   password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
   port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
+  database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'
+};
+
+const extraConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -19,24 +25,22 @@ let dbInstance = null;
 
 async function initDB() {
   try {
-    const initialConnection = await mysql.createConnection({
-      host: poolConfig.host,
-      user: poolConfig.user,
-      password: poolConfig.password,
-      port: poolConfig.port
-    });
+    const initialConnection = await mysql.createConnection(
+      connectionUri ? connectionUri : { ...poolConfig, ...extraConfig }
+    );
 
     try {
-      await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'}\``);
+      if (!connectionUri) {
+        await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'}\``);
+      }
     } catch (e) {
       console.log('Skipping CREATE DATABASE (likely on a managed cloud DB like Railway without permissions):', e.message);
     }
     await initialConnection.end();
 
-    dbInstance = mysql.createPool({
-      ...poolConfig,
-      database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'
-    });
+    dbInstance = connectionUri 
+      ? mysql.createPool(connectionUri)
+      : mysql.createPool({ ...poolConfig, ...extraConfig });
 
     console.log('✅ EduConnect is successfully connected to the local MySQL Database!');
 
