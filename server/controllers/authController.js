@@ -22,8 +22,8 @@ exports.register = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otp_expiry = new Date(Date.now() + 10 * 60000); 
         
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Hash the password (using 8 rounds instead of 10 for faster execution on low-resource cloud hosts)
+        const hashedPassword = await bcrypt.hash(password, 8);
 
         // Split full_name into First_Name and Last_Name
         const nameParts = full_name.trim().split(' ');
@@ -155,7 +155,7 @@ exports.resetPassword = async (req, res) => {
         }
 
         // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, 8);
 
         // Update DB and clear token
         await db.query(
@@ -184,7 +184,7 @@ exports.setupPassword = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
 
         // Hash new password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 8);
 
         // Update DB
         await db.query(
