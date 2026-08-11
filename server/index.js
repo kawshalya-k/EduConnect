@@ -105,7 +105,8 @@ async function startServer() {
   try {
     // Test DB connection first
     await db.query('SELECT 1');
-    app.listen(5000, () => console.log('Server running on port 5000'));
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
     console.error('Failed to start server:', err.message);
     setTimeout(startServer, 1000); // retry after 1 second
