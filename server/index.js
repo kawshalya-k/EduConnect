@@ -99,26 +99,6 @@ app.get('/_routes', (req, res) => {
   res.json({ routes });
 });
 
-// Print registered routes to console
-setTimeout(() => {
-  try {
-    const registered = [];
-    app._router.stack.forEach((middleware) => {
-      if (middleware.route) {
-        registered.push(middleware.route.path);
-      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
-        middleware.handle.stack.forEach((handler) => {
-          const route = handler.route && handler.route.path;
-          if (route) registered.push(route);
-        });
-      }
-    });
-    console.log('Registered routes:', registered);
-  } catch (e) {
-    console.error('Failed listing routes:', e.message);
-  }
-}, 1000);
-
 // ── Weekly Challenge Scheduler ──
 startScheduler();
 
@@ -126,7 +106,7 @@ startScheduler();
 const db = require('./config/db');
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
 
 async function verifyDB() {
   try {
