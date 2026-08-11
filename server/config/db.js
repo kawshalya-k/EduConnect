@@ -9,7 +9,8 @@ const poolConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  multipleStatements: true
+  multipleStatements: true,
+  connectTimeout: 5000
 };
 
 console.log('DB poolConfig preview:', { host: poolConfig.host, user: poolConfig.user, passwordPresent: Boolean(poolConfig.password), port: poolConfig.port });
@@ -25,7 +26,11 @@ async function initDB() {
       port: poolConfig.port
     });
 
-    await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'educonnect'}\``);
+    try {
+      await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'educonnect'}\``);
+    } catch (e) {
+      console.log('Skipping CREATE DATABASE (likely on a managed cloud DB like Railway without permissions):', e.message);
+    }
     await initialConnection.end();
 
     dbInstance = mysql.createPool({
@@ -242,18 +247,28 @@ async function initDB() {
   }
 }
 
-const dbPromise = initDB();
+let dbPromise = initDB();
 
 const db = {
   query: async (sql, params = []) => {
     await dbPromise;
-    if (!dbInstance) throw new Error('Database not initialized yet');
+    if (!dbInstance) {
+      console.log('Database not initialized, retrying...');
+      dbPromise = initDB();
+      await dbPromise;
+      if (!dbInstance) throw new Error('Database not initialized yet');
+    }
     const [rows, fields] = await dbInstance.query(sql, params);
     return [rows, fields];
   },
   getConnection: async () => {
     await dbPromise;
-    if (!dbInstance) throw new Error('Database not initialized yet');
+    if (!dbInstance) {
+      console.log('Database not initialized, retrying...');
+      dbPromise = initDB();
+      await dbPromise;
+      if (!dbInstance) throw new Error('Database not initialized yet');
+    }
     return dbInstance.getConnection();
   }
 };
