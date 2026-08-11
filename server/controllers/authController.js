@@ -34,8 +34,8 @@ exports.register = async (req, res) => {
         const sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role, otp_code, otp_expiry, is_verified, skill_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100)";
         await db.query(sql, [firstName, lastName, email, hashedPassword, role || 'Student', otp, otp_expiry, 1]); // Set is_verified to 1 to bypass OTP temporarily
 
-        // Send email via Mailtrap/Nodemailer
-        await sendEmail(email, otp);
+        // Send email via Mailtrap/Nodemailer (fire and forget)
+        sendEmail(email, otp).catch(console.error);
 
         res.status(200).json({ message: "Verification code sent to your university email!" });
     } catch (err) {
@@ -131,7 +131,7 @@ exports.forgotPassword = async (req, res) => {
         // Send email with link
         // In a real app, this should be the frontend URL
         const resetLink = `http://localhost:5173/set-new-password?token=${resetToken}`;
-        await sendEmail(email, `Your password reset link: ${resetLink}`);
+        sendEmail(email, `Your password reset link: ${resetLink}`).catch(console.error);
 
         res.status(200).json({ message: "Password reset link sent to your email." });
     } catch (err) {
