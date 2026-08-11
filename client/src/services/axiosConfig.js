@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://educonnect-production-c0d9.up.railway.app/api',
 });
 
 // Automatically attach JWT token to every request
