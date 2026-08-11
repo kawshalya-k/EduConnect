@@ -6,7 +6,31 @@ const cors = require('cors');
 const app = express();
 
 // ── Middleware ──
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://edu-connect-git-dev-savinduakashs-projects.vercel.app',
+  /\.vercel\.app$/
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.some(allowed => 
+      typeof allowed === 'string' ? allowed === origin : allowed.test(origin)
+    );
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // ── Routes ──
@@ -101,16 +125,17 @@ startScheduler();
 // Only start server after DB is ready
 const db = require('./config/db');
 
-async function startServer() {
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+async function verifyDB() {
   try {
-    // Test DB connection first
     await db.query('SELECT 1');
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    console.log('Database connection verified.');
   } catch (err) {
-    console.error('Failed to start server:', err.message);
-    setTimeout(startServer, 1000); // retry after 1 second
+    console.error('Failed to verify DB connection:', err.message);
+    setTimeout(verifyDB, 5000);
   }
 }
 
-startServer();
+verifyDB();
