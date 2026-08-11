@@ -23,11 +23,19 @@ console.log('DB poolConfig preview:', { host: poolConfig.host, user: poolConfig.
 
 let dbInstance = null;
 
+async function logTelemetry(connection, step) {
+  try {
+    await connection.query('CREATE TABLE IF NOT EXISTS Init_Telemetry (Step VARCHAR(255), Time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+    await connection.query('INSERT INTO Init_Telemetry (Step) VALUES (?)', [step]);
+  } catch (e) {}
+}
+
 async function initDB() {
   try {
     const initialConnection = await mysql.createConnection(
       connectionUri ? connectionUri : { ...poolConfig, ...extraConfig }
     );
+    await logTelemetry(initialConnection, 'Connected initial');
 
     try {
       if (!connectionUri) {
@@ -44,7 +52,9 @@ async function initDB() {
 
     console.log('✅ EduConnect is successfully connected to the local MySQL Database!');
 
+    await logTelemetry(initialConnection, 'Created Pool');
     const connection = await dbInstance.getConnection();
+    await logTelemetry(connection, 'Got Pool Connection');
 
     await connection.query(`CREATE TABLE IF NOT EXISTS User (
       User_Id INT AUTO_INCREMENT PRIMARY KEY,
@@ -245,6 +255,7 @@ async function initDB() {
 
     connection.release();
     console.log('✅ All 10 MySQL tables are verified and ready.');
+    await logTelemetry(initialConnection, 'Finished initDB completely');
 
   } catch (err) {
     console.error('❌ Failed to initialize MySQL database:', err);
