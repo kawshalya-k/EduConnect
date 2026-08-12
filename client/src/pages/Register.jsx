@@ -164,9 +164,6 @@ const Register = () => {
                 <label className="text-sm font-bold text-slate-700">University Email</label>
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="student@dept.ac.lk" className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:bg-white outline-none transition-all" />
               </div>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                By clicking Continue, you agree to our <Link to="/terms-of-service?onboarding=true" className="text-[#10B981] hover:underline">Terms of Service</Link>, <Link to="/privacy-policy?onboarding=true" className="text-[#10B981] hover:underline">Privacy Policy</Link>, and <Link to="/community-standards?onboarding=true" className="text-[#10B981] hover:underline">Community Standards</Link>.
-              </p>
               <button 
                 type="submit"
                 disabled={loading}
