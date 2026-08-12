@@ -177,7 +177,7 @@ export default function MentorProfile() {
                   <FiCalendar size={20} className="text-[#10B981]" />
                 </div>
                 <div className="profile-stat-info">
-                  <span className="profile-stat-value">{mentor.sessionsTaught || 12}</span>
+                  <span className="profile-stat-value">{mentor.sessionsTaught ?? 0}</span>
                   <span className="profile-stat-label">SESSIONS TAUGHT</span>
                 </div>
               </div>
@@ -189,10 +189,14 @@ export default function MentorProfile() {
                 </div>
                 <div className="profile-stat-info">
                   <div className="profile-stat-rating-row">
-                    <span className="profile-stat-value">{mentor.rating?.toFixed(1) || '4.9'}</span>
-                    <div className="profile-stat-stars-row">
-                      <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                    </div>
+                    <span className="profile-stat-value">
+                      {mentor.rating && Number(mentor.rating) > 0 ? Number(mentor.rating).toFixed(1) : 'No reviews'}
+                    </span>
+                    {mentor.rating && Number(mentor.rating) > 0 && (
+                      <div className="profile-stat-stars-row">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                      </div>
+                    )}
                   </div>
                   <span className="profile-stat-label">RATING</span>
                 </div>
@@ -204,7 +208,7 @@ export default function MentorProfile() {
                   <FiCalendar size={20} className="text-[#10B981]" />
                 </div>
                 <div className="profile-stat-info">
-                  <span className="profile-stat-value">{mentor.memberSince || 'Oct 2023'}</span>
+                  <span className="profile-stat-value">{mentor.memberSince || 'N/A'}</span>
                   <span className="profile-stat-label">MEMBER SINCE</span>
                 </div>
               </div>
