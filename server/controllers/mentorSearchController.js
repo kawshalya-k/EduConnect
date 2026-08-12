@@ -28,7 +28,7 @@ exports.searchMentors = async (req, res) => {
     const conditions = [
         `u.Status = 'Active'`,
         `us.Role = 'Mentor'`,
-        `(us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR 1=1)`
+        `(us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`
     ];
 
     if (skill_id) {
@@ -133,7 +133,7 @@ exports.searchMentors = async (req, res) => {
                  LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
                  WHERE u.User_Id IN (${placeholders}) 
                    AND us.Role = 'Mentor' 
-                   AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR 1=1)`,
+                   AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
                 mentorIds
             );
 
@@ -192,7 +192,7 @@ exports.getFeaturedMentors = async (req, res) => {
              JOIN User       u  ON u.User_Id  = ld.Mentor_Id
              JOIN Skill      s  ON s.Skill_Id = ld.Skill_Id
              JOIN User_Skill us ON us.User_Id = ld.Mentor_Id AND us.Skill_Id = ld.Skill_Id AND us.Role = 'Mentor'
-             WHERE u.Status = 'Active' AND (us.Verification_Status = 'Verified' OR 1=1)
+             WHERE u.Status = 'Active' AND us.Verification_Status = 'Verified'
              ORDER BY ld.Score DESC
              LIMIT 6`
         );
@@ -248,7 +248,7 @@ exports.aiSearchMentors = async (req, res) => {
       const [allVerified] = await db.query(
         `SELECT us.User_Id, us.Skill_Id 
          FROM User_Skill us 
-         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR 1=1) 
+         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified') 
          LIMIT 10`
       );
       matches = allVerified.map(row => ({
@@ -276,9 +276,9 @@ exports.aiSearchMentors = async (req, res) => {
        JOIN User_Skill us ON us.User_Id = u.User_Id
        JOIN Skill s ON s.Skill_Id = us.Skill_Id
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
-        WHERE u.User_Id IN (${placeholders}) 
-          AND us.Role = 'Mentor' 
-          AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR 1=1)`,
+       WHERE u.User_Id IN (${placeholders}) 
+         AND us.Role = 'Mentor' 
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
       mentorIds
     );
 
@@ -344,10 +344,10 @@ exports.getRecommendedMentors = async (req, res) => {
        JOIN User_Skill us ON us.User_Id = u.User_Id
        JOIN Skill s ON s.Skill_Id = us.Skill_Id
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
-        WHERE us.Role = 'Mentor' 
-          AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR 1=1)
-          AND u.Status = 'Active'
-          AND u.User_Id != ?`,
+       WHERE us.Role = 'Mentor' 
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')
+         AND u.Status = 'Active'
+         AND u.User_Id != ?`,
       [userId]
     );
 
@@ -427,9 +427,9 @@ exports.getVerifiedMentorsCount = async (req, res) => {
       `SELECT COUNT(DISTINCT u.User_Id) AS count
        FROM User u
        JOIN User_Skill us ON us.User_Id = u.User_Id
-        WHERE u.Status = 'Active'
-          AND us.Role = 'Mentor'
-          AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR 1=1)`
+       WHERE u.Status = 'Active'
+         AND us.Role = 'Mentor'
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`
     );
     res.json({ count: rows[0].count || 0 });
   } catch (err) {
