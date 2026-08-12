@@ -313,15 +313,9 @@ export default function MentorDashboard() {
 
             {/* Mentor Spotlight */}
             <div className="mentor-spotlight-card">
-              <div className="spotlight-header">
-                <span>📢</span>
-                <h3>Mentor Spotlight</h3>
-              </div>
-              <div className="spotlight-webinar">
-                <div className="webinar-tag">LIVE WEBINAR</div>
-                <p className="webinar-title">How to handle complex technical questions</p>
-                <button className="webinar-remind-btn">Remind Me</button>
-              </div>
+              <div className="webinar-tag">LIVE WEBINAR</div>
+              <h3 className="webinar-title">How to handle complex technical questions</h3>
+              <button className="webinar-remind-btn">Remind Me</button>
             </div>
 
             {/* Achievement Badges */}
