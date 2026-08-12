@@ -92,10 +92,33 @@ const awardBadge = async (req, res) => {
 // TASK 6: GET leaderboard
 // GET /api/gamification/leaderboard
 // ─────────────────────────────────────────
+// Levelling_Data has two schemas in the wild: the snake_case one used by
+// gamification/seed scripts (user_id, session_count, level, ...) and the
+// CamelCase one auto-created by db.js (Mentor_Id, Total_Sessions, Mentor_Level, ...).
+// Detect the actual columns once so the leaderboard works against either.
+let levellingColumns = null;
+const getLevellingColumns = async () => {
+  if (levellingColumns) return levellingColumns;
+  const [rows] = await db.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Levelling_Data'`
+  );
+  const cols = new Set(rows.map((r) => r.COLUMN_NAME));
+  levellingColumns = {
+    userId: cols.has('user_id') ? 'user_id' : 'Mentor_Id',
+    score: cols.has('score') ? 'score' : 'Score',
+    sessionCount: cols.has('session_count') ? 'session_count' : 'Total_Sessions',
+    averageRating: cols.has('average_rating') ? 'average_rating' : 'Average_Rating',
+    level: cols.has('level') ? 'level' : 'Mentor_Level',
+  };
+  return levellingColumns;
+};
+
 const getLeaderboard = async (req, res) => {
   try {
     const { period = 'weekly', skill = 'all' } = req.query;
-    let query = `
+    const lc = await getLevellingColumns();
+    const query = `
       SELECT
         u.User_Id AS user_id,
         u.First_Name AS first_name,
@@ -103,12 +126,12 @@ const getLeaderboard = async (req, res) => {
         u.University AS university,
         u.Avatar AS avatar,
         u.skill_coins AS skill_coins,
-        COALESCE(SUM(ld.score), 0) AS score,
-        COALESCE(SUM(ld.session_count), 0) AS session_count,
-        COALESCE(AVG(ld.average_rating), 0) AS average_rating,
-        COALESCE(MAX(ld.level), 'BRONZE') AS mentor_level
+        COALESCE(SUM(ld.\`${lc.score}\`), 0) AS score,
+        COALESCE(SUM(ld.\`${lc.sessionCount}\`), 0) AS session_count,
+        COALESCE(AVG(ld.\`${lc.averageRating}\`), 0) AS average_rating,
+        COALESCE(MAX(ld.\`${lc.level}\`), 'BRONZE') AS mentor_level
       FROM User u
-      LEFT JOIN Levelling_Data ld ON u.User_Id = ld.user_id
+      LEFT JOIN Levelling_Data ld ON u.User_Id = ld.\`${lc.userId}\`
       GROUP BY u.User_Id
       ORDER BY u.skill_coins DESC, score DESC
       LIMIT 50
