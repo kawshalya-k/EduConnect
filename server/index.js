@@ -6,21 +6,35 @@ const cors = require('cors');
 const app = express();
 
 // ── Middleware ──
-// Remove app.use(cors()) on line 9 and replace lines 9-33 with:
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://edu-connect-one-lime.vercel.app',
+  'https://edu-connect-f5ez0bsa9-savinduakashs-projects.vercel.app',
+  /\.vercel\.app$/
+];
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://edu-connect-git-dev-savinduakashs-projects.vercel.app',
-    /\.vercel\.app$/
-  ],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.some(allowed =>
+      typeof allowed === 'string'
+        ? allowed === origin
+        : allowed.test(origin)
+    );
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
 app.use(express.json());
 
 // ── Routes ──
