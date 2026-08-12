@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getWalletBalance, getWalletTransactions } from '../services/walletService';
+import LearnerSidebar from '../components/LearnerSidebar';
 
 export default function Wallet() {
   const { user, syncWalletBalance } = useAuth();
@@ -49,13 +50,16 @@ export default function Wallet() {
     return (
       <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
         <DashboardNavbar />
-        <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-            <div className="h-96 bg-gray-200 rounded"></div>
-          </div>
-        </main>
+        <div className="flex flex-1 w-full">
+          <LearnerSidebar />
+          <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="h-96 bg-gray-200 rounded"></div>
+            </div>
+          </main>
+        </div>
         <Footer />
       </div>
     );
@@ -65,9 +69,12 @@ export default function Wallet() {
     return (
       <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
         <DashboardNavbar />
-        <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
-          <div className="text-red-500 text-center">{error}</div>
-        </main>
+        <div className="flex flex-1 w-full">
+          <LearnerSidebar />
+          <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
+            <div className="text-red-500 text-center">{error}</div>
+          </main>
+        </div>
         <Footer />
       </div>
     );
@@ -77,8 +84,10 @@ export default function Wallet() {
     <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
-      <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
-        {/* Breadcrumbs */}
+      <div className="flex flex-1 w-full">
+        <LearnerSidebar />
+        <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
+          {/* Breadcrumbs */}
         <div className="flex items-center gap-2 mb-4">
           <Link to="/dashboard" className="text-[#64748B] font-normal text-[14px] leading-[20px] hover:underline">Dashboard</Link>
           <svg viewBox="0 0 24 24" fill="none" className="w-[10px] h-[10px] text-[#64748B] stroke-2 stroke-current">
@@ -147,7 +156,8 @@ export default function Wallet() {
             </div>
           )}
         </div>
-      </main>
+        </main>
+      </div>
 
       <Footer />
     </div>

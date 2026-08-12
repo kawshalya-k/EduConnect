@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import PageLayout from '../components/Layout/PageLayout';
-import DashboardSidebar from '../components/Mentorship/MentorSideBar';
+import LearnerSidebar from '../components/LearnerSidebar';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../services/axiosConfig';
 
@@ -145,7 +145,7 @@ export default function MentorWallet() {
     return (
       <PageLayout>
         <div className="dash-layout">
-          <DashboardSidebar user={user} />
+          <LearnerSidebar />
           <div className="dash-content">
             <div className="dash-main" style={{ padding: "28px 32px" }}>
               <p style={{ textAlign: "center", color: "#16a34a", padding: "3rem" }}>Loading wallet...</p>
@@ -159,7 +159,7 @@ export default function MentorWallet() {
   return (
     <PageLayout>
       <div className="dash-layout">
-        <DashboardSidebar user={user} />
+        <LearnerSidebar />
         <div className="dash-content">
           <div className="dash-main" style={{ padding: "28px 32px" }}>
 

@@ -1,15 +1,22 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 
-const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  port: process.env.DB_PORT || 3306,
+const connectionUri = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
+const poolConfig = connectionUri ? { uri: connectionUri } : {
+  host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
+  user: process.env.DB_USER || process.env.MYSQLUSER || 'root',
+  password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
+  port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
+  database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'
+};
+
+const extraConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  multipleStatements: true
+  multipleStatements: true,
+  connectTimeout: 5000
 };
 
 console.log('DB poolConfig preview:', { host: poolConfig.host, user: poolConfig.user, passwordPresent: Boolean(poolConfig.password), port: poolConfig.port });
@@ -18,20 +25,22 @@ let dbInstance = null;
 
 async function initDB() {
   try {
-    const initialConnection = await mysql.createConnection({
-      host: poolConfig.host,
-      user: poolConfig.user,
-      password: poolConfig.password,
-      port: poolConfig.port
-    });
+    const initialConnection = await mysql.createConnection(
+      connectionUri ? connectionUri : { ...poolConfig, ...extraConfig }
+    );
 
-    await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'educonnect'}\``);
+    try {
+      if (!connectionUri) {
+        await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || process.env.MYSQLDATABASE || 'educonnect'}\``);
+      }
+    } catch (e) {
+      console.log('Skipping CREATE DATABASE (likely on a managed cloud DB like Railway without permissions):', e.message);
+    }
     await initialConnection.end();
 
-    dbInstance = mysql.createPool({
-      ...poolConfig,
-      database: process.env.DB_NAME || 'educonnect'
-    });
+    dbInstance = connectionUri 
+      ? mysql.createPool(connectionUri)
+      : mysql.createPool({ ...poolConfig, ...extraConfig });
 
     console.log('✅ EduConnect is successfully connected to the local MySQL Database!');
 
@@ -251,18 +260,28 @@ async function initDB() {
   }
 }
 
-const dbPromise = initDB();
+let dbPromise = initDB();
 
 const db = {
   query: async (sql, params = []) => {
     await dbPromise;
-    if (!dbInstance) throw new Error('Database not initialized yet');
+    if (!dbInstance) {
+      console.log('Database not initialized, retrying...');
+      dbPromise = initDB();
+      await dbPromise;
+      if (!dbInstance) throw new Error('Database not initialized yet');
+    }
     const [rows, fields] = await dbInstance.query(sql, params);
     return [rows, fields];
   },
   getConnection: async () => {
     await dbPromise;
-    if (!dbInstance) throw new Error('Database not initialized yet');
+    if (!dbInstance) {
+      console.log('Database not initialized, retrying...');
+      dbPromise = initDB();
+      await dbPromise;
+      if (!dbInstance) throw new Error('Database not initialized yet');
+    }
     return dbInstance.getConnection();
   }
 };
