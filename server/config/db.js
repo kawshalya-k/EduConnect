@@ -184,9 +184,19 @@ async function initDB() {
     try {
       await connection.query('ALTER TABLE User ADD COLUMN Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
       console.log('✅ Added Created_At column to User table.');
+      // Backfill any NULL values for existing users
+      await connection.query('UPDATE User SET Created_At = CURRENT_TIMESTAMP WHERE Created_At IS NULL');
+      console.log('✅ Backfilled NULL Created_At values in User table.');
     } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') {
         console.error('Error adding Created_At column to User:', e.message);
+      } else {
+        // Run update query if column already exists but has NULL values
+        try {
+          await connection.query('UPDATE User SET Created_At = CURRENT_TIMESTAMP WHERE Created_At IS NULL');
+        } catch (updateErr) {
+          console.error('Error updating NULL Created_At values:', updateErr.message);
+        }
       }
     }
 

@@ -188,7 +188,7 @@ exports.getPublicProfile = async (req, res) => {
       currentXP: currentXP,
       nextLevelXP: nextLevelXP,
       sessionsTaught: sessionsTaught,
-      rating: avgRating > 0 ? avgRating : 5.0,
+      rating: avgRating > 0 ? avgRating : 0,
       memberSince: memberSinceDate,
       verified: true,
       skills: skills.map(s => ({
