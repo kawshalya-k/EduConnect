@@ -7,6 +7,17 @@ const ScrollToTop = () => {
   useEffect(() => {
     if (!hash) {
       window.scrollTo(0, 0);
+      // Reset scroll position on all scrollable elements in the page
+      try {
+        const scrollableElements = document.querySelectorAll('*');
+        scrollableElements.forEach(el => {
+          if (el.scrollTop > 0) {
+            el.scrollTop = 0;
+          }
+        });
+      } catch (e) {
+        console.error('ScrollToTop reset error:', e);
+      }
     } else {
       const id = hash.replace('#', '');
       const element = document.getElementById(id);
