@@ -6,30 +6,13 @@ const cors = require('cors');
 const app = express();
 
 // ── Middleware ──
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://edu-connect-one-lime.vercel.app',
-  'https://edu-connect-f5ez0bsa9-savinduakashs-projects.vercel.app',
-  /\.vercel\.app$/
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    const isAllowed = allowedOrigins.some(allowed =>
-      typeof allowed === 'string'
-        ? allowed === origin
-        : allowed.test(origin)
-    );
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
-    }
-  },
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://edu-connect-git-dev-savinduakashs-projects.vercel.app',
+    /\.vercel\.app$/
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
