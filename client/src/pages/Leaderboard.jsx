@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getLeaderboard } from '../services/gamificationService';
 import { useAuth } from '../context/AuthContext';
 import LearnerSidebar from '../components/LearnerSidebar';
