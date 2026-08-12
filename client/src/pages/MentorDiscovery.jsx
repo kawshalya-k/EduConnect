@@ -48,7 +48,7 @@ export default function MentorDiscovery() {
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedLevels, setSelectedLevels] = useState(['GOLD', 'SILVER']);
+  const [selectedLevels, setSelectedLevels] = useState(['GOLD', 'SILVER', 'BRONZE']);
   const [sessionType, setSessionType] = useState('Any Type');
 
   useEffect(() => {

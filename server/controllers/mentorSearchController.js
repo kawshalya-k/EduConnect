@@ -64,7 +64,10 @@ exports.searchMentors = async (req, res) => {
     
     const activeLevel = level || levels;
     if (activeLevel) {
-        const levelList = activeLevel.split(',').map(l => l.trim());
+        const levelList = activeLevel.split(',').map(l => {
+            const clean = l.trim().toLowerCase();
+            return clean.charAt(0).toUpperCase() + clean.slice(1);
+        });
         const placeholders = levelList.map(() => '?').join(',');
         conditions.push(`us.Mentor_Level IN (${placeholders})`);
         params.push(...levelList);
