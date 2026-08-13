@@ -251,7 +251,7 @@ exports.getMentors = async (req, res) => {
     const formattedMentors = rows.map(row => ({
       id: row.id,
       name: `${row.First_Name} ${row.Last_Name}`,
-      avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
+      avatar: row.avatar || '/default-avatar.svg',
       level: row.level,
       role: row.role || 'Mentor',
       rating: Number(row.rating).toFixed(1),

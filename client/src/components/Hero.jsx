@@ -56,7 +56,7 @@ const Hero = () => {
           {displayedUsers.length > 0 && (
             <div className="flex -space-x-3">
               {displayedUsers.map((u, i) => {
-                const avatarUrl = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=${bgColors[i % 3]}&color=fff`;
+                const avatarUrl = u.avatar || '/default-avatar.svg';
                 return (
                   <img 
                     key={i} 

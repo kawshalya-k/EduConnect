@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const RecommendedMentorCard = ({ mentor }) => {
   const mentorId = mentor.userId || mentor.User_Id || mentor.id;
   const mentorName = mentor.name || `${mentor.First_Name || ''} ${mentor.Last_Name || ''}`.trim() || 'Peer Mentor';
-  const mentorAvatar = mentor.avatar || mentor.Avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentor.First_Name || 'mentor'}&backgroundColor=E2E8F0`;
+  const mentorAvatar = mentor.avatar || mentor.Avatar || '/default-avatar.svg';
   const mentorRole = mentor.role || mentor.title || mentor.Bio || 'Expert Mentor';
 
   return (

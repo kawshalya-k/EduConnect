@@ -64,21 +64,30 @@ exports.searchMentors = async (req, res) => {
     
     const activeLevel = level || levels;
     if (activeLevel) {
-        const levelList = activeLevel.split(',').map(l => {
+        const queryLevels = [];
+        activeLevel.split(',').forEach(l => {
             const clean = l.trim().toLowerCase();
-            return clean.charAt(0).toUpperCase() + clean.slice(1);
+            if (clean === 'gold') {
+                queryLevels.push('Gold', 'Expert', 'GOLD MENTOR');
+            } else if (clean === 'silver') {
+                queryLevels.push('Silver', 'Intermediate');
+            } else if (clean === 'bronze') {
+                queryLevels.push('Bronze', 'Beginner');
+            } else {
+                queryLevels.push(clean.charAt(0).toUpperCase() + clean.slice(1));
+            }
         });
-        const placeholders = levelList.map(() => '?').join(',');
+        const placeholders = queryLevels.map(() => '?').join(',');
         conditions.push(`us.Mentor_Level IN (${placeholders})`);
-        params.push(...levelList);
+        params.push(...queryLevels);
     }
     if (university) {
         conditions.push(`u.University LIKE ?`);
         params.push(`%${university}%`);
     }
     if (keyword) {
-        conditions.push(`(u.First_Name LIKE ? OR u.Last_Name LIKE ?)`);
-        params.push(`%${keyword}%`, `%${keyword}%`);
+        conditions.push(`(u.First_Name LIKE ? OR u.Last_Name LIKE ? OR s.Skill_Name LIKE ? OR s.Category LIKE ? OR u.Bio LIKE ?)`);
+        params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
     }
 
     const whereClause = conditions.join(' AND ');
@@ -360,7 +369,7 @@ exports.getRecommendedMentors = async (req, res) => {
           name: `${row.First_Name} ${row.Last_Name}`,
           firstName: row.First_Name,
           lastName: row.Last_Name,
-          avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
+          avatar: row.avatar || '/default-avatar.svg',
           mentorLevel: row.Mentor_Level || 'Bronze',
           title: row.Bio || 'Mentor',
           university: row.University,

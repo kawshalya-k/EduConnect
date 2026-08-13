@@ -40,7 +40,7 @@ export default function MySessions() {
         const transformed = (data || []).map(s => ({
           id: s.Session_Id,
           mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.Mentor_First || s.Mentor_Id}&backgroundColor=E2E8F0`,
+          image: s.Mentor_Avatar || '/default-avatar.svg',
           skill: s.Skill_Name || 'Mentoring',
           topic: s.Skill_Name || 'Session',
           date: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD',

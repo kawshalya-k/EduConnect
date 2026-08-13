@@ -51,7 +51,7 @@ const Leaderboard = () => {
   };
 
   const getAvatar = (firstName, lastName, avatar) => {
-    return avatar || `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=10B981&color=fff`;
+    return avatar || '/default-avatar.svg';
   };
 
   const podiumData = leaderboardData.slice(0, 3);

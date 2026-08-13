@@ -36,7 +36,7 @@ const Leaderboard = () => {
           rating: parseFloat(mentor.Average_Rating) || 5.0,
           status: "Verified",
           session_count: mentor.Total_Sessions || 0,
-          avatar: mentor.Avatar || `https://ui-avatars.com/api/?name=${mentor.First_Name}+${mentor.Last_Name}&background=10B981&color=fff`
+          avatar: mentor.Avatar || '/default-avatar.svg'
         }));
         setMentors(formattedMentors);
         

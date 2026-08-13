@@ -327,7 +327,7 @@ const LearnerDashboard = () => {
                       className="flex flex-row items-center p-4 border border-slate-100 hover:border-[#10B77F]/20 rounded-2xl hover:bg-slate-50/50 transition-all gap-4"
                     >
                       <img 
-                        src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.firstName || 'mentor'}&backgroundColor=E2E8F0`}
+                        src={m.avatar || '/default-avatar.svg'}
                         alt={m.name}
                         className="w-12 h-12 rounded-full object-cover border border-slate-100 shrink-0"
                       />

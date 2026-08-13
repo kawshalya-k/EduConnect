@@ -119,11 +119,12 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="flex flex-col items-start w-9 h-9 cursor-pointer focus:outline-none"
                   >
-                    <div className="box-border flex flex-col justify-center items-start w-9 h-9 bg-[#E2E8F0] border-2 border-[#10B981]/30 rounded-full overflow-hidden hover:border-[#10B981]/60 transition-all">
-                      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mt-2 text-slate-400">
-                        <circle cx="16" cy="12" r="6" fill="currentColor"/>
-                        <path d="M6 28C6 22.4772 10.4772 18 16 18C21.5228 18 26 22.4772 26 28" fill="currentColor"/>
-                      </svg>
+                    <div className="box-border flex flex-col justify-center items-center w-9 h-9 border-2 border-[#10B981]/30 rounded-full overflow-hidden hover:border-[#10B981]/60 transition-all">
+                      <img
+                        src={user?.avatar || user?.Avatar || '/default-avatar.svg'}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </button>
 
