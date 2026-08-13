@@ -205,7 +205,9 @@ exports.getFeaturedMentors = async (req, res) => {
              ORDER BY ld.Score DESC
              LIMIT 6`
         );
-        res.json(mentors);
+        const [sessionCountRows] = await db.query('SELECT COUNT(*) AS total FROM Session');
+        const totalSessions = sessionCountRows[0]?.total || 0;
+        res.json({ mentors, totalSessions });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
