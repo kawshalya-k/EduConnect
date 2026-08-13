@@ -23,6 +23,7 @@ const sendEmail = async (email, otp) => {
 
         await transporter.sendMail(mailOptions);
         console.log(`Email successfully sent to ${email}`);
+        console.log(`[DEV HINT] The OTP is: ${otp}`);
     } catch (error) {
         console.error("Failed to send email (Mailtrap issue):", error.message);
         console.log(`\n=========================================`);

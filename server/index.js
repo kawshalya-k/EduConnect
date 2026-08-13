@@ -6,14 +6,9 @@ const cors = require('cors');
 const app = express();
 
 // ── Middleware ──
+// Set CORS to allow ALL origins during testing
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://edu-connect-git-dev-savinduakashs-projects.vercel.app',
-    /\.vercel\.app$/
-  ],
-  credentials: true,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
