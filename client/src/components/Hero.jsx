@@ -75,8 +75,8 @@ const Hero = () => {
       </div>
       <div className="flex-1 w-full flex justify-end">
         <img 
-          src="/images/hero_forest_desk.png" 
-          alt="AI-powered skill sharing in a magical forest" 
+          src="/images/landing_page_photo.png" 
+          alt="AI-powered skill sharing" 
           className="w-full max-w-lg rounded-[2rem] shadow-2xl object-cover aspect-square"
         />
       </div>
