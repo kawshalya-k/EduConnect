@@ -28,7 +28,7 @@ exports.searchMentors = async (req, res) => {
     const conditions = [
         `u.Status = 'Active'`,
         `us.Role = 'Mentor'`,
-        `(us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR us.Verification_Status = 'Draft')`
+        `(us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`
     ];
 
     if (skill_id) {
@@ -145,7 +145,7 @@ exports.searchMentors = async (req, res) => {
                  LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
                  WHERE u.User_Id IN (${placeholders}) 
                    AND us.Role = 'Mentor' 
-                   AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR us.Verification_Status = 'Draft')`,
+                   AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
                 mentorIds
             );
 
@@ -262,7 +262,7 @@ exports.aiSearchMentors = async (req, res) => {
       const [allVerified] = await db.query(
         `SELECT us.User_Id, us.Skill_Id 
          FROM User_Skill us 
-         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR us.Verification_Status = 'Draft') 
+         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1') 
          LIMIT 10`
       );
       matches = allVerified.map(row => ({
@@ -292,7 +292,7 @@ exports.aiSearchMentors = async (req, res) => {
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
        WHERE u.User_Id IN (${placeholders}) 
          AND us.Role = 'Mentor' 
-         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR us.Verification_Status = 'Draft')`,
+         AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
       mentorIds
     );
 
