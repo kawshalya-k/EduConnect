@@ -33,8 +33,8 @@ Available Mentors:
 ${JSON.stringify(mentorsList, null, 2)}
 
 Instructions:
-1. Analyze the learner's wishlist and match them with mentors who have relevant skills, experience, levels, and good ratings.
-2. Select and rank all available mentors in order of relevance (best matches first).
+1. Analyze the learner's wishlist and match them with mentors who have verified skills matching the wishlist.
+2. Rank the mentors such that verified mentors teaching skills on the learner's wishlist are shown first. Then, rank other verified mentors who teach other skills. If no verified mentor is available, return an empty array under "recommended_ids".
 3. Return ONLY a JSON object containing an array of recommended mentor user IDs under the key "recommended_ids".
 4. Do NOT include any markdown code blocks, explanation, or conversational text. Return raw JSON text.
 
