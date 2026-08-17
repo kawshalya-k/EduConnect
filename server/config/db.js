@@ -35,7 +35,6 @@ async function initDB() {
     const initialConnection = await mysql.createConnection(
       connectionUri ? connectionUri : { ...poolConfig, ...extraConfig }
     );
-    await logTelemetry(initialConnection, 'Connected initial');
 
     try {
       if (!connectionUri) {
@@ -52,9 +51,7 @@ async function initDB() {
 
     console.log('✅ EduConnect is successfully connected to the local MySQL Database!');
 
-    await logTelemetry(initialConnection, 'Created Pool');
     const connection = await dbInstance.getConnection();
-    await logTelemetry(connection, 'Got Pool Connection');
 
     await connection.query(`CREATE TABLE IF NOT EXISTS User (
       User_Id INT AUTO_INCREMENT PRIMARY KEY,
@@ -192,6 +189,25 @@ async function initDB() {
     }
 
     try {
+      await connection.query('ALTER TABLE User ADD COLUMN Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+      console.log('✅ Added Created_At column to User table.');
+      // Backfill any NULL values for existing users
+      await connection.query('UPDATE User SET Created_At = CURRENT_TIMESTAMP WHERE Created_At IS NULL');
+      console.log('✅ Backfilled NULL Created_At values in User table.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('Error adding Created_At column to User:', e.message);
+      } else {
+        // Run update query if column already exists but has NULL values
+        try {
+          await connection.query('UPDATE User SET Created_At = CURRENT_TIMESTAMP WHERE Created_At IS NULL');
+        } catch (updateErr) {
+          console.error('Error updating NULL Created_At values:', updateErr.message);
+        }
+      }
+    }
+
+    try {
       await connection.query("ALTER TABLE User_Skill MODIFY COLUMN Verification_Status VARCHAR(50) DEFAULT 'Pending'");
       console.log("✅ Modified Verification_Status column in User_Skill table to VARCHAR(50).");
     } catch (e) {
@@ -255,7 +271,6 @@ async function initDB() {
 
     connection.release();
     console.log('✅ All 10 MySQL tables are verified and ready.');
-    await logTelemetry(initialConnection, 'Finished initDB completely');
 
   } catch (err) {
     console.error('❌ Failed to initialize MySQL database:', err);

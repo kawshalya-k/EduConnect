@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
@@ -13,6 +13,19 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('/users/public/stats');
+        setTotalUsers(res.data?.totalUsers || 0);
+      } catch (err) {
+        console.error('Failed to fetch public stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -86,7 +99,9 @@ const Login = () => {
              <div className="flex -space-x-2">
                 {[1,2,3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />)}
              </div>
-             <p className="text-sm font-semibold text-slate-700">Join 2,000+ students across Sri Lanka</p>
+             <p className="text-sm font-semibold text-slate-700">
+               Join {totalUsers ? `${totalUsers}` : '2,000+'} students across Sri Lanka
+             </p>
           </div>
         </div>
       </div>

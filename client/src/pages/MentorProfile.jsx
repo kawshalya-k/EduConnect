@@ -5,6 +5,7 @@ import PageLayout from '../components/Layout/PageLayout';
 import { LoadingState } from '../components/Layout/LoadingState';
 import { fetchMentorProfile } from '../services/mentorApi';
 import { useAuth } from '../context/AuthContext';
+import axiosInstance from '../services/axiosConfig';
 import './MentorProfile.css';
 
 export default function MentorProfile() {
@@ -15,9 +16,13 @@ export default function MentorProfile() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [availabilitySlots, setAvailabilitySlots] = useState([]);
 
   useEffect(() => {
     loadProfile();
+    if (mentorId) {
+      loadAvailability();
+    }
   }, [mentorId]);
 
   const loadProfile = async () => {
@@ -29,6 +34,54 @@ export default function MentorProfile() {
       console.error('Profile load error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAvailability = async () => {
+    const upcomingDays = [];
+    const options = { weekday: 'long', month: 'short', day: 'numeric' };
+    for (let i = 0; i < 3; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const dateVal = String(d.getDate()).padStart(2, '0');
+      upcomingDays.push({
+        value: `${year}-${month}-${dateVal}`,
+        label: d.toLocaleDateString('en-US', options)
+      });
+    }
+
+    try {
+      const promises = upcomingDays.map(async (day) => {
+        try {
+          const res = await axiosInstance.get(`/sessions/availability/${mentorId}`, {
+            params: { date: day.value }
+          });
+          const activeSlots = (res.data.slots || [])
+            .filter(slot => slot.available)
+            .map(slot => ({
+              label: slot.label.split(' - ')[0],
+              value: slot.value
+            }));
+          return {
+            date: day.value,
+            dateLabel: day.label,
+            times: activeSlots
+          };
+        } catch (err) {
+          console.error(`Error loading availability for ${day.value}:`, err);
+          return {
+            date: day.value,
+            dateLabel: day.label,
+            times: []
+          };
+        }
+      });
+      const results = await Promise.all(promises);
+      setAvailabilitySlots(results);
+    } catch (err) {
+      console.error('Failed to load availability:', err);
     }
   };
 
@@ -54,227 +107,257 @@ export default function MentorProfile() {
   const levelIcon =
     mentor.level === 'GOLD' ? '🏆' : mentor.level === 'SILVER' ? '⭐' : '🥉';
 
-  // Mock availability
-  const availability = [
-    { date: 'Monday, Oct 24', times: ['10:00 AM', '11:30 AM'] },
-    { date: 'Wednesday, Oct 26', times: ['11:00 AM', '1:00 PM'] },
-    { date: 'Saturday, Oct 29', times: ['11:00 AM', '1:00 PM'] },
-  ];
+
 
   return (
     <PageLayout>
-      <div className="mentor-profile-page">
-        {/* Hero Section */}
-        <div className="profile-hero">
-          <div className="profile-hero-content">
-            {/* Avatar & Badge */}
-            <div className="profile-hero-left">
-              <div className="profile-hero-avatar">
-                {mentor.avatar ? (
-                  <img src={mentor.avatar} alt={mentor.name} />
-                ) : (
-                  <span>{mentor.name?.slice(0, 1)}</span>
-                )}
-                <div className={`profile-level-badge level-${mentor.level?.toLowerCase()}`}>
-                  {levelIcon}
-                </div>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="profile-hero-info">
-              <h1 className="profile-name">{mentor.name}</h1>
-              <p className="profile-title">
-                {mentor.title}
-                {mentor.verified && (
-                  <span className="verified-badge">
-                    <FiCheckCircle size={14} />
-                    VERIFIED
-                  </span>
-                )}
-              </p>
-
-              <div className="profile-meta">
-                <span>{mentor.university}</span>
-                <span className={`level-badge-text level-${mentor.level?.toLowerCase()}`}>
-                  {mentor.level} MENTOR RANK
-                </span>
-                <div className="rank-progress">
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${mentor.levelProgress || 70}%` }}
-                    />
+      <div className="mentor-profile-page-container">
+        <div className="mentor-profile-main-layout">
+          
+          {/* Left Column: Hero, Stats, Skills, Reviews */}
+          <div className="profile-left-column">
+            
+            {/* Hero Section */}
+            <div className="profile-hero-card">
+              <div className="profile-hero-inner">
+                {/* Avatar container */}
+                <div className="profile-hero-avatar-wrapper">
+                  <div className="profile-hero-avatar-outer-border">
+                    <div className="profile-hero-avatar-inner">
+                      {mentor.avatar ? (
+                        <img src={mentor.avatar} alt={mentor.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-4xl font-bold text-white">{mentor.name?.slice(0, 1)}</span>
+                      )}
+                    </div>
                   </div>
-                  <p className="progress-text">
-                    {mentor.currentXP || 140} / {mentor.nextLevelXP || 200} KP to Silver
-                  </p>
-                </div>
-              </div>
-
-              {/* Key Stats */}
-              <div className="profile-stats">
-                <div className="stat-item">
-                  <FiCalendar size={16} />
-                  <div>
-                    <p className="stat-label">SESSIONS TAUGHT</p>
-                    <p className="stat-value">{mentor.sessionsTaught || 12}</p>
+                  {/* Floating level label */}
+                  <div className="profile-hero-level-badge">
+                    <span className="profile-hero-level-badge-text">{mentor.level}</span>
                   </div>
                 </div>
-                <div className="stat-item">
-                  <FiStar size={16} />
-                  <div>
-                    <p className="stat-label">RATING</p>
-                    <p className="stat-value">
-                      {mentor.rating?.toFixed(1) || '4.9'} <span className="stars">★★★★★</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="stat-item">
-                  <FiCalendar size={16} />
-                  <div>
-                    <p className="stat-label">MEMBER SINCE</p>
-                    <p className="stat-value">{mentor.memberSince || 'Oct 2023'}</p>
+
+                {/* Profile Details */}
+                <div className="profile-hero-details">
+                  <h1 className="profile-hero-name">
+                    {mentor.name}
+                    {mentor.verified && (
+                      <span className="profile-hero-verified-badge">
+                        <FiCheckCircle size={14} />
+                        VERIFIED
+                      </span>
+                    )}
+                  </h1>
+                  <p className="profile-hero-title">{mentor.title}</p>
+                  
+                  {/* Progress bar info */}
+                  <div className="profile-progress-bar-container">
+                    <div className="profile-progress-bar-header">
+                      <span className="profile-progress-bar-role-text">VERIFIED MENTOR</span>
+                      <span className="profile-progress-bar-xp-text">
+                        {mentor.currentXP || 140} / {mentor.nextLevelXP || 200} KP to {mentor.level === 'GOLD' ? 'Legend' : mentor.level === 'SILVER' ? 'Gold' : 'Silver'}
+                      </span>
+                    </div>
+                    <div className="profile-progress-bar-track">
+                      <div
+                        className="profile-progress-bar-fill"
+                        style={{ width: `${mentor.levelProgress || 70}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="profile-content-grid">
-          {/* Left Column */}
-          <div className="profile-main">
-            {/* Verified Skills */}
+            {/* Key Stats Section */}
+            <div className="profile-stats-row">
+              {/* Stat 1 */}
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon-wrapper">
+                  <FiCalendar size={20} className="text-[#10B981]" />
+                </div>
+                <div className="profile-stat-info">
+                  <span className="profile-stat-value">{mentor.sessionsTaught ?? 0}</span>
+                  <span className="profile-stat-label">SESSIONS TAUGHT</span>
+                </div>
+              </div>
+
+              {/* Stat 2 */}
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon-wrapper">
+                  <FiStar size={20} className="text-[#10B981]" />
+                </div>
+                <div className="profile-stat-info">
+                  <div className="profile-stat-rating-row">
+                    <span className="profile-stat-value">
+                      {mentor.rating && Number(mentor.rating) > 0 ? Number(mentor.rating).toFixed(1) : 'No reviews'}
+                    </span>
+                    {mentor.rating && Number(mentor.rating) > 0 && (
+                      <div className="profile-stat-stars-row">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="profile-stat-label">RATING</span>
+                </div>
+              </div>
+
+              {/* Stat 3 */}
+              <div className="profile-stat-card">
+                <div className="profile-stat-icon-wrapper">
+                  <FiCalendar size={20} className="text-[#10B981]" />
+                </div>
+                <div className="profile-stat-info">
+                  <span className="profile-stat-value">{mentor.memberSince || 'N/A'}</span>
+                  <span className="profile-stat-label">MEMBER SINCE</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Verified Skills Section */}
             {mentor.skills && mentor.skills.length > 0 && (
-              <section className="profile-section">
-                <h2 className="section-title">✓ Verified Skills</h2>
-                <div className="skills-grid">
+              <div className="profile-skills-section">
+                <div className="profile-section-heading">
+                  <div className="profile-section-heading-indicator" />
+                  <h3 className="profile-section-title">Verified Skills</h3>
+                </div>
+                <div className="profile-skills-grid">
                   {mentor.skills.map((skill) => (
-                    <div key={skill.id} className="skill-detail-card">
-                      <div className="flex gap-2 items-center mb-2 flex-wrap" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
-                        <div className="skill-badge-verified">
-                          <FiCheckCircle size={14} />
-                          <span>VERIFIED SKILL</span>
+                    <div key={skill.id} className="profile-skill-card">
+                      <div className="profile-skill-card-header">
+                        <div className="profile-skill-card-icon-container">
+                          <span className="profile-skill-card-icon">⚡</span>
                         </div>
-                        {skill.level && (
-                          <div className={`skill-badge-level skill-badge-level--${skill.level.toLowerCase()}`} style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            padding: '4px 10px',
-                            borderRadius: '9999px',
-                            fontWeight: '700',
-                            fontSize: '11px',
-                            letterSpacing: '0.5px',
-                            textTransform: 'uppercase',
-                            background: skill.level.toLowerCase() === 'expert' ? 'rgba(245, 158, 11, 0.12)' :
-                                        skill.level.toLowerCase() === 'intermediate' ? 'rgba(59, 130, 246, 0.12)' :
-                                        'rgba(16, 185, 129, 0.12)',
-                            color: skill.level.toLowerCase() === 'expert' ? '#92400E' :
-                                   skill.level.toLowerCase() === 'intermediate' ? '#1E40AF' :
-                                   '#065F46'
-                          }}>
-                            {skill.level}
-                          </div>
+                        <div className="profile-skill-card-badge">
+                          <span className="profile-skill-card-badge-bullet">•</span>
+                          <span>Verified Skill</span>
+                        </div>
+                      </div>
+                      <h4 className="profile-skill-card-title">{skill.name}</h4>
+                      <p className="profile-skill-card-description">{skill.description}</p>
+                      <div className="profile-skill-card-tags">
+                        {skill.technologies && skill.technologies.length > 0 ? (
+                          skill.technologies.map((tech) => (
+                            <span key={tech} className="profile-tech-tag">{tech}</span>
+                          ))
+                        ) : (
+                          <>
+                            <span className="profile-tech-tag">Expert</span>
+                            <span className="profile-tech-tag">{skill.category || 'Tech'}</span>
+                          </>
                         )}
                       </div>
-                      <h3 className="skill-detail-name">{skill.name}</h3>
-                      <p className="skill-detail-desc">{skill.description}</p>
-                      <div className="skill-detail-techs">
-                        {skill.technologies?.map((tech) => (
-                          <span key={tech} className="tech-tag">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
             )}
 
-            {/* Learner Feedback */}
+            {/* Learner Feedback Section */}
             {mentor.reviews && mentor.reviews.length > 0 && (
-              <section className="profile-section">
-                <h2 className="section-title">📚 Learner Feedback</h2>
-                <div className="reviews-list">
+              <div className="profile-reviews-section">
+                <div className="profile-section-heading">
+                  <div className="profile-section-heading-indicator" />
+                  <h3 className="profile-section-title">Learner Feedback</h3>
+                </div>
+                <div className="profile-reviews-list">
                   {mentor.reviews.map((review) => (
-                    <div key={review.id} className="review-card">
-                      <div className="review-header">
-                        <div className="review-avatar">
+                    <div key={review.id} className="profile-review-card">
+                      <div className="profile-review-card-header">
+                        <div className="profile-review-card-avatar">
                           {review.learnerAvatar ? (
-                            <img src={review.learnerAvatar} alt={review.learnerName} />
+                            <img src={review.learnerAvatar} alt={review.learnerName} className="w-full h-full object-cover" />
                           ) : (
-                            <span>{review.learnerName?.slice(0, 1)}</span>
+                            <span className="text-sm font-bold text-white">{review.learnerName?.slice(0, 1)}</span>
                           )}
                         </div>
-                        <div className="review-info">
-                          <p className="review-name">{review.learnerName}</p>
-                          <p className="review-session">{review.sessionTopic}</p>
+                        <div className="profile-review-card-info">
+                          <p className="profile-review-card-name">{review.learnerName}</p>
+                          <p className="profile-review-card-topic">{review.sessionTopic}</p>
                         </div>
-                        <div className="review-rating">
-                          {Array.from({ length: review.rating }).map((_, i) => (
-                            <span key={i} className="star">★</span>
+                        <div className="profile-review-card-rating">
+                          {Array.from({ length: Math.round(review.rating || 5) }).map((_, i) => (
+                            <span key={i} className="profile-star-filled">★</span>
                           ))}
-                          {Array.from({ length: 5 - review.rating }).map((_, i) => (
-                            <span key={`empty-${i}`} className="star empty">☆</span>
+                          {Array.from({ length: 5 - Math.round(review.rating || 5) }).map((_, i) => (
+                            <span key={`empty-${i}`} className="profile-star-empty">☆</span>
                           ))}
                         </div>
                       </div>
-                      <p className="review-text">{review.comment}</p>
+                      <p className="profile-review-card-comment">{review.comment}</p>
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
             )}
           </div>
 
-          {/* Right Column - Booking */}
-          <aside className="profile-sidebar">
-            {/* Availability */}
-            <div className="booking-card">
-              <h3 className="booking-title">Select Availability</h3>
-              <div className="availability-dates">
-                {availability.map((slot, idx) => (
-                  <div key={idx} className="availability-slot">
-                    <p className="slot-date">{slot.date}</p>
-                    <div className="slot-times">
-                      {slot.times.map((time) => (
-                        <button
-                          key={time}
-                          className={`time-btn ${selectedDate === slot.date && selectedTime === time ? 'active' : ''}`}
-                          onClick={() => {
-                            setSelectedDate(slot.date);
-                            setSelectedTime(time);
-                          }}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+          {/* Right Column: Booking & Availability */}
+          <div className="profile-sidebar-column">
+            {/* Availability Selection Card */}
+            <div className="profile-availability-card">
+              <div className="profile-availability-header">
+                <div className="profile-availability-header-icon-container">
+                  <FiCalendar size={18} className="text-[#10B77F]" />
+                </div>
+                <h3 className="profile-availability-header-title">Select Availability</h3>
               </div>
+              
+              <div className="profile-availability-slots-list">
+                {availabilitySlots.map((slot, idx) => {
+                  const isDateSelected = selectedDate === slot.date;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`profile-availability-slot-item ${isDateSelected ? 'selected' : ''}`}
+                    >
+                      <p className="profile-availability-slot-date">{slot.dateLabel}</p>
+                      <div className="profile-availability-time-grid">
+                        {slot.times.length > 0 ? (
+                          slot.times.map((time) => {
+                            const isTimeSelected = selectedDate === slot.date && selectedTime === time.value;
+                            return (
+                              <button
+                                key={time.value}
+                                className={`profile-availability-time-btn ${isTimeSelected ? 'active' : ''}`}
+                                onClick={() => {
+                                  setSelectedDate(slot.date);
+                                  setSelectedTime(time.value);
+                                }}
+                              >
+                                {time.label}
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <span className="text-xs text-slate-400 py-1">No slots available</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-              {/* Session Info */}
-              <div className="session-info-list">
-                <div className="info-item">
-                  <span className="info-icon">✓</span>
-                  <span>60-minute focused session</span>
+            {/* Booking Action Card */}
+            <div className="profile-booking-action-card">
+              <div className="profile-booking-info-list">
+                <div className="profile-booking-info-item">
+                  <div className="profile-booking-info-check">✓</div>
+                  <span className="profile-booking-info-text">60-minute focused session</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-icon">✓</span>
-                  <span>Project review & feedback</span>
+                <div className="profile-booking-info-item">
+                  <div className="profile-booking-info-check">✓</div>
+                  <span className="profile-booking-info-text">Project review & feedback</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-icon">✓</span>
-                  <span>Follow-up resource list</span>
+                <div className="profile-booking-info-item">
+                  <div className="profile-booking-info-check">✓</div>
+                  <span className="profile-booking-info-text">Follow-up resource list</span>
                 </div>
               </div>
 
               <button 
-                className="book-session-btn" 
+                className="profile-booking-btn-primary" 
                 disabled={!selectedTime}
                 onClick={() => {
                   if (user) {
@@ -298,7 +381,7 @@ export default function MentorProfile() {
               </button>
 
               <button 
-                className="message-btn"
+                className="profile-booking-btn-secondary"
                 onClick={() => {
                   if (user) {
                     navigate('/messages', {
@@ -315,13 +398,15 @@ export default function MentorProfile() {
                   }
                 }}
               >
-                <FiMessageCircle size={16} />
                 Message {mentor.name?.split(' ')[0]}
               </button>
 
-              <p className="satisfaction-guarantee">100% SATISFACTION GUARANTEED</p>
+              <div className="profile-booking-guarantee-container">
+                <span className="profile-booking-guarantee-text">100% SATISFACTION GUARANTEED</span>
+              </div>
             </div>
-          </aside>
+          </div>
+
         </div>
       </div>
     </PageLayout>

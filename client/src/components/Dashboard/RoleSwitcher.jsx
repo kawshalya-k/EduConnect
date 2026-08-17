@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 const RoleSwitcher = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, setUser, mode, setMode } = useAuth();
 
   // Initialize role from localStorage, defaulting based on current path if empty
   const [currentRole, setCurrentRole] = useState(() => {
@@ -19,18 +20,25 @@ const RoleSwitcher = () => {
     if (location.pathname === '/mentor-dashboard') {
       setCurrentRole('mentor');
       localStorage.setItem('activeRole', 'mentor');
-    } else if (location.pathname === '/learner-dashboard' || location.pathname === '/dashboard') {
+      if (setMode) setMode('mentor');
+    } else if (location.pathname === '/learner-dashboard') {
       setCurrentRole('learner');
       localStorage.setItem('activeRole', 'learner');
+      if (setMode) setMode('learner');
+    } else if (location.pathname === '/dashboard') {
+      const currentMode = mode || 'learner';
+      setCurrentRole(currentMode);
+      localStorage.setItem('activeRole', currentMode);
     }
-  }, [location.pathname]);
-
-  const { user, setUser } = useAuth();
+  }, [location.pathname, mode, setMode]);
 
   const handleRoleChange = async (role) => {
     setCurrentRole(role);
     localStorage.setItem('activeRole', role);
     localStorage.setItem('educonnect_mode', role);
+    if (setMode) {
+      setMode(role);
+    }
 
     // Update backend user role if logged in
     if (user && user.id) {

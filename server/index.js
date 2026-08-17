@@ -6,35 +6,17 @@ const cors = require('cors');
 const app = express();
 
 // ── Middleware ──
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://edu-connect-git-dev-savinduakashs-projects.vercel.app',
-  /\.vercel\.app$/
-];
 
+// Set CORS to allow ALL origins during testing
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    const isAllowed = allowedOrigins.some(allowed => 
-      typeof allowed === 'string' ? allowed === origin : allowed.test(origin)
-    );
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow cookies/headers if using sessions/auth tokens
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
-// ── Routes ──
+// ── Routes ── 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mentorRoutes = require('./routes/mentorRoutes');
@@ -49,8 +31,8 @@ const mentorSearchRoutes = require('./routes/mentorSearchRoutes');
 // ── API Routes ──
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/mentors', mentorRoutes);
 app.use('/api/mentors', mentorSearchRoutes);
+app.use('/api/mentors', mentorRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -100,26 +82,6 @@ app.get('/_routes', (req, res) => {
   res.json({ routes });
 });
 
-// Print registered routes to console
-setTimeout(() => {
-  try {
-    const registered = [];
-    app._router.stack.forEach((middleware) => {
-      if (middleware.route) {
-        registered.push(middleware.route.path);
-      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
-        middleware.handle.stack.forEach((handler) => {
-          const route = handler.route && handler.route.path;
-          if (route) registered.push(route);
-        });
-      }
-    });
-    console.log('Registered routes:', registered);
-  } catch (e) {
-    console.error('Failed listing routes:', e.message);
-  }
-}, 1000);
-
 // ── Weekly Challenge Scheduler ──
 startScheduler();
 
@@ -127,7 +89,7 @@ startScheduler();
 const db = require('./config/db');
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
 
 async function verifyDB() {
   try {

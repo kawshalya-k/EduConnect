@@ -1,28 +1,38 @@
 import React from 'react';
 import { PlusCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const RecommendedMentorCard = ({ mentor }) => {
+  const mentorId = mentor.userId || mentor.User_Id || mentor.id;
+  const mentorName = mentor.name || `${mentor.First_Name || ''} ${mentor.Last_Name || ''}`.trim() || 'Peer Mentor';
+  const mentorAvatar = mentor.avatar || mentor.Avatar || '/default-avatar.svg';
+  const mentorRole = mentor.role || mentor.title || mentor.Bio || 'Expert Mentor';
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 w-full">
       {/* Avatar */}
-      <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+      <Link to={`/mentor/${mentorId}`} className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
         <img 
-          src={mentor.avatar} 
-          alt={mentor.name}
+          src={mentorAvatar} 
+          alt={mentorName}
           className="w-full h-full object-cover"
         />
-      </div>
+      </Link>
 
       {/* Info */}
-      <div className="flex flex-col flex-grow">
-        <h4 className="text-sm font-bold text-slate-900">{mentor.name}</h4>
-        <p className="text-xs text-slate-500">{mentor.role}</p>
+      <div className="flex flex-col flex-grow min-w-0">
+        <Link to={`/mentor/${mentorId}`}>
+          <h4 className="text-sm font-bold text-slate-900 truncate hover:text-[#10B981] transition-colors">
+            {mentorName}
+          </h4>
+        </Link>
+        <p className="text-xs text-slate-500 truncate">{mentorRole}</p>
       </div>
 
       {/* Action */}
-      <button className="text-[#10B981] hover:text-[#059669] transition-colors p-1">
+      <Link to={`/mentor/${mentorId}`} className="text-[#10B981] hover:text-[#059669] transition-colors p-1 shrink-0">
         <PlusCircle className="w-5 h-5" />
-      </button>
+      </Link>
     </div>
   );
 };

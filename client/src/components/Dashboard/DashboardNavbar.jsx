@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import RoleSwitcher from './RoleSwitcher';
 import WalletWidget from '../Gamification/WalletWidget';
 import logo from '../../Assets/educonnect-logo.svg';
@@ -21,7 +21,21 @@ const NAV_LINKS = {
 const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, mode, logout } = useAuth();
+  
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Determine role reactively based on persistent storage
   const [role, setRole] = useState(() => {
@@ -30,15 +44,15 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
     return currentPath.startsWith('/mentor') ? 'mentor' : 'learner';
   });
 
-  // Re-evaluate whenever the route changes (e.g. going from dashboard to messages)
+  // Re-evaluate whenever the route changes or mode changes
   useEffect(() => {
     const savedRole = localStorage.getItem('activeRole');
     if (savedRole) {
       setRole(savedRole);
     } else {
-      setRole(currentPath.startsWith('/mentor') ? 'mentor' : 'learner');
+      setRole(mode || (currentPath.startsWith('/mentor') ? 'mentor' : 'learner'));
     }
-  }, [currentPath]);
+  }, [currentPath, mode]);
 
   const links = NAV_LINKS[role] || NAV_LINKS.learner;
 
@@ -99,15 +113,44 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
                   </svg>
                 </Link>
 
-                {/* Profile */}
-                <Link to="/profile" className="flex flex-col items-start w-9 h-9 cursor-pointer">
-                  <div className="box-border flex flex-col justify-center items-start w-9 h-9 bg-[#E2E8F0] border-2 border-[#10B981]/30 rounded-full overflow-hidden">
-                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mt-2 text-slate-400">
-                      <circle cx="16" cy="12" r="6" fill="currentColor"/>
-                      <path d="M6 28C6 22.4772 10.4772 18 16 18C21.5228 18 26 22.4772 26 28" fill="currentColor"/>
-                    </svg>
-                  </div>
-                </Link>
+                {/* Profile Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex flex-col items-start w-9 h-9 cursor-pointer focus:outline-none"
+                  >
+                    <div className="box-border flex flex-col justify-center items-center w-9 h-9 border-2 border-[#10B981]/30 rounded-full overflow-hidden hover:border-[#10B981]/60 transition-all">
+                      <img
+                        src={user?.avatar || user?.Avatar || '/default-avatar.svg'}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50">
+                      <Link
+                        to="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-all font-medium text-left"
+                      >
+                        My Profile
+                      </Link>
+                      <div className="h-px bg-slate-100 my-1" />
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          logout();
+                          window.location.href = '/';
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-all font-semibold"
+                      >
+                        Log Out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>

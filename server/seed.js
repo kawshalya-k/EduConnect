@@ -45,9 +45,9 @@ async function seed() {
     // 2. Seed Mentors
     const defaultPassword = await bcrypt.hash('password123', 10);
     const mentors = [
-      ['Sarah', 'Chen', 'sarah.c@test.ac.lk', defaultPassword, 'University of Colombo', 'Mentor', 1, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=E2E8F0', 'UX Strategy & Design Thinking'],
-      ['David', 'Miller', 'david.m@test.ac.lk', defaultPassword, 'University of Peradeniya', 'Mentor', 1, 'https://api.dicebear.com/7.x/avataaars/svg?seed=David&backgroundColor=E2E8F0', 'Python Developer & Data Engineer'],
-      ['Elena', 'Rodriguez', 'elena.r@test.ac.lk', defaultPassword, 'University of Moratuwa', 'Mentor', 1, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena&backgroundColor=E2E8F0', 'Product Management Lead']
+      ['Sarah', 'Chen', 'sarah.c@test.ac.lk', defaultPassword, 'University of Colombo', 'Mentor', 1, '/default-avatar.svg', 'UX Strategy & Design Thinking'],
+      ['David', 'Miller', 'david.m@test.ac.lk', defaultPassword, 'University of Peradeniya', 'Mentor', 1, '/default-avatar.svg', 'Python Developer & Data Engineer'],
+      ['Elena', 'Rodriguez', 'elena.r@test.ac.lk', defaultPassword, 'University of Moratuwa', 'Mentor', 1, '/default-avatar.svg', 'Product Management Lead']
     ];
 
     for (const mentor of mentors) {

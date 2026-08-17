@@ -252,7 +252,7 @@ export default function SkillVerifications() {
                             <td style={{ padding: "16px 24px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 <img
-                                  src={item.Avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.First_Name}&backgroundColor=E2E8F0`}
+                                  src={item.Avatar || '/default-avatar.svg'}
                                   alt="avatar"
                                   style={{ width: 34, height: 34, borderRadius: "50%", border: "2px solid #e2e8f0" }}
                                 />

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import logo from '../Assets/educonnect-logo.svg';
@@ -14,6 +14,7 @@ const Register = () => {
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
+  const [timeLeft, setTimeLeft] = useState(59);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -42,8 +43,8 @@ const Register = () => {
       // Save email for password setup page
       localStorage.setItem('temp_register_email', formData.email);
 
-      // Bypass OTP for now: go straight to the success page instead of setStep(2)
-      setTimeout(() => navigate('/verify-otp'), 1500);
+      // Proceed to OTP verification step
+      setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Registration failed');
     } finally {
@@ -88,6 +89,34 @@ const Register = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'OTP verification failed');
       setTimeout(() => navigate('/verification-failed'), 1000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let timer;
+    if (step === 2 && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [step, timeLeft]);
+
+  const handleResendOtp = async () => {
+    if (timeLeft > 0 || loading) return;
+    try {
+      setLoading(true);
+      setError('');
+      setSuccessMsg('');
+      const res = await api.post('/auth/resend-otp', { email: formData.email });
+      setSuccessMsg(res.data.message || 'A new OTP has been sent!');
+      setTimeLeft(59); // Reset timer
+      setOtp(['', '', '', '', '', '']); // Clear current OTP inputs
+      otpRefs.current[0]?.focus();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }
@@ -164,9 +193,6 @@ const Register = () => {
                 <label className="text-sm font-bold text-slate-700">University Email</label>
                 <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="student@dept.ac.lk" className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#10B981] focus:bg-white outline-none transition-all" />
               </div>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                By clicking Continue, you agree to our <Link to="/terms-of-service?onboarding=true" className="text-[#10B981] hover:underline">Terms of Service</Link>, <Link to="/privacy-policy?onboarding=true" className="text-[#10B981] hover:underline">Privacy Policy</Link>, and <Link to="/community-standards?onboarding=true" className="text-[#10B981] hover:underline">Community Standards</Link>.
-              </p>
               <button 
                 type="submit"
                 disabled={loading}
@@ -195,8 +221,15 @@ const Register = () => {
 
               <div className="space-y-4">
                 <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                  <span className="text-slate-400">Timer: <span className="text-[#10B981]">00:59s</span></span>
-                  <button type="button" className="text-[#10B981] hover:underline cursor-pointer">Resend OTP</button>
+                  <span className="text-slate-400">Timer: <span className="text-[#10B981]">00:{timeLeft.toString().padStart(2, '0')}s</span></span>
+                  <button 
+                    type="button" 
+                    onClick={handleResendOtp}
+                    disabled={timeLeft > 0 || loading}
+                    className={`${timeLeft > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-[#10B981] hover:underline cursor-pointer'}`}
+                  >
+                    Resend OTP
+                  </button>
                 </div>
                 
                 <button 

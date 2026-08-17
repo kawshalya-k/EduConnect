@@ -82,26 +82,34 @@ exports.getEarnings = async (req, res) => {
     try {
         const [monthly] = await db.query(
             `SELECT
-                DATE_FORMAT(Date, '%Y-%m') AS Month,
-                SUM(Reward)                AS Total_Earned,
-                COUNT(*)                   AS Sessions_Count
-             FROM Session
-             WHERE Mentor_Id = ? AND Status = 'Completed'
-               AND Date >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
-             GROUP BY DATE_FORMAT(Date, '%Y-%m')
+                DATE_FORMAT(Timestamp, '%Y-%m') AS Month,
+                SUM(Amount)                     AS Total_Earned,
+                COUNT(*)                        AS Sessions_Count
+             FROM Wallet_Transaction
+             WHERE User_Id = ? AND Transaction_Type = 'CREDIT' AND Description NOT LIKE '%Refund%'
+               AND Timestamp >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+             GROUP BY DATE_FORMAT(Timestamp, '%Y-%m')
              ORDER BY Month ASC`,
             [mentorId]
         );
 
         const [allTime] = await db.query(
-            `SELECT SUM(Reward) AS All_Time_Earned FROM Session
-             WHERE Mentor_Id = ? AND Status = 'Completed'`,
+            `SELECT IFNULL(SUM(Amount), 0) AS All_Time_Earned FROM Wallet_Transaction
+             WHERE User_Id = ? AND Transaction_Type = 'CREDIT' AND Description NOT LIKE '%Refund%'`,
+            [mentorId]
+        );
+
+        const [last30Days] = await db.query(
+            `SELECT IFNULL(SUM(Amount), 0) AS Last_30_Days_Earned FROM Wallet_Transaction
+             WHERE User_Id = ? AND Transaction_Type = 'CREDIT' AND Description NOT LIKE '%Refund%'
+               AND Timestamp >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)`,
             [mentorId]
         );
 
         res.json({
             monthly_breakdown: monthly,
-            all_time_earned: allTime[0]?.All_Time_Earned ?? 0
+            all_time_earned: allTime[0]?.All_Time_Earned ?? 0,
+            last_30_days_earned: last30Days[0]?.Last_30_Days_Earned ?? 0
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

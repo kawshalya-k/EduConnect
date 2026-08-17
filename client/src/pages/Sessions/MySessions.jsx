@@ -40,7 +40,7 @@ export default function MySessions() {
         const transformed = (data || []).map(s => ({
           id: s.Session_Id,
           mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.Mentor_First || s.Mentor_Id}&backgroundColor=E2E8F0`,
+          image: s.Mentor_Avatar || '/default-avatar.svg',
           skill: s.Skill_Name || 'Mentoring',
           topic: s.Skill_Name || 'Session',
           date: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD',
@@ -171,7 +171,7 @@ export default function MySessions() {
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[15px] h-[12px] text-[#10B77F]"><path d="M17 10.5V7C17 6.44772 16.5523 6 16 6H4C3.44772 6 3 6.44772 3 7V17C3 17.5523 3.44772 18 4 18H16C16.5523 18 17 17.5523 17 17V13.5L21 17.5V6.5L17 10.5Z" fill="currentColor" /></svg>
                           <span className="text-[#10B77F] font-medium text-sm leading-5">{session.meetingType}</span>
                         </div>
-                        <Link to="/session-room" className="bg-[#10B77F] text-white font-bold text-sm leading-5 py-2.5 px-6 rounded-2xl shadow-[0_10px_15px_-3px_rgba(16,183,127,0.2),0_4px_6px_-4px_rgba(16,183,127,0.2)] hover:bg-[#0ea873] transition-colors flex items-center justify-center">
+                        <Link to={`/session-room?id=${session.id}`} className="bg-[#10B77F] text-white font-bold text-sm leading-5 py-2.5 px-6 rounded-2xl shadow-[0_10px_15px_-3px_rgba(16,183,127,0.2),0_4px_6px_-4px_rgba(16,183,127,0.2)] hover:bg-[#0ea873] transition-colors flex items-center justify-center">
                           Join Meeting
                         </Link>
                       </div>
@@ -216,8 +216,7 @@ export default function MySessions() {
                         </div>
                         <button
                           className={`border font-bold text-xs leading-4 py-1.5 px-4 rounded-2xl transition-colors ${btnClasses}`}
-                          onClick={() => isCompleted ? navigate('/session-feedback', { state: { sessionId: session.id } }) : null}
-                        >
+                          onClick={() => isCompleted ? navigate('/session-feedback', { state: { sessionId: session.Session_Id, mentorName: session.mentor_name || 'Your Mentor' } }) : null}                        >
                           {isCompleted ? "Rate Mentor" : "Feedback"}
                         </button>
                       </div>

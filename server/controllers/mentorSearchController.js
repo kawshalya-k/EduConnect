@@ -13,6 +13,7 @@ exports.searchMentors = async (req, res) => {
         skill_id,
         category,
         level,
+        levels,
         university,
         keyword,
         sort = 'rating',
@@ -27,7 +28,7 @@ exports.searchMentors = async (req, res) => {
     const conditions = [
         `u.Status = 'Active'`,
         `us.Role = 'Mentor'`,
-        `us.Verification_Status = 'Verified'`
+        `(us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`
     ];
 
     if (skill_id) {
@@ -38,14 +39,16 @@ exports.searchMentors = async (req, res) => {
         const categoryList = category.split(',').map(c => c.trim().toLowerCase());
         const matchedSkills = [];
         for (const cat of categoryList) {
-            if (cat === 'web development') {
-                matchedSkills.push('JavaScript', 'Python', 'SQL', 'Git');
-            } else if (cat === 'ui/ux design' || cat === 'ui/ ux strategy') {
-                matchedSkills.push('Figma', 'Information Architecture', 'UI/ UX Strategy');
-            } else if (cat === 'data science') {
-                matchedSkills.push('Statistics', 'NLP', 'Python', 'Data Science');
+            if (cat === 'data science') {
+                matchedSkills.push('Python', 'SQL', 'Data Science', 'NLP');
             } else if (cat === 'mobile development' || cat === 'mobile dev') {
-                matchedSkills.push('Android Development', 'Flutter', 'Android');
+                matchedSkills.push('Flutter', 'Android Development', 'Java');
+            } else if (cat === 'technical') {
+                matchedSkills.push('SQL', 'Information Architecture', 'NLP', 'Java');
+            } else if (cat === 'ui/ux design') {
+                matchedSkills.push('UI/UX Design', 'Information Architecture');
+            } else if (cat === 'web development') {
+                matchedSkills.push('Python', 'Java', 'JavaScript');
             }
         }
         
@@ -60,27 +63,43 @@ exports.searchMentors = async (req, res) => {
             params.push(...categoryList);
         }
     }
-    if (level) {
-        conditions.push(`us.Mentor_Level = ?`);
-        params.push(level);
+    
+    const activeLevel = level || levels;
+    if (activeLevel) {
+        const queryLevels = [];
+        activeLevel.split(',').forEach(l => {
+            const clean = l.trim().toLowerCase();
+            if (clean === 'gold') {
+                queryLevels.push('Gold', 'Expert', 'GOLD MENTOR');
+            } else if (clean === 'silver') {
+                queryLevels.push('Silver', 'Intermediate');
+            } else if (clean === 'bronze') {
+                queryLevels.push('Bronze', 'Beginner');
+            } else {
+                queryLevels.push(clean.charAt(0).toUpperCase() + clean.slice(1));
+            }
+        });
+        const placeholders = queryLevels.map(() => '?').join(',');
+        conditions.push(`us.Mentor_Level IN (${placeholders})`);
+        params.push(...queryLevels);
     }
     if (university) {
         conditions.push(`u.University LIKE ?`);
         params.push(`%${university}%`);
     }
     if (keyword) {
-        conditions.push(`(u.First_Name LIKE ? OR u.Last_Name LIKE ?)`);
-        params.push(`%${keyword}%`, `%${keyword}%`);
+        conditions.push(`(u.First_Name LIKE ? OR u.Last_Name LIKE ? OR s.Skill_Name LIKE ? OR s.Category LIKE ? OR u.Bio LIKE ?)`);
+        params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
     }
 
     const whereClause = conditions.join(' AND ');
 
-    // Sort options
+    // Sort options with GROUP BY compatible aggregates
     const sortMap = {
-        rating:   'ld.Average_Rating DESC',
-        sessions: 'ld.Total_Sessions DESC',
-        newest:   'u.Created_At DESC',
-        level:    'FIELD(us.Mentor_Level, "Gold", "Silver", "Bronze")'
+        rating:   'MAX(COALESCE(ld.Average_Rating, 0)) DESC',
+        sessions: 'SUM(COALESCE(ld.Total_Sessions, 0)) DESC',
+        newest:   'MAX(u.Created_At) DESC',
+        level:    'FIELD(MAX(us.Mentor_Level), "Gold", "Silver", "Bronze")'
     };
     const orderBy = sortMap[sort] || sortMap['rating'];
 
@@ -97,31 +116,71 @@ exports.searchMentors = async (req, res) => {
         );
         const total = countRows[0].total;
 
-        // Main query
-        const [mentors] = await db.query(
-            `SELECT
-                u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio,
-                s.Skill_Id, s.Skill_Name, s.Category,
-                us.Mentor_Level,
-                COALESCE(ld.Average_Rating, 0) AS Average_Rating,
-                COALESCE(ld.Total_Sessions, 0) AS Total_Sessions,
-                COALESCE(ld.Score, 0)           AS Score
+        // 1. Fetch distinct mentor user IDs for this page (grouped for compatibility)
+        const [mentorIdsRows] = await db.query(
+            `SELECT u.User_Id
              FROM User u
              JOIN User_Skill us ON us.User_Id = u.User_Id
              JOIN Skill s       ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
              WHERE ${whereClause}
+             GROUP BY u.User_Id
              ORDER BY ${orderBy}
              LIMIT ? OFFSET ?`,
             [...params, parseInt(limit), offset]
         );
+        const mentorIds = mentorIdsRows.map(r => r.User_Id);
+
+        let paginatedMentors = [];
+        if (mentorIds.length > 0) {
+            const placeholders = mentorIds.map(() => '?').join(',');
+            const [rows] = await db.query(
+                `SELECT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar,
+                        s.Skill_Name, s.Category, us.Mentor_Level,
+                        COALESCE(ld.Average_Rating, 0) AS Average_Rating,
+                        COALESCE(ld.Total_Sessions, 0) AS Total_Sessions
+                 FROM User u
+                 JOIN User_Skill us ON us.User_Id = u.User_Id
+                 JOIN Skill s       ON s.Skill_Id = us.Skill_Id
+                 LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
+                 WHERE u.User_Id IN (${placeholders}) 
+                   AND us.Role = 'Mentor' 
+                   AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
+                mentorIds
+            );
+
+            // Group by User_Id to combine multiple skills and avoid duplicate mentor cards
+            const grouped = {};
+            for (const r of rows) {
+                if (!grouped[r.User_Id]) {
+                    grouped[r.User_Id] = {
+                        User_Id: r.User_Id,
+                        First_Name: r.First_Name,
+                        Last_Name: r.Last_Name,
+                        University: r.University,
+                        Bio: r.Bio,
+                        Avatar: r.Avatar,
+                        Mentor_Level: r.Mentor_Level,
+                        Average_Rating: r.Average_Rating,
+                        Total_Sessions: r.Total_Sessions,
+                        skills: []
+                    };
+                }
+                if (r.Skill_Name && !grouped[r.User_Id].skills.includes(r.Skill_Name)) {
+                    grouped[r.User_Id].skills.push(r.Skill_Name);
+                }
+            }
+            
+            // Keep original order of mentorIds
+            paginatedMentors = mentorIds.map(id => grouped[id]).filter(Boolean);
+        }
 
         res.json({
             total,
             page: parseInt(page),
             limit: parseInt(limit),
             total_pages: Math.ceil(total / limit),
-            mentors
+            mentors: paginatedMentors
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -149,7 +208,9 @@ exports.getFeaturedMentors = async (req, res) => {
              ORDER BY ld.Score DESC
              LIMIT 6`
         );
-        res.json(mentors);
+        const [sessionCountRows] = await db.query('SELECT COUNT(*) AS total FROM Session');
+        const totalSessions = sessionCountRows[0]?.total || 0;
+        res.json({ mentors, totalSessions });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -201,7 +262,7 @@ exports.aiSearchMentors = async (req, res) => {
       const [allVerified] = await db.query(
         `SELECT us.User_Id, us.Skill_Id 
          FROM User_Skill us 
-         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified') 
+         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1') 
          LIMIT 10`
       );
       matches = allVerified.map(row => ({
@@ -210,17 +271,18 @@ exports.aiSearchMentors = async (req, res) => {
       }));
     }
 
-    // Extract mentor IDs from results
-    const mentorIds = matches
+    // Extract unique mentor IDs from results
+    const mentorIds = [...new Set(matches
       .filter(m => m.score > 0.6) // relevance threshold
-      .map(m => m.metadata.userId);
+      .map(m => m.metadata.userId)
+    )];
 
     if (mentorIds.length === 0) return res.json({ mentors: [] });
 
     // Fetch full mentor data from MySQL
     const placeholders = mentorIds.map(() => '?').join(',');
     const [mentors] = await db.query(
-      `SELECT DISTINCT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar,
+      `SELECT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar,
               s.Skill_Name, s.Category, us.Mentor_Level,
               COALESCE(ld.Average_Rating, 0) AS Average_Rating,
               COALESCE(ld.Total_Sessions, 0) AS Total_Sessions
@@ -228,13 +290,37 @@ exports.aiSearchMentors = async (req, res) => {
        JOIN User_Skill us ON us.User_Id = u.User_Id
        JOIN Skill s ON s.Skill_Id = us.Skill_Id
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
-       WHERE u.User_Id IN (${placeholders}) AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
+       WHERE u.User_Id IN (${placeholders}) 
+         AND us.Role = 'Mentor' 
+         AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
       mentorIds
     );
 
+    // Group by User_Id to combine multiple skills and avoid duplicate rows
+    const grouped = {};
+    for (const r of mentors) {
+      if (!grouped[r.User_Id]) {
+        grouped[r.User_Id] = {
+          User_Id: r.User_Id,
+          First_Name: r.First_Name,
+          Last_Name: r.Last_Name,
+          University: r.University,
+          Bio: r.Bio,
+          Avatar: r.Avatar,
+          Mentor_Level: r.Mentor_Level,
+          Average_Rating: r.Average_Rating,
+          Total_Sessions: r.Total_Sessions,
+          skills: []
+        };
+      }
+      if (r.Skill_Name && !grouped[r.User_Id].skills.includes(r.Skill_Name)) {
+        grouped[r.User_Id].skills.push(r.Skill_Name);
+      }
+    }
+
     // Re-order mentors to match Pinecone's relevance ranking
     const ordered = mentorIds
-      .map(id => mentors.find(m => m.User_Id === id))
+      .map(id => grouped[id])
       .filter(Boolean);
 
     res.json({ mentors: ordered, source: 'ai' });
@@ -250,58 +336,21 @@ exports.aiSearchMentors = async (req, res) => {
 exports.getRecommendedMentors = async (req, res) => {
   const userId = req.user.id;
   try {
-    const { embedText } = require('../config/gemini');
-    const pineconeIndex = require('../config/pinecone');
+    const { recommendMentorsAI } = require('../config/gemini');
 
-    // 1. Fetch skills the learner wants to learn
+    // 1. Fetch skills the learner wants to learn (wishlist)
     const [learnSkills] = await db.query(
-      `SELECT s.Skill_Name 
+      `SELECT s.Skill_Id, s.Skill_Name, s.Category 
        FROM User_Skill us 
        JOIN Skill s ON s.Skill_Id = us.Skill_Id 
        WHERE us.User_Id = ? AND us.Role = 'Learner'`,
       [userId]
     );
 
-    let queryText = 'highly rated student mentors';
-    if (learnSkills.length > 0) {
-      const list = learnSkills.map(s => s.Skill_Name).join(', ');
-      queryText = `learner interested in learning: ${list}`;
-    }
-
-    // 2. Generate embedding for query
-    const queryVector = await embedText(queryText);
-
-    // 3. Query Pinecone for top 4 matches
-    const results = await pineconeIndex.query({
-      vector: queryVector,
-      topK: 4,
-      includeMetadata: true
-    });
-
-    let matches = results.matches || [];
-
-    // Fallback if empty and mock mode
-    if (matches.length === 0 && !process.env.PINECONE_API_KEY) {
-      const [allVerified] = await db.query(
-        `SELECT us.User_Id, us.Skill_Id 
-         FROM User_Skill us 
-         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified') 
-         LIMIT 4`
-      );
-      matches = allVerified.map(row => ({
-        score: 0.8,
-        metadata: { userId: row.User_Id, skillId: row.Skill_Id }
-      }));
-    }
-
-    const mentorIds = matches.map(m => m.metadata.userId);
-    if (mentorIds.length === 0) return res.json([]);
-
-    // Fetch full data
-    const placeholders = mentorIds.map(() => '?').join(',');
-    const [mentors] = await db.query(
-      `SELECT DISTINCT u.User_Id as id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar as avatar,
-              s.Skill_Name, s.Category, us.Mentor_Level as level,
+    // 2. Fetch all active, verified mentors from MySQL (Verification_Status = 'Verified' or 1)
+    const [allMentors] = await db.query(
+      `SELECT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar as avatar,
+              s.Skill_Id, s.Skill_Name, s.Category, us.Mentor_Level,
               COALESCE(ld.Average_Rating, 5.0) AS rating,
               COALESCE(ld.Total_Sessions, 0) AS reviews,
               '100 Skill Coins' as price
@@ -309,29 +358,101 @@ exports.getRecommendedMentors = async (req, res) => {
        JOIN User_Skill us ON us.User_Id = u.User_Id
        JOIN Skill s ON s.Skill_Id = us.Skill_Id
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
-       WHERE u.User_Id IN (${placeholders}) AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
-      mentorIds
+       WHERE us.Role = 'Mentor' 
+         AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')
+         AND u.Status = 'Active'
+         AND u.User_Id != ?`,
+      [userId]
     );
 
-    // Format fields to match frontend expectations (RecommendedMentorCard / MentorCard)
-    const formatted = mentors.map(row => ({
-      id: row.id,
-      name: `${row.First_Name} ${row.Last_Name}`,
-      avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
-      level: row.level || 'Bronze',
-      role: row.Bio || 'Mentor',
-      rating: Number(row.rating).toFixed(1),
-      reviews: row.reviews,
-      price: row.price,
-      skills: [row.Skill_Name]
-    }));
+    // Group mentors by User_Id to combine multiple skills and avoid duplicate rows
+    const mentorsMap = {};
+    for (const row of allMentors) {
+      if (!mentorsMap[row.User_Id]) {
+        mentorsMap[row.User_Id] = {
+          userId: row.User_Id,
+          name: `${row.First_Name} ${row.Last_Name}`,
+          firstName: row.First_Name,
+          lastName: row.Last_Name,
+          avatar: row.avatar || '/default-avatar.svg',
+          mentorLevel: row.Mentor_Level || 'Bronze',
+          title: row.Bio || 'Mentor',
+          university: row.University,
+          rating: Number(row.rating).toFixed(1),
+          reviews: row.reviews,
+          price: row.price,
+          skills: [],
+          skillIds: []
+        };
+      }
+      if (row.Skill_Name && !mentorsMap[row.User_Id].skills.includes(row.Skill_Name)) {
+        mentorsMap[row.User_Id].skills.push(row.Skill_Name);
+      }
+      if (row.Skill_Id && !mentorsMap[row.User_Id].skillIds.includes(row.Skill_Id)) {
+        mentorsMap[row.User_Id].skillIds.push(row.Skill_Id);
+      }
+    }
+    const mentorsList = Object.values(mentorsMap);
 
-    // Order to match Pinecone relevance
-    const ordered = mentorIds
-      .map(id => formatted.find(m => m.id === id))
-      .filter(Boolean);
+    let recommendedIds = null;
+    if (process.env.GEMINI_API_KEY) {
+      // Pass the wishlist and mentorsList to Gemini for generative matching
+      recommendedIds = await recommendMentorsAI(learnSkills, mentorsList);
+    }
 
-    res.json(ordered);
+    let ordered = [];
+    if (recommendedIds && recommendedIds.length > 0) {
+      const uniqueIds = [...new Set(recommendedIds)];
+      ordered = uniqueIds
+        .map(id => mentorsMap[id])
+        .filter(Boolean);
+    }
+
+    // Fallback: If Gemini is not set up or returned no matches, run smart database wishlist-matching
+    if (ordered.length === 0) {
+      console.log('[AI Recommendation] Gemini returned no matches or is not set up. Using database matching fallback.');
+      
+      if (mentorsList.length > 0) {
+        const wishlistSkillIds = learnSkills.map(s => s.Skill_Id);
+        const wishlistSkillNames = learnSkills.map(s => s.Skill_Name.trim().toLowerCase());
+
+        const wishlistMentors = mentorsList.filter(m => 
+          m.skillIds.some(id => wishlistSkillIds.includes(id)) ||
+          m.skills.some(name => wishlistSkillNames.includes(name.trim().toLowerCase()))
+        );
+
+        const wishlistMentorIds = wishlistMentors.map(m => m.userId);
+        const otherMentors = mentorsList.filter(m => !wishlistMentorIds.includes(m.userId));
+
+        if (wishlistMentors.length > 0) {
+          ordered = [...wishlistMentors, ...otherMentors];
+        } else {
+          ordered = otherMentors; // show verified mentors for other skills
+        }
+      }
+    }
+
+    res.json({ mentors: ordered });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// GET /api/mentors/verified-count
+// Get total count of unique active, verified mentors
+// ─────────────────────────────────────────────
+exports.getVerifiedMentorsCount = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT COUNT(DISTINCT u.User_Id) AS count
+       FROM User u
+       JOIN User_Skill us ON us.User_Id = u.User_Id
+       WHERE u.Status = 'Active'
+         AND us.Role = 'Mentor'
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR us.Verification_Status = 'Draft')`
+    );
+    res.json({ count: rows[0].count || 0 });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

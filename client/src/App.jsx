@@ -29,7 +29,7 @@ import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
 import Notifications from './pages/Notifications';
-import DevMenu from './components/DevMenu';
+
 import ScrollToTop from './components/ScrollToTop';
 //Mentor
 import MentorDashboard from './pages/Mentor/MentorDashboard';
@@ -65,7 +65,7 @@ function App() {
   return (
     <div className="App">
       <ScrollToTop />
-      <DevMenu />
+
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />

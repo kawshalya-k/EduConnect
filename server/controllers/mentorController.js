@@ -126,6 +126,53 @@ exports.getPublicProfile = async (req, res) => {
       [mentorId]
     );
 
+    // Fetch sessions stats
+    const [statsRows] = await db.query(
+      `SELECT 
+         COALESCE(AVG(Rating), 0) as avgRating,
+         COUNT(Session_Id) as sessionsTaught
+       FROM Session
+       WHERE Mentor_Id = ? AND Status = 'Completed'`,
+      [mentorId]
+    );
+    const avgRating = Number(statsRows[0].avgRating || 0);
+    const sessionsTaught = Number(statsRows[0].sessionsTaught || 0);
+
+    // Fetch levelling data
+    const [levellingRows] = await db.query(
+      `SELECT 
+         COALESCE(SUM(Score), 0) as totalScore,
+         MAX(Mentor_Level) as maxLevel
+       FROM Levelling_Data 
+       WHERE Mentor_Id = ?`,
+      [mentorId]
+    );
+    const totalXP = Number(levellingRows[0].totalScore || 0);
+    const dbLevel = (levellingRows[0].maxLevel || 'BRONZE').toUpperCase();
+
+    let calculatedLevel = dbLevel === 'GOLD' || dbLevel === 'SILVER' || dbLevel === 'BRONZE' ? dbLevel : 'BRONZE';
+    let currentXP = totalXP;
+    let nextLevelXP = 200;
+    let levelProgress = 70;
+
+    if (calculatedLevel === 'GOLD') {
+      currentXP = totalXP;
+      nextLevelXP = 1000;
+      levelProgress = Math.min(100, Math.round((totalXP / 1000) * 100)) || 100;
+    } else if (calculatedLevel === 'SILVER') {
+      currentXP = totalXP >= 200 ? totalXP - 200 : totalXP;
+      nextLevelXP = 500;
+      levelProgress = Math.min(100, Math.round((currentXP / 300) * 100)) || 50;
+    } else {
+      currentXP = totalXP;
+      nextLevelXP = 200;
+      levelProgress = Math.min(100, Math.round((totalXP / 200) * 100)) || 20;
+    }
+
+    const memberSinceDate = userRows[0].Created_At
+      ? new Date(userRows[0].Created_At).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      : 'Oct 2023';
+
     const mentorData = {
       id: userRows[0].User_Id,
       userId: userRows[0].User_Id,
@@ -136,7 +183,13 @@ exports.getPublicProfile = async (req, res) => {
       bio: userRows[0].Bio || '',
       title: userRows[0].Bio || 'Expert Mentor',
       avatar: userRows[0].Avatar,
-      level: skills.length > 0 ? (skills[0].Mentor_Level ? skills[0].Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE') : 'BRONZE',
+      level: calculatedLevel,
+      levelProgress: levelProgress,
+      currentXP: currentXP,
+      nextLevelXP: nextLevelXP,
+      sessionsTaught: sessionsTaught,
+      rating: avgRating > 0 ? avgRating : 0,
+      memberSince: memberSinceDate,
       verified: true,
       skills: skills.map(s => ({
         id: s.Skill_Id,
@@ -198,7 +251,7 @@ exports.getMentors = async (req, res) => {
     const formattedMentors = rows.map(row => ({
       id: row.id,
       name: `${row.First_Name} ${row.Last_Name}`,
-      avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
+      avatar: row.avatar || '/default-avatar.svg',
       level: row.level,
       role: row.role || 'Mentor',
       rating: Number(row.rating).toFixed(1),

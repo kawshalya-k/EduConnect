@@ -74,7 +74,36 @@ exports.verifyOTP = async (req, res) => {
     }
 };
 
-// --- 3. LOGIN ---
+// --- 3. RESEND OTP ---
+exports.resendOTP = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const [rows] = await db.query("SELECT * FROM User WHERE Email = ?", [email]);
+        const user = rows[0];
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+        if (user.is_verified) return res.status(400).json({ message: "User is already verified" });
+
+        // Generate OTP & Expiry (valid for 10 minutes)
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp_expiry = new Date(Date.now() + 10 * 60000); 
+
+        // Update DB with new OTP
+        await db.query(
+            "UPDATE User SET otp_code = ?, otp_expiry = ? WHERE Email = ?", 
+            [otp, otp_expiry, email]
+        );
+
+        // Send email
+        await sendEmail(email, otp);
+
+        res.status(200).json({ message: "A new verification code has been sent to your email!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// --- 4. LOGIN ---
 exports.login = async (req, res) => {
     const { email, password, rememberMe } = req.body;
     try {
@@ -184,7 +213,7 @@ exports.setupPassword = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
 
         // Hash new password
-        const hashedPassword = await bcrypt.hash(password, 8);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Update DB
         await db.query(

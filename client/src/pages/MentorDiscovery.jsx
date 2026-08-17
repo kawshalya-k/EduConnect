@@ -32,11 +32,12 @@ export default function MentorDiscovery() {
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState('rating');
   
-  const [categories, setCategories] = useState([
-    'Web Development',
-    'UI/UX Design',
+  const [categories] = useState([
     'Data Science',
-    'Mobile Development'
+    'Mobile Development',
+    'Technical',
+    'UI/UX Design',
+    'Web Development'
   ]);
   const [quickTags, setQuickTags] = useState([
     'Data Structures 101',
@@ -48,26 +49,8 @@ export default function MentorDiscovery() {
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedLevels, setSelectedLevels] = useState(['GOLD', 'SILVER']);
+  const [selectedLevels, setSelectedLevels] = useState(['GOLD', 'SILVER', 'BRONZE']);
   const [sessionType, setSessionType] = useState('Any Type');
-
-  useEffect(() => {
-    const getCats = async () => {
-      try {
-        const res = await fetchCategories();
-        const fetchedCats = (res.data || []).filter(Boolean);
-        if (fetchedCats.length > 0) {
-          setCategories(fetchedCats);
-        } else {
-          setCategories(['Web Development', 'UI/UX Design', 'Data Science', 'Mobile Development']);
-        }
-      } catch (err) {
-        console.error('Failed to load categories dynamically:', err);
-        setCategories(['Web Development', 'UI/UX Design', 'Data Science', 'Mobile Development']);
-      }
-    };
-    getCats();
-  }, []);
 
   useEffect(() => {
     const loadQuickTags = async () => {
@@ -123,7 +106,6 @@ export default function MentorDiscovery() {
       const res = await searchMentors({
         category: selectedCategory || undefined,
         levels: selectedLevels.join(','),
-        sessionType: sessionType === 'Any Type' ? null : sessionType,
         sortBy,
       });
       setMentors(res.data?.mentors || []);
@@ -298,8 +280,9 @@ export default function MentorDiscovery() {
               <div className="mentors-grid">
                 {mentors.map((mentor) => (
                   <MentorCard
-                    key={mentor.id}
+                    key={mentor.id || mentor.userId || mentor.User_Id}
                     mentor={mentor}
+                    layout="grid"
                     onBooking={(m) => {
                       if (user) {
                         navigate('/session-booking', {

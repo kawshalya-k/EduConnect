@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyNotifications, markAllAsRead, markAsRead, deleteNotification } from '../services/notificationService';
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
 
 const typeConfig = {
@@ -80,28 +81,7 @@ export default function Notifications() {
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Navbar */}
-      <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: "#10b981", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>E</span>
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
-        </div>
-        <div style={{ display: "flex", gap: 32 }}>
-          {["Dashboard", "Sessions", "Messages"].map(n => (
-            <span key={n} style={{ cursor: "pointer", fontWeight: 500, color: "#64748b", fontSize: 14 }}>{n}</span>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ position: "relative" }}>
-            <span style={{ fontSize: 20, cursor: "pointer" }}>🔔</span>
-            {unreadCount > 0 && (
-              <div style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, background: "#ef4444", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>{unreadCount}</div>
-            )}
-          </div>
-          <img src="https://i.pravatar.cc/40?img=12" alt="avatar" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-        </div>
-      </nav>
+      <DashboardNavbar />
 
       {/* Main Content */}
       <div style={{ flex: 1, maxWidth: 800, width: "100%", margin: "0 auto", padding: "2rem 1.5rem" }}>

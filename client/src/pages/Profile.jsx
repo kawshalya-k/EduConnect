@@ -137,7 +137,7 @@ export default function Profile() {
                 <div className="flex items-center gap-6 pb-8 border-b border-slate-100">
                   <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-emerald-100 flex-shrink-0">
                     <img 
-                      src={profile.Avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.First_Name}&backgroundColor=E2E8F0`}
+                      src={profile.Avatar || '/default-avatar.svg'}
                       alt="Profile" 
                       className="w-full h-full object-cover"
                     />
