@@ -37,6 +37,15 @@ export default function Analytics() {
   const navigate = useNavigate();
   const maxBar = 100;
 
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const adminName = adminUser.name || 'Super Admin';
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
+  };
+
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
@@ -47,6 +56,14 @@ export default function Analytics() {
       }
     };
     fetchAnalytics();
+  }, []);
+
+  // Admin auth guard
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      navigate('/admin/login');
+    }
   }, []);
 
   const stats = [
@@ -70,7 +87,7 @@ export default function Analytics() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>Alex Rivera</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>{adminName}</span>
         </div>
       </nav>
 
@@ -92,9 +109,10 @@ export default function Analytics() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #a7f3d0" }} />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>Super Admin</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>{adminName}</p>
                 <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Administrator</p>
               </div>
+              <span onClick={handleLogout} title="Logout" style={{ cursor: "pointer", fontSize: 16, color: "#94a3b8" }}>↪</span>
             </div>
           </div>
         </div>

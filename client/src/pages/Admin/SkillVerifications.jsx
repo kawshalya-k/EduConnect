@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllUserSkills } from '../../services/adminService';
+import { getAllSkills, getAllUserSkills } from '../../services/adminService';
 
 const sidebarItems = [
   { icon: "⊞", label: "Dashboard", path: "/admin/dashboard" },
@@ -19,11 +19,20 @@ export default function SkillVerifications() {
   
   const navigate = useNavigate();
 
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const adminName = adminUser.name || 'Super Admin';
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
+  };
+
   useEffect(() => {
     const fetchSkills = async () => {
       try {
         const data = await getAllUserSkills();
-        setUserSkills(data);
+        setUserSkills(data || []);
       } catch (err) {
         console.error('Error fetching user skills:', err);
       } finally {
@@ -31,6 +40,14 @@ export default function SkillVerifications() {
       }
     };
     fetchSkills();
+  }, []);
+
+    // Admin auth guard
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      navigate('/admin/login');
+    }
   }, []);
 
   // Compute live stats from DB data
@@ -83,38 +100,45 @@ export default function SkillVerifications() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f1f5f9", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
-      {/* Top Bar */}
-      <div style={{ background: "#0f172a", padding: "0.6rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ color: "#94a3b8", fontSize: 13, fontWeight: 600 }}>Admin - Skill Verification</span>
-        <span style={{ color: "#475569", fontSize: 12 }}>EduConnect Admin Panel v2.0</span>
-      </div>
+      {/* Navbar */}
+      <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e2e8f0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 36, height: 36, background: "#10b981", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>E</span>
+          </div>
+          <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
+          <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "3px 10px", borderRadius: 20, border: "1px solid #a7f3d0" }}>Admin</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>{adminName}</span>
+        </div>
+      </nav>
 
       <div style={{ display: "flex", flex: 1 }}>
 
         {/* Sidebar */}
-        <div style={{ width: 220, background: "#fff", borderRight: "1px solid #f1f5f9", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-          <div style={{ padding: "1.25rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>E</span>
-            </div>
-            <span style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>EduConnect</span>
-          </div>
-          <div style={{ padding: "1rem 0.75rem", flex: 1 }}>
+        <div style={{ width: 230, background: "#fff", borderRight: "1px solid #e2e8f0", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+          <div style={{ padding: "1.5rem 1rem", flex: 1 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: 1.5, textTransform: "uppercase", margin: "0 0 1rem 0.5rem" }}>Main Menu</p>
             {sidebarItems.map(item => (
               <div key={item.label} onClick={() => { setActivePage(item.label); navigate(item.path); }}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#f0fdf4" : "transparent", color: activePage === item.label ? "#10b981" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #10b981" : "3px solid transparent" }}>
-                <span>{item.icon}</span>
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, marginBottom: 4, cursor: "pointer", background: activePage === item.label ? "#ecfdf5" : "transparent", color: activePage === item.label ? "#10b981" : "#64748b", fontWeight: activePage === item.label ? 700 : 500, fontSize: 14, borderLeft: activePage === item.label ? "3px solid #10b981" : "3px solid transparent" }}>
+                <span style={{ fontSize: 17 }}>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
             ))}
           </div>
-          <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #bbf7d0" }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#0f172a" }}>Admin Profile</p>
-              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Super User</p>
+          <div style={{ padding: "1rem", margin: "0 1rem 1rem", background: "#f8fafc", borderRadius: 14, border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #a7f3d0" }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>{adminName}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Super Administrator</p>
+              </div>
+              <span onClick={handleLogout} title="Logout" style={{ cursor: "pointer", fontSize: 16, color: "#94a3b8" }}>↪</span>
             </div>
           </div>
         </div>
@@ -122,17 +146,11 @@ export default function SkillVerifications() {
         {/* Main Content */}
         <div style={{ flex: 1, overflowY: "auto" }}>
 
-          {/* Header */}
-          <div style={{ background: "#fff", padding: "1.5rem 2rem", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Page Header */}
+          <div style={{ background: "#fff", padding: "1.5rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <h1 style={{ margin: "0 0 0.25rem", fontSize: 24, fontWeight: 900, color: "#0f172a" }}>Manage User Skill Levels</h1>
+              <h1 style={{ margin: "0 0 0.25rem", fontSize: 22, fontWeight: 800, color: "#0a1628" }}>Skill Verifications</h1>
               <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>Track automatic mentor skill verifications, attempts, and quiz history.</p>
-            </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Alex Rivera</span>
-              </div>
             </div>
           </div>
 

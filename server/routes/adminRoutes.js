@@ -3,31 +3,36 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const auth = require('../middleware/auth');
 const skillCtrl    = require('../controllers/skillVerificationController');
+const adminAuth = require('../middleware/adminAuth');
 
-// Dashboard
-router.get('/stats', auth, adminController.getDashboardStats);
+// Public — Admin Login
+router.post('/login', adminController.adminLogin);
 
-// User Management
-router.get('/users', auth, adminController.getAllUsers);
-router.get('/users/:userId', auth, adminController.getUserById);
-router.put('/users/:userId/status', auth, adminController.updateUserStatus);
-router.delete('/users/:userId', auth, adminController.deleteUser);
+// Protected — Dashboard
+router.get('/stats', adminAuth, adminController.getDashboardStats);
 
-// Session Management
-router.get('/sessions', auth, adminController.getAllSessions);
-router.put('/sessions/:sessionId/status', auth, adminController.updateSessionStatus);
+// Protected — User Management
+router.get('/users', adminAuth, adminController.getAllUsers);
+router.get('/users/:userId', adminAuth, adminController.getUserById);
+router.put('/users/:userId/status', adminAuth, adminController.updateUserStatus);
+router.delete('/users/:userId', adminAuth, adminController.deleteUser);
 
-// Analytics
-router.get('/analytics', auth, adminController.getAnalytics);
+// Protected — Session Management
+router.get('/sessions', adminAuth, adminController.getAllSessions);
+router.put('/sessions/:sessionId/status', adminAuth, adminController.updateSessionStatus);
 
-// Skill Management
-router.get('/skills', auth, adminController.getAllSkills);
-router.post('/skills', auth, adminController.addSkill);
-router.delete('/skills/:skillId', auth, adminController.deleteSkill);
-router.get('/user-skills', auth, adminController.getAllUserSkills);
+// Protected — Analytics
+router.get('/analytics', adminAuth, adminController.getAnalytics);
+
+// Protected — Skill Management
+router.get('/skills', adminAuth, adminController.getAllSkills);
+router.post('/skills', adminAuth, adminController.addSkill);
+router.delete('/skills/:skillId', adminAuth, adminController.deleteSkill);
+router.get('/user-skills', adminAuth, adminController.getAllUserSkills);
 
 // Mentor Management
 router.get('/', skillCtrl.getPendingVerifications);          // GET all pending
 router.patch('/:userSkillId/verify', skillCtrl.verifySkill);            // approve or reject
 
 module.exports = router;
+

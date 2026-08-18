@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const sidebarItems = [
@@ -30,6 +30,23 @@ export default function Settings() {
   const [criticalSms, setCriticalSms] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState(0);
   const [saved, setSaved] = useState(false);
+
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const adminName = adminUser.name || 'Super Admin';
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
+  };
+
+  // Admin auth guard
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      navigate('/admin/login');
+    }
+  }, []);
 
   const themes = [
     { color: "#10b981", name: "Emerald" },
@@ -68,7 +85,7 @@ export default function Settings() {
             Discard
           </button>
           <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>Alex Rivera</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>{adminName}</span>
         </div>
       </nav>
 
@@ -90,9 +107,10 @@ export default function Settings() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #a7f3d0" }} />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>Alex Thompson</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>{adminName}</p>
                 <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Super Administrator</p>
               </div>
+              <span onClick={handleLogout} title="Logout" style={{ cursor: "pointer", fontSize: 16, color: "#94a3b8" }}>↪</span>
             </div>
           </div>
         </div>
