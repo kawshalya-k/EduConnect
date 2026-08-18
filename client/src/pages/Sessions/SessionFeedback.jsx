@@ -92,7 +92,7 @@ export default function SessionFeedback() {
   }
 
   const mentorName = session ? `${session.Mentor_First || ''} ${session.Mentor_Last || ''}`.trim() : "Your Mentor";
-  const mentorAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.Mentor_First || 'mentor'}&backgroundColor=E2E8F0`;
+  const mentorAvatar = session?.Mentor_Avatar || '/default-avatar.svg';
   const sessionDate = session?.Date ? new Date(session.Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const skillName = session?.Skill_Name || "Expertise";
 

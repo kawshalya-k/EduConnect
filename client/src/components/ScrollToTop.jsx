@@ -7,6 +7,33 @@ const ScrollToTop = () => {
   useEffect(() => {
     if (!hash) {
       window.scrollTo(0, 0);
+      // Reset scroll position on all scrollable elements in the page immediately
+      try {
+        const scrollableElements = document.querySelectorAll('*');
+        scrollableElements.forEach(el => {
+          if (el.scrollTop > 0) {
+            el.scrollTop = 0;
+          }
+        });
+      } catch (e) {
+        console.error('ScrollToTop reset error:', e);
+      }
+
+      // Run it again after 100ms to override native browser scroll restoration behavior
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0);
+        try {
+          const scrollableElements = document.querySelectorAll('*');
+          scrollableElements.forEach(el => {
+            if (el.scrollTop > 0) {
+              el.scrollTop = 0;
+            }
+          });
+        } catch (e) {
+          console.error('ScrollToTop delayed reset error:', e);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     } else {
       const id = hash.replace('#', '');
       const element = document.getElementById(id);

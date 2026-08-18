@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 71 71" width="71" height="71">
+  <!-- Ellipse 1 (Outer Circle) -->
+  <circle cx="35.5" cy="35.5" r="34.5" stroke="#10B981" stroke-width="2" fill="none" />
+  
+  <!-- Centered Inner User Icon (Group offset: dx=13.5, dy=14) -->
+  <g transform="translate(13.5, 14)">
+    <!-- Vector (Torso/Shoulders Curve) -->
+    <path d="M 7.33 37.625 C 7.33 26.875, 36.66 26.875, 36.66 37.625" stroke="#10B981" stroke-width="2" fill="none" stroke-linecap="round" />
+    
+    <!-- Vector (Head Circle) -->
+    <circle cx="22" cy="12.5" r="7.3" stroke="#10B981" stroke-width="2" fill="none" />
+  </g>
+</svg>

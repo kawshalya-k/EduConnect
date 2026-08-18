@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
 import { bookSession } from '../../services/sessionService';
+import { fetchMentorProfile } from '../../services/mentorApi';
 import axiosInstance from '../../services/axiosConfig';
 import { useAuth } from '../../context/AuthContext';
 
@@ -30,10 +31,16 @@ export default function SessionBooking() {
   const location = useLocation();
   const { user } = useAuth();
 
+  const state = location.state || {};
+  const mentorId = state.mentorId || 2;
+  const initialDate = state.date || '';
+  const initialTime = state.time || '';
+
+  const [mentorDetails, setMentorDetails] = useState(null);
   const [skills, setSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState(timeSlots[0]);
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(initialTime || timeSlots[0]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,33 +48,34 @@ export default function SessionBooking() {
   const sessionCost = 50;
 
   useEffect(() => {
-    const fetchSkills = async () => {
+    const loadMentorAndSkills = async () => {
       try {
-        const res = await axiosInstance.get('/admin/skills');
-        setSkills(res.data);
-        if (res.data.length > 0) setSelectedSkill(res.data[0].Skill_Name);
+        const res = await fetchMentorProfile(mentorId);
+        const mentorData = res.data?.mentor;
+        setMentorDetails(mentorData);
+        if (mentorData?.skills && mentorData.skills.length > 0) {
+          setSkills(mentorData.skills);
+          setSelectedSkill(mentorData.skills[0].name || mentorData.skills[0].Skill_Name);
+        }
       } catch (err) {
-        console.error('Error fetching skills:', err);
+        console.error('Error fetching mentor profile/skills:', err);
       }
     };
 
     const fetchWallet = async () => {
+      if (!user?.id) return;
       try {
-        const res = await axiosInstance.get('/wallet/balance');
+        const res = await axiosInstance.get(`/wallet/${user.id}`);
         setWalletBalance(res.data.balance || 0);
       } catch (err) {
-        try {
-          const res2 = await axiosInstance.get('/sessions/my');
-          setWalletBalance(user?.coins || 100);
-        } catch {
-          setWalletBalance(user?.coins || 100);
-        }
+        console.error('Error fetching wallet balance:', err);
+        setWalletBalance(user?.coins || 100);
       }
     };
 
-    fetchSkills();
+    loadMentorAndSkills();
     fetchWallet();
-  }, []);
+  }, [mentorId, user]);
 
   const handleBook = async () => {
     if (!date) { setError('Please select a date.'); return; }
@@ -77,9 +85,13 @@ export default function SessionBooking() {
     setLoading(true);
     setError('');
     try {
+      const matchedSkillId = skills.find(t => (t.name === selectedSkill || t.Skill_Name === selectedSkill))?.id 
+                          || skills.find(t => (t.name === selectedSkill || t.Skill_Name === selectedSkill))?.Skill_Id 
+                          || 1;
+
       await bookSession({
-        skill_id: skills.find(t => t.Skill_Name === selectedSkill)?.Skill_Id || 1,
-        mentor_id: 2,
+        skill_id: matchedSkillId,
+        mentor_id: mentorId,
         session_type: "Online-Video",
         date: date,
         time: convertTo24Hour(time),
@@ -88,7 +100,7 @@ export default function SessionBooking() {
       });
       navigate('/booking-confirmed', {
         state: {
-          mentor: "Your Mentor",
+          mentor: mentorDetails?.name || "Your Mentor",
           date: date,
           time: time,
           coinsDeducted: sessionCost,
@@ -122,17 +134,25 @@ export default function SessionBooking() {
             {/* Mentor Card */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <div className="flex items-center gap-4">
-                <img src="https://i.pravatar.cc/80?img=47" alt="mentor"
-                  className="w-16 h-16 rounded-xl object-cover" />
+                {mentorDetails?.avatar ? (
+                  <img src={mentorDetails.avatar} alt={mentorDetails.name}
+                    className="w-16 h-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-[#E2E8F0] flex items-center justify-center font-bold text-slate-500 text-2xl">
+                    {mentorDetails?.name?.slice(0, 1)}
+                  </div>
+                )}
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-lg text-[#0a1628]">Sarani Herath</span>
-                    <span className="bg-amber-50 text-amber-500 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-300">⭐ GOLD MENTOR</span>
+                    <span className="font-bold text-lg text-[#0a1628]">{mentorDetails?.name || "Loading..."}</span>
+                    <span className="bg-amber-50 text-amber-500 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                      ⭐ {mentorDetails?.level || "BRONZE"} MENTOR
+                    </span>
                   </div>
-                  <p className="text-sm text-gray-500">Senior UX Researcher • University of Kelaniya</p>
+                  <p className="text-sm text-gray-500">{mentorDetails?.title} • {mentorDetails?.university}</p>
                   <div className="flex items-center gap-4 mt-1">
-                    <span className="text-sm text-gray-500">⭐ 4.9 (124 reviews)</span>
-                    <span className="text-sm text-gray-500">💬 200+ Sessions</span>
+                    <span className="text-sm text-gray-500">⭐ {mentorDetails?.rating && Number(mentorDetails.rating) > 0 ? Number(mentorDetails.rating).toFixed(1) : 'No reviews'}</span>
+                    <span className="text-sm text-gray-500">💬 {mentorDetails?.sessionsTaught ?? 0} Sessions</span>
                   </div>
                 </div>
               </div>
@@ -149,8 +169,12 @@ export default function SessionBooking() {
                     value={selectedSkill}
                     onChange={e => setSelectedSkill(e.target.value)}
                     className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#0a1628] font-medium focus:outline-none focus:border-[#10b981] focus:ring-2 focus:ring-[#10b981]/20 transition-all">
-                    {skills.length === 0 && <option>Loading skills...</option>}
-                    {skills.map(s => <option key={s.Skill_Id} value={s.Skill_Name}>{s.Skill_Name}</option>)}
+                    {skills.length === 0 && <option>No verified skills available for this mentor...</option>}
+                    {skills.map(s => (
+                      <option key={s.id || s.Skill_Id} value={s.name || s.Skill_Name}>
+                        {s.name || s.Skill_Name}
+                      </option>
+                    ))}
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▾</div>
                 </div>
