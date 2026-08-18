@@ -155,20 +155,6 @@ const FinishSetup = () => {
               </div>
             </div>
 
-            {/* Checkbox */}
-            <div className="flex items-start mt-2">
-              <div className="flex items-center h-5">
-                <input
-                  type="checkbox"
-                  required
-                  className="w-4 h-4 bg-white border border-[#CBD5E1] rounded text-[#10B981] focus:ring-[#10B981] focus:ring-offset-0 cursor-pointer"
-                />
-              </div>
-              <div className="ml-3 text-[14px] leading-[20px] text-[#475569]">
-                I agree to the <Link to="/terms-of-service?onboarding=true" className="text-[#10B981] hover:underline">Terms of Service</Link> and <Link to="/privacy-policy?onboarding=true" className="text-[#10B981] hover:underline">Privacy Policy</Link>.
-              </div>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"

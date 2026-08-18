@@ -68,7 +68,7 @@ const MentorNav = () => {
           {/* Profile */}
           <Link to="/profile" className="w-9 h-9 rounded-full border-2 border-emerald-200 overflow-hidden cursor-pointer">
             <img 
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=E2E8F0" 
+              src="/default-avatar.svg" 
               alt="Profile" 
               className="w-full h-full object-cover"
             />

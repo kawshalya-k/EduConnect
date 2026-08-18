@@ -42,47 +42,55 @@
 .skills-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .skill-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border-radius: var(--radius-md);
+  gap: 12px;
+  padding: 14px 16px;
+  background: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  border-radius: 14px;
   text-decoration: none;
-  transition: var(--transition);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .skill-item:hover {
-  background: var(--gray-50);
+  background: #FFFFFF;
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.04), 0 3px 6px -3px rgba(0, 0, 0, 0.02);
 }
 
 .skill-item-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background: var(--gray-100);
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .skill-item-icon img {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
 }
 
 .skill-icon-placeholder {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748B;
 }
 
 .skill-item-info {
@@ -91,9 +99,9 @@
 }
 
 .skill-item-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gray-800);
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E293B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -101,12 +109,13 @@
 
 .skill-item-level {
   font-size: 11px;
-  color: var(--gray-500);
-  margin-top: 1px;
+  color: #64748B;
+  margin-top: 2px;
+  font-weight: 500;
 }
 
 .skill-verified-icon {
-  color: var(--primary);
+  color: #10B981;
   flex-shrink: 0;
 }
 
@@ -136,20 +145,21 @@
   justify-content: center;
   gap: 6px;
   width: 100%;
-  padding: 9px;
-  border-radius: var(--radius-md);
-  border: 1.5px dashed var(--gray-300);
+  padding: 11px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--gray-600);
+  font-weight: 600;
+  color: #475569;
   text-decoration: none;
-  transition: var(--transition);
+  transition: all 0.2s ease;
 }
 
 .add-skill-btn:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-lighter);
+  border-color: #10B981;
+  color: #10B981;
+  background: #ECFDF5;
 }
 
 .skill-status-badge {

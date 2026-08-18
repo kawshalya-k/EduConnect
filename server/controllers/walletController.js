@@ -120,9 +120,9 @@ const createTransaction = async (req, res) => {
 
     await db.query(
       `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, session_id, running_balance)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [user_id, type, amount, reason, session_id || null, newBalance]
+       (User_Id, Transaction_Type, Amount, Description)
+       VALUES (?, ?, ?, ?)`,
+      [user_id, type, amount, reason]
     );
 
     res.json({
@@ -166,9 +166,9 @@ const deductCoinsOnBooking = async (user_id, session_id, mentor_name, skill) => 
 
     await db.query(
       `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, session_id, running_balance)
-       VALUES (?, 'DEBIT', ?, ?, ?, ?)`,
-      [user_id, cost, `Booked session: ${skill} with ${mentor_name}`, session_id, newBalance]
+       (User_Id, Transaction_Type, Amount, Description)
+       VALUES (?, 'DEBIT', ?, ?)`,
+      [user_id, cost, `Booked session: ${skill} with ${mentor_name}`]
     );
 
     return { success: true, newBalance, cost };
@@ -202,9 +202,9 @@ const creditCoinsOnSessionComplete = async (mentor_id, session_id, learner_name,
 
     await db.query(
       `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, session_id, running_balance)
-       VALUES (?, 'CREDIT', ?, ?, ?, ?)`,
-      [mentor_id, reward, `Session completed: ${skill} with ${learner_name}`, session_id, newBalance]
+       (User_Id, Transaction_Type, Amount, Description)
+       VALUES (?, 'CREDIT', ?, ?)`,
+      [mentor_id, reward, `Session completed: ${skill} with ${learner_name}`]
     );
 
     return { success: true, newBalance, reward };
@@ -238,9 +238,9 @@ const creditCoinsOnVerification = async (user_id, skill_name) => {
 
     await db.query(
       `INSERT INTO Wallet_Transaction 
-       (user_id, type, amount, reason, running_balance)
-       VALUES (?, 'CREDIT', ?, ?, ?)`,
-      [user_id, reward, `Skill verified: ${skill_name}`, newBalance]
+       (User_Id, Transaction_Type, Amount, Description)
+       VALUES (?, 'CREDIT', ?, ?)`,
+      [user_id, reward, `Skill verified: ${skill_name}`]
     );
 
     return { success: true, newBalance, reward };

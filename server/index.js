@@ -6,10 +6,17 @@ const cors = require('cors');
 const app = express();
 
 // ── Middleware ──
-app.use(cors());
+
+// Set CORS to allow ALL origins during testing
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
-// ── Routes ──
+// ── Routes ── 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mentorRoutes = require('./routes/mentorRoutes');
@@ -75,41 +82,23 @@ app.get('/_routes', (req, res) => {
   res.json({ routes });
 });
 
-// Print registered routes to console
-setTimeout(() => {
-  try {
-    const registered = [];
-    app._router.stack.forEach((middleware) => {
-      if (middleware.route) {
-        registered.push(middleware.route.path);
-      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
-        middleware.handle.stack.forEach((handler) => {
-          const route = handler.route && handler.route.path;
-          if (route) registered.push(route);
-        });
-      }
-    });
-    console.log('Registered routes:', registered);
-  } catch (e) {
-    console.error('Failed listing routes:', e.message);
-  }
-}, 1000);
-
 // ── Weekly Challenge Scheduler ──
 startScheduler();
 
 // Only start server after DB is ready
 const db = require('./config/db');
 
-async function startServer() {
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+
+async function verifyDB() {
   try {
-    // Test DB connection first
     await db.query('SELECT 1');
-    app.listen(5000, () => console.log('Server running on port 5000'));
+    console.log('Database connection verified.');
   } catch (err) {
-    console.error('Failed to start server:', err.message);
-    setTimeout(startServer, 1000); // retry after 1 second
+    console.error('Failed to verify DB connection:', err.message);
+    setTimeout(verifyDB, 5000);
   }
 }
 
-startServer();
+verifyDB();

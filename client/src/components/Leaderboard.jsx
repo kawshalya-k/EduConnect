@@ -27,7 +27,7 @@ const Leaderboard = () => {
     const loadFeatured = async () => {
       try {
         const res = await axiosInstance.get('/mentors/featured');
-        const data = res.data || [];
+        const data = res.data?.mentors || [];
         const formattedMentors = data.slice(0, 3).map((mentor, index) => ({
           rank: `#${index + 1}`,
           name: `${mentor.First_Name} ${mentor.Last_Name}`,
@@ -36,13 +36,12 @@ const Leaderboard = () => {
           rating: parseFloat(mentor.Average_Rating) || 5.0,
           status: "Verified",
           session_count: mentor.Total_Sessions || 0,
-          avatar: mentor.Avatar || `https://ui-avatars.com/api/?name=${mentor.First_Name}+${mentor.Last_Name}&background=10B981&color=fff`
+          avatar: mentor.Avatar || '/default-avatar.svg'
         }));
         setMentors(formattedMentors);
         
-        // Count total sessions of all featured mentors
-        const total = formattedMentors.reduce((acc, m) => acc + m.session_count, 0);
-        setTotalSessions(total || 12);
+        // Take overall session count from database
+        setTotalSessions(res.data?.totalSessions || 0);
       } catch (err) {
         setError('Failed to load featured mentors');
         console.error(err);

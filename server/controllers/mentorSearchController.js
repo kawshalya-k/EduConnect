@@ -28,7 +28,7 @@ exports.searchMentors = async (req, res) => {
     const conditions = [
         `u.Status = 'Active'`,
         `us.Role = 'Mentor'`,
-        `(us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`
+        `(us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`
     ];
 
     if (skill_id) {
@@ -39,14 +39,16 @@ exports.searchMentors = async (req, res) => {
         const categoryList = category.split(',').map(c => c.trim().toLowerCase());
         const matchedSkills = [];
         for (const cat of categoryList) {
-            if (cat === 'web development') {
-                matchedSkills.push('JavaScript', 'Python', 'SQL', 'Git');
-            } else if (cat === 'ui/ux design' || cat === 'ui/ ux strategy') {
-                matchedSkills.push('Figma', 'Information Architecture', 'UI/ UX Strategy');
-            } else if (cat === 'data science') {
-                matchedSkills.push('Statistics', 'NLP', 'Python', 'Data Science');
+            if (cat === 'data science') {
+                matchedSkills.push('Python', 'SQL', 'Data Science', 'NLP');
             } else if (cat === 'mobile development' || cat === 'mobile dev') {
-                matchedSkills.push('Android Development', 'Flutter', 'Android');
+                matchedSkills.push('Flutter', 'Android Development', 'Java');
+            } else if (cat === 'technical') {
+                matchedSkills.push('SQL', 'Information Architecture', 'NLP', 'Java');
+            } else if (cat === 'ui/ux design') {
+                matchedSkills.push('UI/UX Design', 'Information Architecture');
+            } else if (cat === 'web development') {
+                matchedSkills.push('Python', 'Java', 'JavaScript');
             }
         }
         
@@ -64,28 +66,40 @@ exports.searchMentors = async (req, res) => {
     
     const activeLevel = level || levels;
     if (activeLevel) {
-        const levelList = activeLevel.split(',').map(l => l.trim());
-        const placeholders = levelList.map(() => '?').join(',');
+        const queryLevels = [];
+        activeLevel.split(',').forEach(l => {
+            const clean = l.trim().toLowerCase();
+            if (clean === 'gold') {
+                queryLevels.push('Gold', 'Expert', 'GOLD MENTOR');
+            } else if (clean === 'silver') {
+                queryLevels.push('Silver', 'Intermediate');
+            } else if (clean === 'bronze') {
+                queryLevels.push('Bronze', 'Beginner');
+            } else {
+                queryLevels.push(clean.charAt(0).toUpperCase() + clean.slice(1));
+            }
+        });
+        const placeholders = queryLevels.map(() => '?').join(',');
         conditions.push(`us.Mentor_Level IN (${placeholders})`);
-        params.push(...levelList);
+        params.push(...queryLevels);
     }
     if (university) {
         conditions.push(`u.University LIKE ?`);
         params.push(`%${university}%`);
     }
     if (keyword) {
-        conditions.push(`(u.First_Name LIKE ? OR u.Last_Name LIKE ?)`);
-        params.push(`%${keyword}%`, `%${keyword}%`);
+        conditions.push(`(u.First_Name LIKE ? OR u.Last_Name LIKE ? OR s.Skill_Name LIKE ? OR s.Category LIKE ? OR u.Bio LIKE ?)`);
+        params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
     }
 
     const whereClause = conditions.join(' AND ');
 
-    // Sort options
+    // Sort options with GROUP BY compatible aggregates
     const sortMap = {
-        rating:   'ld.Average_Rating DESC',
-        sessions: 'ld.Total_Sessions DESC',
-        newest:   'u.Created_At DESC',
-        level:    'FIELD(us.Mentor_Level, "Gold", "Silver", "Bronze")'
+        rating:   'MAX(COALESCE(ld.Average_Rating, 0)) DESC',
+        sessions: 'SUM(COALESCE(ld.Total_Sessions, 0)) DESC',
+        newest:   'MAX(u.Created_At) DESC',
+        level:    'FIELD(MAX(us.Mentor_Level), "Gold", "Silver", "Bronze")'
     };
     const orderBy = sortMap[sort] || sortMap['rating'];
 
@@ -102,14 +116,15 @@ exports.searchMentors = async (req, res) => {
         );
         const total = countRows[0].total;
 
-        // 1. Fetch distinct mentor user IDs for this page
+        // 1. Fetch distinct mentor user IDs for this page (grouped for compatibility)
         const [mentorIdsRows] = await db.query(
-            `SELECT DISTINCT u.User_Id
+            `SELECT u.User_Id
              FROM User u
              JOIN User_Skill us ON us.User_Id = u.User_Id
              JOIN Skill s       ON s.Skill_Id = us.Skill_Id
              LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
              WHERE ${whereClause}
+             GROUP BY u.User_Id
              ORDER BY ${orderBy}
              LIMIT ? OFFSET ?`,
             [...params, parseInt(limit), offset]
@@ -130,7 +145,7 @@ exports.searchMentors = async (req, res) => {
                  LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
                  WHERE u.User_Id IN (${placeholders}) 
                    AND us.Role = 'Mentor' 
-                   AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
+                   AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
                 mentorIds
             );
 
@@ -193,7 +208,9 @@ exports.getFeaturedMentors = async (req, res) => {
              ORDER BY ld.Score DESC
              LIMIT 6`
         );
-        res.json(mentors);
+        const [sessionCountRows] = await db.query('SELECT COUNT(*) AS total FROM Session');
+        const totalSessions = sessionCountRows[0]?.total || 0;
+        res.json({ mentors, totalSessions });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -245,7 +262,7 @@ exports.aiSearchMentors = async (req, res) => {
       const [allVerified] = await db.query(
         `SELECT us.User_Id, us.Skill_Id 
          FROM User_Skill us 
-         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified') 
+         WHERE us.Role = 'Mentor' AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1') 
          LIMIT 10`
       );
       matches = allVerified.map(row => ({
@@ -275,7 +292,7 @@ exports.aiSearchMentors = async (req, res) => {
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
        WHERE u.User_Id IN (${placeholders}) 
          AND us.Role = 'Mentor' 
-         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`,
+         AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
       mentorIds
     );
 
@@ -330,10 +347,10 @@ exports.getRecommendedMentors = async (req, res) => {
       [userId]
     );
 
-    // 2. Fetch all active, verified mentors from MySQL
+    // 2. Fetch all active, verified mentors from MySQL (Verification_Status = 'Verified' or 1)
     const [allMentors] = await db.query(
       `SELECT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar as avatar,
-              s.Skill_Name, s.Category, us.Mentor_Level,
+              s.Skill_Id, s.Skill_Name, s.Category, us.Mentor_Level,
               COALESCE(ld.Average_Rating, 5.0) AS rating,
               COALESCE(ld.Total_Sessions, 0) AS reviews,
               '100 Skill Coins' as price
@@ -342,7 +359,7 @@ exports.getRecommendedMentors = async (req, res) => {
        JOIN Skill s ON s.Skill_Id = us.Skill_Id
        LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
        WHERE us.Role = 'Mentor' 
-         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')
+         AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')
          AND u.Status = 'Active'
          AND u.User_Id != ?`,
       [userId]
@@ -357,18 +374,22 @@ exports.getRecommendedMentors = async (req, res) => {
           name: `${row.First_Name} ${row.Last_Name}`,
           firstName: row.First_Name,
           lastName: row.Last_Name,
-          avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.First_Name}&backgroundColor=E2E8F0`,
+          avatar: row.avatar || '/default-avatar.svg',
           mentorLevel: row.Mentor_Level || 'Bronze',
           title: row.Bio || 'Mentor',
           university: row.University,
           rating: Number(row.rating).toFixed(1),
           reviews: row.reviews,
           price: row.price,
-          skills: []
+          skills: [],
+          skillIds: []
         };
       }
       if (row.Skill_Name && !mentorsMap[row.User_Id].skills.includes(row.Skill_Name)) {
         mentorsMap[row.User_Id].skills.push(row.Skill_Name);
+      }
+      if (row.Skill_Id && !mentorsMap[row.User_Id].skillIds.includes(row.Skill_Id)) {
+        mentorsMap[row.User_Id].skillIds.push(row.Skill_Id);
       }
     }
     const mentorsList = Object.values(mentorsMap);
@@ -391,21 +412,24 @@ exports.getRecommendedMentors = async (req, res) => {
     if (ordered.length === 0) {
       console.log('[AI Recommendation] Gemini returned no matches or is not set up. Using database matching fallback.');
       
-      let allVerified = [];
-      if (learnSkills.length > 0) {
-        const skillNames = learnSkills.map(s => s.Skill_Name.toLowerCase());
-        // Find mentors teaching any of these wishlist skills
-        allVerified = mentorsList.filter(m => 
-          m.skills.some(s => skillNames.includes(s.toLowerCase()))
-        );
-      }
+      if (mentorsList.length > 0) {
+        const wishlistSkillIds = learnSkills.map(s => s.Skill_Id);
+        const wishlistSkillNames = learnSkills.map(s => s.Skill_Name.trim().toLowerCase());
 
-      // Add all remaining verified mentors to the recommendations pool
-      const existingIds = allVerified.map(m => m.userId);
-      const remaining = mentorsList.filter(m => !existingIds.includes(m.userId));
-      allVerified.push(...remaining);
-      
-      ordered = allVerified;
+        const wishlistMentors = mentorsList.filter(m => 
+          m.skillIds.some(id => wishlistSkillIds.includes(id)) ||
+          m.skills.some(name => wishlistSkillNames.includes(name.trim().toLowerCase()))
+        );
+
+        const wishlistMentorIds = wishlistMentors.map(m => m.userId);
+        const otherMentors = mentorsList.filter(m => !wishlistMentorIds.includes(m.userId));
+
+        if (wishlistMentors.length > 0) {
+          ordered = [...wishlistMentors, ...otherMentors];
+        } else {
+          ordered = otherMentors; // show verified mentors for other skills
+        }
+      }
     }
 
     res.json({ mentors: ordered });
@@ -426,7 +450,7 @@ exports.getVerifiedMentorsCount = async (req, res) => {
        JOIN User_Skill us ON us.User_Id = u.User_Id
        WHERE u.Status = 'Active'
          AND us.Role = 'Mentor'
-         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified')`
+         AND (us.Verification_Status = 1 OR us.Verification_Status = 'Verified' OR us.Verification_Status = 'Draft')`
     );
     res.json({ count: rows[0].count || 0 });
   } catch (err) {

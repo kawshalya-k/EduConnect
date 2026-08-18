@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
 import axiosInstance from '../../services/axiosConfig';
+import { useAuth } from '../../context/AuthContext';
 
 const guidelines = [
   "Keep your microphone muted unless speaking.",
@@ -13,12 +14,17 @@ const guidelines = [
 
 export default function SessionRoom() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('id');
+  const { user } = useAuth();
+
+  const [sessionDetails, setSessionDetails] = useState(null);
   const [meetingLink, setMeetingLink] = useState('');
   const [submittedLink, setSubmittedLink] = useState('');
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [timeLeft, setTimeLeft] = useState(15 * 60);
-  const [walletBalance, setWalletBalance] = useState(120);
+  const [walletBalance, setWalletBalance] = useState(0);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -27,6 +33,48 @@ export default function SessionRoom() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const fetchSessionData = async () => {
+      try {
+        let activeSessionId = sessionId;
+
+        if (!activeSessionId) {
+          // Fallback: Fetch last upcoming session
+          const resMy = await axiosInstance.get('/sessions/my');
+          const upcoming = resMy.data.filter(s => s.status !== 'Completed' && s.status !== 'Rated');
+          if (upcoming.length > 0) {
+            activeSessionId = upcoming[0].id;
+          }
+        }
+
+        if (activeSessionId) {
+          const res = await axiosInstance.get(`/sessions/${activeSessionId}`);
+          setSessionDetails(res.data);
+          if (res.data.Meeting_Link) {
+            setSubmittedLink(res.data.Meeting_Link);
+            setMeetingLink(res.data.Meeting_Link);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching session data:', err);
+      }
+    };
+
+    const fetchWallet = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await axiosInstance.get(`/wallet/${user.id}`);
+        setWalletBalance(res.data.balance || 0);
+      } catch (err) {
+        console.error('Error fetching wallet:', err);
+        setWalletBalance(user?.coins || 100);
+      }
+    };
+
+    fetchSessionData();
+    fetchWallet();
+  }, [sessionId, user]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,9 +97,20 @@ export default function SessionRoom() {
     setNewMessage('');
   };
 
-  const handleSubmitLink = () => {
+  const handleSubmitLink = async () => {
     if (!meetingLink.trim()) return;
-    setSubmittedLink(meetingLink);
+    const targetSessionId = sessionId || sessionDetails?.Session_Id;
+    if (!targetSessionId) return;
+
+    try {
+      await axiosInstance.put(`/sessions/${targetSessionId}/meeting-link`, {
+        meeting_link: meetingLink
+      });
+      setSubmittedLink(meetingLink);
+      alert('Meeting link updated successfully!');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit meeting link');
+    }
   };
 
   return (
@@ -64,17 +123,26 @@ export default function SessionRoom() {
           {/* Left Sidebar */}
           <div className="col-span-3 space-y-4">
 
-            {/* Mentor Info */}
+            {/* Participant Card */}
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-3">
                 <div className="relative">
-                  <img src="https://i.pravatar.cc/48?img=47" alt="mentor"
-                    className="w-12 h-12 rounded-xl object-cover" />
+                  <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-800 text-xl">
+                    {user?.id === sessionDetails?.Learner_Id 
+                      ? sessionDetails?.Mentor_First?.slice(0, 1) 
+                      : sessionDetails?.Learner_First?.slice(0, 1) || "?"}
+                  </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#10b981] rounded-full border-2 border-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm text-[#0a1628]">Dr. Sarah Mitchell</p>
-                  <p className="text-xs text-[#10b981] font-medium">● Online • Your Mentor</p>
+                  <p className="font-bold text-sm text-[#0a1628]">
+                    {user?.id === sessionDetails?.Learner_Id
+                      ? `${sessionDetails?.Mentor_First} ${sessionDetails?.Mentor_Last}`
+                      : `${sessionDetails?.Learner_First} ${sessionDetails?.Learner_Last}`}
+                  </p>
+                  <p className="text-xs text-[#10b981] font-medium">
+                    ● Online • {user?.id === sessionDetails?.Learner_Id ? "Your Mentor" : "Your Learner"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -82,8 +150,8 @@ export default function SessionRoom() {
             {/* Session Topic */}
             <div className="bg-[#0a1628] rounded-2xl p-4 shadow-sm">
               <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">Session Topic</p>
-              <p className="font-bold text-white text-sm">Python Loops <span className="text-[#10b981]">&</span> Lists</p>
-              <p className="text-xs text-gray-400 mt-1">Intermediate Level</p>
+              <p className="font-bold text-white text-sm">{sessionDetails?.Skill_Name || "Loading Topic..."}</p>
+              <p className="text-xs text-gray-400 mt-1">{sessionDetails?.Session_Type || "Online-Video"}</p>
             </div>
 
             {/* Wallet Balance */}
@@ -119,61 +187,63 @@ export default function SessionRoom() {
               </div>
             </div>
 
-            {/* Session Setup - Mentor submits link */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#ecfdf5] rounded-xl flex items-center justify-center text-lg">🔗</div>
+            {/* Mentor View - Setup meeting link */}
+            {user?.id === sessionDetails?.Mentor_Id && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#ecfdf5] rounded-xl flex items-center justify-center text-lg">🔗</div>
+                    <div>
+                      <p className="font-bold text-sm text-[#0a1628]">Session Setup</p>
+                      <p className="text-xs text-gray-500">Share your meeting link with the learner</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">REQUIRED</span>
+                </div>
+                <div className="flex gap-3">
+                  <input
+                    type="url"
+                    value={meetingLink}
+                    onChange={e => setMeetingLink(e.target.value)}
+                    placeholder="Paste Zoom, Google Meet, or Teams link here..."
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#10b981] focus:ring-2 focus:ring-[#10b981]/20 transition-all" />
+                  <button
+                    onClick={handleSubmitLink}
+                    className="bg-[#10b981] hover:bg-[#059669] text-white font-bold text-sm px-5 py-3 rounded-xl transition-all whitespace-nowrap">
+                    Submit Link ▶
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Learner View - Video Call Access */}
+            {user?.id === sessionDetails?.Learner_Id && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-[#ecfdf5] rounded-xl flex items-center justify-center">
+                    <span className="text-[#10b981] font-black text-lg">E</span>
+                  </div>
                   <div>
-                    <p className="font-bold text-sm text-[#0a1628]">Session Setup</p>
-                    <p className="text-xs text-gray-500">Share your meeting link with the learner</p>
+                    <p className="font-bold text-sm text-[#0a1628]">Video Call Access</p>
+                    <p className="text-xs text-gray-500">Join the live video call with your mentor</p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">REQUIRED</span>
-              </div>
-              <div className="flex gap-3">
-                <input
-                  type="url"
-                  value={meetingLink}
-                  onChange={e => setMeetingLink(e.target.value)}
-                  placeholder="Paste Zoom, Google Meet, or Teams link here..."
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#10b981] focus:ring-2 focus:ring-[#10b981]/20 transition-all" />
-                <button
-                  onClick={handleSubmitLink}
-                  className="bg-[#10b981] hover:bg-[#059669] text-white font-bold text-sm px-5 py-3 rounded-xl transition-all whitespace-nowrap">
-                  Submit Link ▶
-                </button>
-              </div>
-            </div>
 
-            {/* Learner View - Waiting Room / Join */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-[#ecfdf5] rounded-xl flex items-center justify-center">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/EduConnect_logo.svg/32px-EduConnect_logo.svg.png"
-                    alt="E" className="w-6 h-6"
-                    onError={e => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span class="text-[#10b981] font-black text-lg">E</span>'; }} />
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-[#0a1628]">Learner View: Waiting Room</p>
-                  <p className="text-xs text-gray-500">Video call access for the learner</p>
-                </div>
+                {submittedLink ? (
+                  <a href={submittedLink} target="_blank" rel="noreferrer"
+                    className="w-full block text-center bg-[#10b981] hover:bg-[#059669] text-white font-bold py-3.5 rounded-xl transition-all text-sm">
+                    🎥 Join Video Call
+                  </a>
+                ) : (
+                  <div className="bg-gray-50 rounded-xl p-8 text-center border border-dashed border-gray-200">
+                    <p className="text-3xl mb-3">⏳</p>
+                    <p className="font-bold text-sm text-[#0a1628]">Waiting for Mentor</p>
+                    <p className="text-xs text-gray-500 mt-1">Your mentor is preparing the meeting link...</p>
+                  </div>
+                )}
               </div>
-
-              {submittedLink ? (
-                <a href={submittedLink} target="_blank" rel="noreferrer"
-                  className="w-full block text-center bg-[#10b981] hover:bg-[#059669] text-white font-bold py-3.5 rounded-xl transition-all text-sm">
-                  🎥 Join Video Call
-                </a>
-              ) : (
-                <div className="bg-gray-50 rounded-xl p-8 text-center border border-dashed border-gray-200">
-                  <p className="text-3xl mb-3">⏳</p>
-                  <p className="font-bold text-sm text-[#0a1628]">Waiting for Mentor</p>
-                  <p className="text-xs text-gray-500 mt-1">Your mentor is preparing the meeting link...</p>
-                </div>
-              )}
+            )}
             </div>
-          </div>
 
           {/* Right - Chat */}
           <div className="col-span-3">
