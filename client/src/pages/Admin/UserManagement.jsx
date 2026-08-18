@@ -2,24 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllUsers, updateUserStatus, deleteUser } from '../../services/adminService';
 
-const users = [
-  { id: "482109", name: "Sarah Jenkins", email: "s.jenkins@stanford.edu", role: "Mentor", university: "Stanford University", coins: 2450, status: "ACTIVE", avatar: "https://i.pravatar.cc/40?img=47" },
-  { id: "482110", name: "Alex Rivera", email: "arivera@mit.edu", role: "Learner", university: "MIT", coins: 890, status: "ACTIVE", avatar: "https://i.pravatar.cc/40?img=11" },
-  { id: "482115", name: "Jordan Lee", email: "j.lee@oxford.ac.uk", role: "Learner", university: "Oxford University", coins: 120, status: "SUSPENDED", avatar: "https://i.pravatar.cc/40?img=25" },
-  { id: "482118", name: "Marcus Chen", email: "mchen@ethz.ch", role: "Mentor", university: "ETH Zurich", coins: 5100, status: "PENDING", avatar: "https://i.pravatar.cc/40?img=13" },
-  { id: "482122", name: "Elena Petrova", email: "epetrova@educonnect.com", role: "Admin", university: "Corporate", coins: 0, status: "ACTIVE", avatar: "https://i.pravatar.cc/40?img=32" },
-];
+
 
 const statusColors = {
-  ACTIVE: { bg: "#f0fdf4", color: "#10b981" },
-  SUSPENDED: { bg: "#fef2f2", color: "#ef4444" },
-  PENDING: { bg: "#fffbeb", color: "#d97706" },
+  Active:    { bg: "#f0fdf4", color: "#10b981" },
+  Inactive:  { bg: "#fffbeb", color: "#d97706" },
+  Suspended: { bg: "#fef2f2", color: "#ef4444" },
 };
 
 const roleColors = {
-  Mentor: { bg: "#eff6ff", color: "#3b82f6" },
-  Learner: { bg: "#f5f3ff", color: "#8b5cf6" },
-  Admin: { bg: "#0f172a", color: "#fff" },
+  Student: { bg: "#f5f3ff", color: "#8b5cf6" },
+  Mentor:  { bg: "#eff6ff", color: "#3b82f6" },
+  Admin:   { bg: "#0f172a", color: "#fff" },
 };
 
 const sidebarItems = [
@@ -37,6 +31,7 @@ export default function UserManagement() {
   const [activePage, setActivePage] = useState('User Management');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,11 +47,13 @@ export default function UserManagement() {
   }, []);
 
   const fetchUsers = async () => {
+    setError(null);
     try {
       const data = await getAllUsers();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching users:', err);
+      setError('Failed to load users. Please ensure the server is running.');
     } finally {
       setLoading(false);
     }
@@ -95,21 +92,20 @@ export default function UserManagement() {
     const fullName = `${u.First_Name || ''} ${u.Last_Name || ''}`.trim();
     const matchSearch = fullName.toLowerCase().includes(search.toLowerCase()) ||
       (u.Email || '').toLowerCase().includes(search.toLowerCase());
-    const matchRole = roleFilter === 'All Roles' || u.Role === roleFilter;
-    const matchStatus = statusFilter === 'All Status' || u.Status === statusFilter;
+    const matchRole = roleFilter === 'All Roles' || (u.Role || '').toLowerCase() === roleFilter.toLowerCase();
+    const matchStatus = statusFilter === 'All Status' || (u.Status || '').toLowerCase() === statusFilter.toLowerCase();
     return matchSearch && matchRole && matchStatus;
   });
 
-  if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#10b981" }}>Loading users...</div>;
+  if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#10b981", fontSize: 16 }}>⏳ Loading users...</div>;
+  if (error) return <div style={{ padding: "3rem", textAlign: "center", color: "#ef4444", fontSize: 16 }}>⚠️ {error}</div>;
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#f8fafc", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Navbar */}
       <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: "#10b981", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>E</span>
-          </div>
+          <img src="/src/Assets/EduConnect_Logo.png" alt="EduConnect" style={{ height: 36, objectFit: "contain" }} />
           <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
           <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "3px 10px", borderRadius: 20, border: "1px solid #a7f3d0" }}>Admin</span>
         </div>
@@ -191,13 +187,22 @@ export default function UserManagement() {
               </div>
 
               {/* Table Rows */}
-              {filtered.map((user, i) => (
+              {filtered.length === 0 ? (
+                <div style={{ padding: "3rem", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
+                  {users.length === 0 ? '📭 No users found in the database.' : '🔍 No users match your search or filters.'}
+                </div>
+              ) : filtered.map((user, i) => (
                 <div key={user.User_Id || i}
                   style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 2fr 1fr 1fr 1fr", padding: "1rem 1.5rem", borderBottom: i < filtered.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center", transition: "background 0.15s" }}>
 
                   {/* User */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <img src={user.avatar || 'https://i.pravatar.cc/40'} alt={user.First_Name} style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0", flexShrink: 0 }} />
+                    <img
+                      src={user.Avatar || `https://i.pravatar.cc/40?u=${user.User_Id}`}
+                      alt={user.First_Name}
+                      style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0", flexShrink: 0 }}
+                      onError={e => { e.target.src = `https://i.pravatar.cc/40?u=${user.User_Id}`; }}
+                    />
                     <div>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{user.First_Name} {user.Last_Name}</p>
                       <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>ID: {user.User_Id}</p>
@@ -208,20 +213,20 @@ export default function UserManagement() {
                   <span style={{ fontSize: 13, color: "#475569" }}>{user.Email}</span>
 
                   {/* Role */}
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: roleColors[user.Role]?.bg || '#f1f5f9', color: roleColors[user.Role]?.color || '#475569', display: "inline-block" }}>{user.Role}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: roleColors[user.Role]?.bg || '#f1f5f9', color: roleColors[user.Role]?.color || '#475569', display: "inline-block" }}>{user.Role || '—'}</span>
 
                   {/* University */}
-                  <span style={{ fontSize: 13, color: "#475569" }}>{user.University || 'SLIIT'}</span>
+                  <span style={{ fontSize: 13, color: "#475569" }}>{user.University || '—'}</span>
 
                   {/* Coins */}
                   <span style={{ fontSize: 13, fontWeight: 600, color: "#10b981" }}>💰 {(user.Wallet_Balance || 0).toLocaleString()}</span>
 
                   {/* Status */}
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: statusColors[user.Status]?.bg || '#f1f5f9', color: statusColors[user.Status]?.color || '#475569', display: "inline-block" }}>{user.Status}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: statusColors[user.Status]?.bg || '#f1f5f9', color: statusColors[user.Status]?.color || '#475569', display: "inline-block" }}>{user.Status || '—'}</span>
 
                   {/* Actions */}
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button 
+                    <button
                       onClick={() => handleStatusUpdate(user.User_Id, user.Status === 'Suspended' ? 'Active' : 'Suspended')}
                       style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", fontSize: 12, cursor: "pointer", color: "#ef4444", fontWeight: 600 }}>
                       {user.Status === 'Suspended' ? 'Restore' : 'Suspend'}
@@ -237,12 +242,7 @@ export default function UserManagement() {
 
               {/* Pagination */}
               <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Showing 1 to {filtered.length} of 12,482 users</span>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {['←', '1', '2', '3', '...', '2497', '→'].map((p, i) => (
-                    <button key={i} style={{ width: 32, height: 32, borderRadius: 8, border: p === '1' ? "none" : "1px solid #e2e8f0", background: p === '1' ? "#10b981" : "#fff", color: p === '1' ? "#fff" : "#475569", fontSize: 13, fontWeight: p === '1' ? 700 : 400, cursor: "pointer" }}>{p}</button>
-                  ))}
-                </div>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Showing {filtered.length} of {users.length} users</span>
               </div>
             </div>
           </div>
