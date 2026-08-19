@@ -3,34 +3,24 @@ import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getBadges, getUserBadges } from '../services/gamificationService';
+import { getBadgeProgress } from '../services/gamificationService';
 
 export default function BadgesPage() {
   const { user } = useAuth();
   const [allBadges, setAllBadges] = useState([]);
-  const [userBadges, setUserBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
+    let refreshTimer;
     const loadBadges = async () => {
       if (!user?.id) return;
 
       try {
         setLoading(true);
-        const [badgesData, userBadgesData] = await Promise.all([
-          getBadges(),
-          getUserBadges(user.id)
-        ]);
-
-        if (badgesData.success) {
-          setAllBadges(badgesData.badges);
-        }
-
-        if (userBadgesData.success) {
-          setUserBadges(userBadgesData.badges);
-        }
+        const badgesData = await getBadgeProgress(user.id);
+        if (badgesData.success) setAllBadges(badgesData.badges);
       } catch (err) {
         setError('Failed to load badges data');
         console.error(err);
@@ -40,6 +30,8 @@ export default function BadgesPage() {
     };
 
     loadBadges();
+    refreshTimer = window.setInterval(loadBadges, 15000);
+    return () => window.clearInterval(refreshTimer);
   }, [user?.id]);
 
   const getBadgeIcon = (badgeName) => {
@@ -52,8 +44,8 @@ export default function BadgesPage() {
   };
 
   const getBadgeState = (badge) => {
-    const earnedBadge = userBadges.find(ub => ub.badge_id === badge.badge_id);
-    if (earnedBadge) {
+    const percent = Number(badge.percent || 0);
+    if (badge.completed || percent >= 100) {
       return {
         state: "completed",
         stateLabel: "Completed",
@@ -62,8 +54,8 @@ export default function BadgesPage() {
     }
     return {
       state: "locked",
-      stateLabel: "Locked",
-      percent: 0
+      stateLabel: badge.stateLabel || "Locked",
+      percent
     };
   };
 
@@ -78,9 +70,9 @@ export default function BadgesPage() {
     if (activeTab === "earned") return badgesWithState.filter(b => b.state === "completed");
     if (activeTab === "locked") return badgesWithState.filter(b => b.state === "locked");
     return badgesWithState;
-  }, [allBadges, userBadges, activeTab]);
+  }, [allBadges, activeTab]);
 
-  const earnedCount = userBadges.length;
+  const earnedCount = allBadges.filter(badge => badge.completed).length;
   const lockedCount = allBadges.length - earnedCount;
 
   if (loading) {
@@ -193,7 +185,7 @@ function BadgeCard({ badge }) {
 
   let containerClass = "bg-white border shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] p-6 relative h-[262px] flex flex-col";
   if (isCompleted) containerClass += " border-[#10B981]";
-  else if (isLocked) containerClass += " border-[#E2E8F0] opacity-60"; 
+  else if (isLocked) containerClass += " border-[#E2E8F0] opacity-60";
 
   let iconContainerClass = "w-16 h-16 rounded-full flex items-center justify-center mb-6 shrink-0 ";
   if (isCompleted) {
@@ -237,7 +229,7 @@ function BadgeCard({ badge }) {
         </div>
         <div className={`h-[8px] w-full rounded-full overflow-hidden ${trackColorClass}`}>
           <div 
-            className={`h-full rounded-full ${isCompleted ? 'bg-[#10B981]' : 'bg-transparent'}`} 
+            className={`h-full rounded-full ${badge.percent > 0 ? 'bg-[#10B981]' : 'bg-transparent'}`} 
             style={{ width: `${badge.percent}%` }}
           ></div>
         </div>
