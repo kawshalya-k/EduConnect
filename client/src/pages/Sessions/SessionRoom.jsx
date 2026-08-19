@@ -186,6 +186,9 @@ export default function SessionRoom() {
 
   const timerState = getSessionTimerState();
 
+  const isLearner = user?.id && sessionDetails?.Learner_Id && String(user.id) === String(sessionDetails.Learner_Id);
+  const isMentor = user?.id && sessionDetails?.Mentor_Id && String(user.id) === String(sessionDetails.Mentor_Id);
+
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
     setMessages(prev => [...prev, {
@@ -234,7 +237,7 @@ export default function SessionRoom() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center font-bold text-emerald-800 text-xl">
-                    {user?.id === sessionDetails?.Learner_Id 
+                    {isLearner 
                       ? sessionDetails?.Mentor_First?.slice(0, 1) 
                       : sessionDetails?.Learner_First?.slice(0, 1) || "?"}
                   </div>
@@ -242,12 +245,12 @@ export default function SessionRoom() {
                 </div>
                 <div>
                   <p className="font-bold text-sm text-[#0a1628]">
-                    {user?.id === sessionDetails?.Learner_Id
+                    {isLearner
                       ? `${sessionDetails?.Mentor_First} ${sessionDetails?.Mentor_Last}`
                       : `${sessionDetails?.Learner_First} ${sessionDetails?.Learner_Last}`}
                   </p>
                   <p className="text-xs text-[#10b981] font-medium">
-                    ● Online • {user?.id === sessionDetails?.Learner_Id ? "Your Mentor" : "Your Learner"}
+                    ● Online • {isLearner ? "Your Mentor" : "Your Learner"}
                   </p>
                 </div>
               </div>
@@ -294,7 +297,7 @@ export default function SessionRoom() {
             </div>
 
             {/* Unified Video Call Access Component (visible to both Mentor and Learner) */}
-            {(user?.id === sessionDetails?.Mentor_Id || user?.id === sessionDetails?.Learner_Id) && (
+            {(isMentor || isLearner) && (
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">

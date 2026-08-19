@@ -22,7 +22,7 @@ export default function SessionFeedback() {
   const [rating, setRating] = useState(5);
   const [hovered, setHovered] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const [selectedTags, setSelectedTags] = useState(["Clear Communication", "Deep Expertise"]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export default function SessionFeedback() {
               <h1 className="text-[#0F172A] font-extrabold text-[30px] leading-[36px] tracking-[-0.75px]">{mentorName}</h1>
               <h2 className="text-[#10B77F] font-semibold text-[18px] leading-[28px]">{skillName} Expert</h2>
               {sessionDate && (
-                <p className="text-[#64748B] font-normal text-[14px] leading-[20px]">Mentored on {sessionDate} for 60 mins</p>
+                <p className="text-[#64748B] font-normal text-[14px] leading-[20px]">Mentored for {session?.Duration || 45} mins on {sessionDate}</p>
               )}
             </div>
           </div>

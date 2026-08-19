@@ -230,9 +230,10 @@ exports.addMeetingLink = async (req, res) => {
     if (session) {
       // Determine other party to notify
       const currentUserId = req.user.id;
-      const recipientId = currentUserId === session.Learner_Id ? session.Mentor_Id : session.Learner_Id;
-      const roleName = currentUserId === session.Learner_Id ? 'learner' : 'mentor';
-      const notificationMessage = currentUserId === session.Learner_Id
+      const isCurrentLearner = Number(currentUserId) === Number(session.Learner_Id);
+      const recipientId = isCurrentLearner ? session.Mentor_Id : session.Learner_Id;
+      const roleName = isCurrentLearner ? 'learner' : 'mentor';
+      const notificationMessage = isCurrentLearner
         ? 'The learner has updated the meeting link. You can now join the session.'
         : 'Your mentor has added the meeting link. You can now join the session.';
 
@@ -274,7 +275,7 @@ exports.rateSession = async (req, res) => {
     // Check if session exists and belongs to learner
     const session = await Session.getSessionById(sessionId);
     if (!session) return res.status(404).json({ message: 'Session not found' });
-    if (session.Learner_Id !== learner_id) return res.status(403).json({ message: 'Unauthorized' });
+    if (Number(session.Learner_Id) !== Number(learner_id)) return res.status(403).json({ message: 'Unauthorized' });
     if (session.Status !== 'Completed') return res.status(400).json({ message: 'Can only rate completed sessions' });
 
     // Update session
