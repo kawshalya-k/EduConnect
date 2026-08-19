@@ -375,23 +375,6 @@ exports.verifySkill = async (req, res) => {
         }
       }
 
-      // Give Bronze Mentor badge if not already awarded
-      let [badges] = await db.query('SELECT Badge_Id FROM Badge WHERE Badge_Name = ?', ['Bronze Mentor']);
-      let badgeId;
-      if (badges.length === 0) {
-        const [result] = await db.query(
-          'INSERT INTO Badge (Badge_Name, Criteria, Description) VALUES (?, ?, ?)',
-          ['Bronze Mentor', 'Verify first skill', 'Awarded for successfully verifying a skill']
-        );
-        badgeId = result.insertId;
-      } else {
-        badgeId = badges[0].Badge_Id;
-      }
-      await db.query(
-        'INSERT IGNORE INTO User_Badge (user_id, badge_id) VALUES (?, ?)',
-        [userId, badgeId]
-      );
-
       // Create notification
       const [skillRows] = await db.query('SELECT Skill_Name FROM Skill WHERE Skill_Id = ?', [skillId]);
       const skillName = skillRows.length > 0 ? skillRows[0].Skill_Name : 'Skill';

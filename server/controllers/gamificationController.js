@@ -2,13 +2,70 @@
 
 const db = require('../config/db');
 
+const getBadgeProgress = async (userId) => {
+  const progress = {};
+  if (!userId) return progress;
+
+  const [[sessionStats]] = await db.query(
+    `SELECT
+       SUM(CASE WHEN Learner_Id = ? AND Status = 'Completed' THEN 1 ELSE 0 END) AS completed_sessions,
+       SUM(CASE WHEN Learner_Id = ? AND Status <> 'Completed' THEN 1 ELSE 0 END) AS active_sessions
+     FROM Session`,
+    [userId, userId]
+  );
+  const completedSessions = Number(sessionStats?.completed_sessions || 0);
+  const activeSessions = Number(sessionStats?.active_sessions || 0);
+
+  const [sessionDays] = await db.query(
+    `SELECT DISTINCT DATE_FORMAT(Date, '%Y-%m-%d') AS study_day
+     FROM Session
+     WHERE Learner_Id = ? AND Status = 'Completed'
+    ORDER BY study_day DESC`,
+    [userId]
+  );
+  let streakDays = 0;
+  for (let index = 0; index < sessionDays.length; index += 1) {
+    const currentDay = new Date(`${sessionDays[index].study_day}T00:00:00Z`);
+    const previousDay = index === 0
+      ? null
+      : new Date(`${sessionDays[index - 1].study_day}T00:00:00Z`);
+    if (index === 0 || (previousDay - currentDay) / 86400000 === 1) {
+      streakDays += 1;
+    } else {
+      break;
+    }
+  }
+
+  const [[coinStats]] = await db.query(
+    `SELECT COALESCE(SUM(Amount), 0) AS earned_coins
+     FROM Wallet_Transaction
+     WHERE User_Id = ? AND Transaction_Type = 'CREDIT'`,
+    [userId]
+  );
+  const earnedCoins = Number(coinStats?.earned_coins || 0);
+
+  progress['First Session'] = completedSessions > 0 ? 100 : activeSessions > 0 ? 50 : 0;
+  progress['7-Day Streak'] = Math.min(100, Math.round((streakDays / 7) * 100));
+  progress['Course Master'] = Math.min(100, Math.round((completedSessions / 10) * 100));
+  progress['Coin Collector'] = Math.min(100, Math.round((earnedCoins / 1000) * 100));
+  return progress;
+};
+
 // ─────────────────────────────────────────
 // TASK 7: GET all available badges
 // GET /api/gamification/badges
 // ─────────────────────────────────────────
 const getAllBadges = async (req, res) => {
   try {
-    const [badges] = await db.query('SELECT * FROM Badge');
+    const [rows] = await db.query('SELECT * FROM Badge');
+    const bc = await getBadgeColumns();
+    const progress = await getBadgeProgress(req.query.user_id);
+    const badges = rows.map((badge) => ({
+      badge_id: badge[bc.badgeId],
+      name: badge[bc.name],
+      description: badge.Description || badge.description,
+      progress: progress[badge[bc.name]] || 0,
+    }));
     res.json({ success: true, badges });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -52,13 +109,18 @@ const getUserBadges = async (req, res) => {
     const { id } = req.params;
     const bc = await getBadgeColumns();
 
-    const [badges] = await db.query(`
+    const [rows] = await db.query(`
       SELECT b.*, ub.\`${bc.awardedAt}\` AS awarded_at
       FROM Badge b
       JOIN User_Badge ub ON b.\`${bc.badgeId}\` = ub.\`${bc.ubBadgeId}\`
       WHERE ub.\`${bc.userId}\` = ?
       ORDER BY ub.\`${bc.awardedAt}\` DESC
     `, [id]);
+    const badges = rows.map((badge) => ({
+      badge_id: badge[bc.badgeId],
+      name: badge[bc.name],
+      description: badge.Description || badge.description,
+    }));
 
     res.json({ success: true, badges });
   } catch (err) {
