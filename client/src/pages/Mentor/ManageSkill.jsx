@@ -109,11 +109,9 @@ export default function ManageSkill() {
     : completedSessions.length;
 
   // Average Rating directly from DB (Levelling_Data)
-  const avgRating = (currentSkill?.avgRating !== null && currentSkill?.avgRating !== undefined && currentSkill.avgRating > 0)
+  const avgRating = (currentSkill?.avgRating !== null && currentSkill?.avgRating !== undefined)
     ? Number(currentSkill.avgRating).toFixed(1)
-    : (completedSessions.filter(s => s.Rating != null).length > 0
-        ? (completedSessions.filter(s => s.Rating != null).reduce((sum, s) => sum + s.Rating, 0) / completedSessions.filter(s => s.Rating != null).length).toFixed(1)
-        : '4.8'); // Fallback to 4.8 if 0 / null in DB
+    : '0.0';
 
   // Total Earned in this skill (completed sessions * session cost)
   const totalEarned = completedSessions.reduce((sum, s) => sum + (s.Cost || 10), 0);
