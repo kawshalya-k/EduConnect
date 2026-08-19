@@ -399,8 +399,8 @@ function SkillCard({ skill, status, retryTime, testingTime }) {
   const totalSessions = skill.Total_Sessions ?? null;
   const avgRating = skill.Average_Rating ?? null;
 
-  return (
-    <div className={`skill-verify-card ${status}`}>
+  const cardInner = (
+    <>
       {(status === 'locked' || status === 'retry') && (
         <div className="skill-card-lock">
           <FiLock size={14} />
@@ -446,14 +446,9 @@ function SkillCard({ skill, status, retryTime, testingTime }) {
                 <FiCheckCircle size={13} />
                 <span>VERIFIED</span>
               </div>
-              <Link 
-                to={`/verification/skill/${skill.Skill_Id || skill.id}/dashboard`}
-                className="skill-card-info-btn" 
-                aria-label="Manage skill dashboard"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
+              <span className="skill-card-info-btn">
                 <FiInfo size={14} />
-              </Link>
+              </span>
             </>
           )}
 
@@ -494,6 +489,24 @@ function SkillCard({ skill, status, retryTime, testingTime }) {
           )}
         </div>
       </div>
+    </>
+  );
+
+  if (status === 'verified') {
+    return (
+      <Link 
+        to={`/verification/skill/${skill.Skill_Id || skill.id}/dashboard`}
+        className={`skill-verify-card ${status} block no-underline text-inherit hover:shadow-md hover:border-emerald-500/20 transition-all cursor-pointer`}
+        style={{ color: 'inherit', textDecoration: 'none' }}
+      >
+        {cardInner}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`skill-verify-card ${status}`}>
+      {cardInner}
     </div>
   );
 }

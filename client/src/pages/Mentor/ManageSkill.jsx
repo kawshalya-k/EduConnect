@@ -155,7 +155,7 @@ export default function ManageSkill() {
         <DashboardSidebar user={user} />
         
         {/* Main Content Area */}
-        <div className="verification-page px-6 md:px-8 py-8" style={{ flex: 1, minWidth: 0, backgroundColor: '#F8FAFC' }}>
+        <div className="px-6 md:px-8 py-8" style={{ flex: 1, minWidth: 0, backgroundColor: '#F8FAFC', maxWidth: 'none', margin: '0' }}>
           
           <Breadcrumb
             items={[
