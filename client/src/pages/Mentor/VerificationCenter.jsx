@@ -446,9 +446,14 @@ function SkillCard({ skill, status, retryTime, testingTime }) {
                 <FiCheckCircle size={13} />
                 <span>VERIFIED</span>
               </div>
-              <button className="skill-card-info-btn" aria-label="Skill info">
+              <Link 
+                to={`/verification/skill/${skill.Skill_Id || skill.id}/dashboard`}
+                className="skill-card-info-btn" 
+                aria-label="Manage skill dashboard"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
                 <FiInfo size={14} />
-              </button>
+              </Link>
             </>
           )}
 
