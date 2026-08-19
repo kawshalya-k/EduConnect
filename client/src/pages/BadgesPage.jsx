@@ -7,6 +7,16 @@ import { getBadgeProgress } from '../services/gamificationService';
 import LearnerSidebar from '../components/LearnerSidebar';
 import './Mentor/MentorDashboard.css';
 
+const BADGE_DEFINITIONS = [
+  ['First Session', 'Complete your very first learning session'],
+  ['Fast Learner', 'Finish a full course module in 24 hours'],
+  ['Top Student', 'Reach #1 on the weekly leaderboard'],
+  ['7-Day Streak', 'Study for 7 consecutive days'],
+  ['Collaborator', 'Contribute to 5 community discussions'],
+  ['Course Master', 'Complete 10 full courses at 90% average'],
+  ['Coin Collector', 'Earn over 1000 Skill Coins']
+];
+
 export default function BadgesPage() {
   const { user } = useAuth();
   const [allBadges, setAllBadges] = useState([]);
@@ -22,7 +32,16 @@ export default function BadgesPage() {
       try {
         setLoading(true);
         const badgesData = await getBadgeProgress(user.id);
-        if (badgesData.success) setAllBadges(badgesData.badges);
+        if (badgesData.success) {
+          setAllBadges(badgesData.badges.map((badge, index) => {
+            const [defaultName, defaultDescription] = BADGE_DEFINITIONS[index] || [];
+            return {
+              ...badge,
+              name: badge.name || badge.Badge_Name || defaultName,
+              description: badge.description || badge.Description || defaultDescription
+            };
+          }));
+        }
       } catch (err) {
         setError('Failed to load badges data');
         console.error(err);
