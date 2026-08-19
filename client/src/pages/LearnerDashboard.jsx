@@ -102,24 +102,32 @@ const LearnerDashboard = () => {
         });
 
         // Compute upcoming session (nearest future session)
-        const now = new Date();
         const future = learnerSessions
           .map((s) => {
             try {
-              const d = s.Date ? new Date(s.Date) : null;
-              if (d && s.Time) {
-                const [hh, mm, ss] = s.Time.split(':').map(Number);
-                d.setHours(hh || 0, mm || 0, ss || 0, 0);
+              let d = null;
+              const dStr = s.Date ? s.Date.split('T')[0] : '';
+              const tStr = s.Time || '00:00:00';
+              if (dStr) {
+                const [yy, mm, dd] = dStr.split('-').map(Number);
+                const [hh, min, sec] = tStr.split(':').map(Number);
+                d = new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
               }
               return { ...s, _start: d };
             } catch (e) {
               return { ...s, _start: null };
             }
           })
-          .filter((s) => s._start && s._start >= now)
+          .filter((s) => {
+            if (s.Status === 'Completed' || s.Status === 'Cancelled') return false;
+            if (!s._start) return false;
+            const durationMs = (s.Duration || 60) * 60 * 1000;
+            const endTime = s._start.getTime() + durationMs;
+            return Date.now() <= endTime;
+          })
           .sort((a, b) => a._start - b._start);
 
-        setUpcomingSession(future.length > 0 ? future[0] : learnerSessions.length > 0 ? learnerSessions[0] : null);
+        setUpcomingSession(future.length > 0 ? future[0] : null);
       } catch (err) {
         console.error('Failed to load learning progress:', err);
         setProgressError('Unable to load learning progress.');

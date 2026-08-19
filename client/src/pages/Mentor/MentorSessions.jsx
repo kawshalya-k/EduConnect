@@ -57,14 +57,28 @@ export default function Sessions() {
   // Parse Date and Time to Date object
   const getSessionDateObject = (session) => {
     if (!session?.Date || !session?.Time) return null;
-    const datePart = session.Date.split('T')[0]; // Handle IsoString
-    return new Date(`${datePart}T${session.Time}`);
+    try {
+      const datePart = session.Date.split('T')[0]; // Handle IsoString
+      const [yy, mm, dd] = datePart.split('-').map(Number);
+      const [hh, min, sec] = session.Time.split(':').map(Number);
+      return new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   };
 
   // 1. Determine "Active Focus" (Next Session)
   // Find upcoming scheduled sessions
   const scheduledSessions = sessions
-    .filter((s) => s.Status === 'Scheduled' || s.Status === 'Pending' || s.Status === 'In-Session')
+    .filter((s) => {
+      if (s.Status === 'Completed' || s.Status === 'Cancelled') return false;
+      const start = getSessionDateObject(s);
+      if (!start) return false;
+      const durationMs = (s.Duration || 60) * 60 * 1000;
+      const endTime = start.getTime() + durationMs;
+      return Date.now() <= endTime;
+    })
     .sort((a, b) => {
       const dateA = getSessionDateObject(a);
       const dateB = getSessionDateObject(b);

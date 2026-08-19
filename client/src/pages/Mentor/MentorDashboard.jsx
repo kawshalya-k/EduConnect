@@ -65,21 +65,28 @@ export default function MentorDashboard() {
         const sessionsRes = await fetchMentorSessions(userId);
         const sessions = sessionsRes.data || [];
 
-        // Upcoming = Scheduled or Pending and date >= today
-        const now = new Date();
+        // Upcoming = Scheduled or Pending and session end time in future
         const upcoming = sessions
           .map((s) => {
             let start = null;
             try {
-              start = s.Date ? new Date(s.Date) : null;
-              if (start && s.Time) {
-                const [hh, mm, ss] = (s.Time || '').split(':').map(Number);
-                start.setHours(hh || 0, mm || 0, ss || 0, 0);
+              const dStr = s.Date ? s.Date.split('T')[0] : '';
+              const tStr = s.Time || '00:00:00';
+              if (dStr) {
+                const [yy, mm, dd] = dStr.split('-').map(Number);
+                const [hh, min, sec] = tStr.split(':').map(Number);
+                start = new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
               }
             } catch (e) { start = null; }
             return { ...s, _start: start };
           })
-          .filter((s) => s._start && (s.Status === 'Scheduled' || s.Status === 'Pending') && s._start >= now)
+          .filter((s) => {
+            if (s.Status === 'Completed' || s.Status === 'Cancelled') return false;
+            if (!s._start) return false;
+            const durationMs = (s.Duration || 60) * 60 * 1000;
+            const endTime = s._start.getTime() + durationMs;
+            return Date.now() <= endTime;
+          })
           .sort((a, b) => a._start - b._start);
 
         const pending = sessions.filter((s) => s.Status === 'Pending');

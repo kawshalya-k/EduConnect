@@ -37,17 +37,46 @@ export default function MySessions() {
       try {
         const res = await axiosInstance.get('/sessions/my');
         const data = res.data;
-        const transformed = (data || []).map(s => ({
-          id: s.Session_Id,
-          mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
-          image: s.Mentor_Avatar || '/default-avatar.svg',
-          skill: s.Skill_Name || 'Mentoring',
-          topic: s.Skill_Name || 'Session',
-          date: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD',
-          time: s.Scheduled_At ? new Date(s.Scheduled_At).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'TBD',
-          status: s.Status || 'SCHEDULED',
-          meetingType: s.Meeting_Link ? 'Online' : 'In-Person',
-        }));
+        const transformed = (data || []).map(s => {
+          let sessionStart = null;
+          try {
+            const dStr = s.Date ? s.Date.split('T')[0] : '';
+            const tStr = s.Time || '00:00:00';
+            if (dStr) {
+              const [yy, mm, dd] = dStr.split('-').map(Number);
+              const [hh, min, sec] = tStr.split(':').map(Number);
+              sessionStart = new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
+            }
+          } catch (e) {
+            sessionStart = null;
+          }
+
+          const durationMs = (s.Duration || 60) * 60 * 1000;
+          const endTime = sessionStart ? sessionStart.getTime() + durationMs : 0;
+          const isPast = endTime ? Date.now() > endTime : false;
+
+          const dateLabel = sessionStart 
+            ? sessionStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'TBD';
+
+          const timeLabel = sessionStart
+            ? sessionStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            : 'TBD';
+
+          return {
+            id: s.Session_Id,
+            mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
+            image: s.Mentor_Avatar || '/default-avatar.svg',
+            skill: s.Skill_Name || 'Mentoring',
+            topic: s.Skill_Name || 'Session',
+            date: dateLabel,
+            time: timeLabel,
+            status: s.Status || 'Scheduled',
+            meetingType: s.Meeting_Link ? 'Online' : 'In-Person',
+            isPast,
+            rawStatus: s.Status
+          };
+        });
         setSessions(transformed);
       } catch (err) {
         console.error('Failed to fetch sessions:', err);
@@ -140,7 +169,7 @@ export default function MySessions() {
             {/* Content List */}
             <div className="flex flex-col items-start gap-6 w-full max-w-[960px]">
 
-              {activeTab === 'upcoming' && sessions.filter(s => s.status !== 'COMPLETED').map(session => (
+              {activeTab === 'upcoming' && sessions.filter(s => !s.isPast && s.rawStatus !== 'Completed' && s.rawStatus !== 'Cancelled').map(session => (
                 <div key={session.id} className="box-border flex flex-col items-start w-full bg-white border border-[#10B77F]/10 shadow-sm rounded-3xl overflow-hidden h-[198px]">
                   <div className="flex flex-row w-full h-[196px]">
                     <div className="w-[224px] h-[196px] overflow-hidden flex-shrink-0">
@@ -186,8 +215,8 @@ export default function MySessions() {
                 </div>
               )}
 
-              {(activeTab === 'past' || activeTab === 'upcoming') && sessions.filter(s => s.status === 'COMPLETED').map(session => {
-                const isCompleted = session.status === 'COMPLETED';
+              {(activeTab === 'past' || activeTab === 'upcoming') && sessions.filter(s => s.isPast || s.rawStatus === 'Completed' || s.rawStatus === 'Cancelled').map(session => {
+                const isCompleted = session.rawStatus === 'Completed';
                 const containerClasses = isCompleted
                   ? "bg-[#F8FAFC] border-[#10B77F]/5"
                   : "bg-[#F8FAFC] border-[#FEE2E2]";
@@ -216,7 +245,7 @@ export default function MySessions() {
                         </div>
                         <button
                           className={`border font-bold text-xs leading-4 py-1.5 px-4 rounded-2xl transition-colors ${btnClasses}`}
-                          onClick={() => isCompleted ? navigate('/session-feedback', { state: { sessionId: session.Session_Id, mentorName: session.mentor_name || 'Your Mentor' } }) : null}                        >
+                          onClick={() => isCompleted ? navigate('/session-feedback', { state: { sessionId: session.id, mentorName: session.mentor || 'Your Mentor' } }) : null}                        >
                           {isCompleted ? "Rate Mentor" : "Feedback"}
                         </button>
                       </div>

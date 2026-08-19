@@ -60,8 +60,22 @@ export default function SessionRoom() {
         setTimeLeft(Math.max(0, Math.floor((startTime - nowTime) / 1000)));
       } else if (nowTime >= startTime && nowTime < endTime) {
         setTimeLeft(Math.max(0, Math.floor((endTime - nowTime) / 1000)));
+        if (sessionDetails.Status !== 'In-Session' && sessionDetails.Status !== 'Completed' && sessionDetails.Status !== 'Cancelled') {
+          axiosInstance.put(`/sessions/${sessionDetails.Session_Id}/status`, { status: 'In-Session' })
+            .then(() => {
+              setSessionDetails(prev => ({ ...prev, Status: 'In-Session' }));
+            })
+            .catch(err => console.error("Error setting session to In-Session:", err));
+        }
       } else {
         setTimeLeft(0);
+        if (sessionDetails.Status !== 'Completed' && sessionDetails.Status !== 'Cancelled') {
+          axiosInstance.put(`/sessions/${sessionDetails.Session_Id}/status`, { status: 'Completed' })
+            .then(() => {
+              setSessionDetails(prev => ({ ...prev, Status: 'Completed' }));
+            })
+            .catch(err => console.error("Error setting session to Completed:", err));
+        }
       }
     }, 1000);
     return () => clearInterval(timer);
