@@ -162,7 +162,7 @@ export default function BadgesPage() {
         <div className="flex gap-8 border-b border-[#10B77F]/10 mb-[32px]">
           {[
             { id: "all", label: "All Badges" },
-            { id: "earned", label: `Earned (${earnedCount})` },
+            { id: "earned", label: `EX Points (${earnedCount})` },
             { id: "locked", label: `Locked (${lockedCount})` }
           ].map(tab => (
             <button
