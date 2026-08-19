@@ -162,6 +162,7 @@ const getLeaderboard = async (req, res) => {
         COALESCE(MAX(ld.\`${lc.level}\`), 'BRONZE') AS mentor_level
       FROM User u
       LEFT JOIN Levelling_Data ld ON u.User_Id = ld.\`${lc.userId}\`
+      WHERE u.Role != 'Admin'
       GROUP BY u.User_Id
       ORDER BY u.skill_coins DESC, score DESC
       LIMIT 50
