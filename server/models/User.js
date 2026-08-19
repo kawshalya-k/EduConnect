@@ -3,7 +3,7 @@ const db = require('../config/db');
 const getAllUsers = async () => {
   const [rows] = await db.query(`
     SELECT User_Id, First_Name, Last_Name, Email, University, 
-    Role, Wallet_Balance, Status, is_verified
+    Role, Wallet_Balance, skill_coins, Avatar, Status, is_verified
     FROM User
     ORDER BY User_Id DESC
   `);
@@ -13,7 +13,7 @@ const getAllUsers = async () => {
 const getUserById = async (userId) => {
   const [rows] = await db.query(
     `SELECT User_Id, First_Name, Last_Name, Email, University, 
-    Role, Wallet_Balance, Status, is_verified
+    Role, Wallet_Balance, skill_coins, Avatar, Status, is_verified
     FROM User WHERE User_Id = ?`,
     [userId]
   );

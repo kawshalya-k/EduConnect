@@ -238,3 +238,124 @@ exports.adminLogin = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// ── ADMIN PROFILE ─────────────────────────────────────────
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [rows] = await db.query(
+      `SELECT u.User_Id, u.First_Name, u.Last_Name, u.Email, u.University, u.Bio, u.Avatar,
+              a.Role as AdminRole, a.Admin_Id
+       FROM User u
+       JOIN Admin a ON a.User_Id = u.User_Id
+       WHERE u.User_Id = ?`,
+      [userId]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'Admin not found' });
+
+    const r = rows[0];
+    res.json({
+      id: r.User_Id,
+      adminId: r.Admin_Id,
+      firstName: r.First_Name,
+      lastName: r.Last_Name,
+      name: `${r.First_Name} ${r.Last_Name}`,
+      email: r.Email,
+      university: r.University || '',
+      bio: r.Bio || '',
+      avatar: r.Avatar || null,
+      role: r.AdminRole || 'Administrator',
+    });
+  } catch (err) {
+    console.error('getAdminProfile error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstName, lastName, university, bio } = req.body;
+
+    if (!firstName || !lastName) {
+      return res.status(400).json({ message: 'First name and last name are required' });
+    }
+
+    await db.query(
+      `UPDATE User SET First_Name = ?, Last_Name = ?, University = ?, Bio = ? WHERE User_Id = ?`,
+      [firstName.trim(), lastName.trim(), (university || '').trim(), (bio || '').trim(), userId]
+    );
+
+    const [rows] = await db.query(
+      `SELECT u.User_Id, u.First_Name, u.Last_Name, u.Email, u.University, u.Bio, u.Avatar,
+              a.Role as AdminRole, a.Admin_Id
+       FROM User u
+       JOIN Admin a ON a.User_Id = u.User_Id
+       WHERE u.User_Id = ?`,
+      [userId]
+    );
+    const r = rows[0];
+    res.json({
+      id: r.User_Id,
+      adminId: r.Admin_Id,
+      firstName: r.First_Name,
+      lastName: r.Last_Name,
+      name: `${r.First_Name} ${r.Last_Name}`,
+      email: r.Email,
+      university: r.University || '',
+      bio: r.Bio || '',
+      avatar: r.Avatar || null,
+      role: r.AdminRole || 'Administrator',
+    });
+  } catch (err) {
+    console.error('updateAdminProfile error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.changeAdminPassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Both current and new password are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters' });
+    }
+
+    const [rows] = await db.query(`SELECT Password FROM User WHERE User_Id = ?`, [userId]);
+    if (!rows.length) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, rows[0].Password);
+    if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await db.query(`UPDATE User SET Password = ? WHERE User_Id = ?`, [hashed, userId]);
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('changeAdminPassword error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ── ADMIN AVATAR UPLOAD ───────────────────────────────────
+exports.uploadAdminAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided.' });
+    }
+
+    const userId = req.user.id;
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    await db.query(`UPDATE User SET Avatar = ? WHERE User_Id = ?`, [avatarUrl, userId]);
+
+    res.json({ avatarUrl });
+  } catch (err) {
+    console.error('uploadAdminAvatar error:', err);
+    res.status(500).json({ message: 'Server error uploading avatar.' });
+  }
+};

@@ -34,6 +34,7 @@ import UserManagement from './pages/Admin/UserManagement';
 import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
+import AdminProfile from './pages/Admin/AdminProfile';
 import Notifications from './pages/Notifications';
 import ScrollToTop from './components/ScrollToTop';
 //Mentor
@@ -127,6 +128,7 @@ function App() {
         <Route path="/admin/analytics" element={<AdminProtectedRoute><Analytics /></AdminProtectedRoute>} />
         <Route path="/admin/settings" element={<AdminProtectedRoute><Settings /></AdminProtectedRoute>} />
         <Route path="/admin/verifications" element={<AdminProtectedRoute><SkillVerifications /></AdminProtectedRoute>} />
+        <Route path="/admin/profile" element={<AdminProtectedRoute><AdminProfile /></AdminProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         
         {/* Mentor Routes */}

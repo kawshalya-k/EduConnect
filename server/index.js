@@ -16,6 +16,10 @@ app.use(cors({
 
 app.use(express.json());
 
+// Serve uploaded files (avatars, certificates, etc.)
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ── Routes ── 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
