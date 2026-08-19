@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { label: 'Mentors', path: '/find-mentor', icon: <FiUsers size={17} /> },
   { label: 'My Sessions', path: '/my-sessions', icon: <FiCalendar size={17} /> },
   { label: 'Badges and Achievements', path: '/badges', icon: <FiAward size={17} /> },
-  { label: 'Wallet', path: '/wallet', icon: <FiDollarSign size={17} /> },
+  { label: 'Wallet', path: '/mentor-wallet', icon: <FiDollarSign size={17} /> },
 ];
 
 export default function LearnerSidebar() {
