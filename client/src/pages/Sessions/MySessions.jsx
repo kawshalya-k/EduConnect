@@ -36,8 +36,9 @@ export default function MySessions() {
       if (!user?.id) return;
       try {
         const res = await axiosInstance.get('/sessions/my');
-        const data = res.data;
-        const transformed = (data || []).map(s => {
+        const rawData = res.data;
+        const learnerSessions = (rawData || []).filter(s => String(s.Learner_Id) === String(user.id));
+        const transformed = learnerSessions.map(s => {
           let sessionStart = null;
           try {
             const dStr = s.Date ? s.Date.split('T')[0] : '';

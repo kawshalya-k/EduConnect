@@ -26,7 +26,7 @@ export default function Sessions() {
       const res = await fetchMentorSessions(user.mentorId || user.id);
       // Ensure we filter for sessions where the user is the Mentor
       const mentorSessions = (res.data || res || []).filter(
-        (s) => s.Mentor_Id === (user.mentorId || user.id)
+        (s) => String(s.Mentor_Id) === String(user.mentorId || user.id)
       );
       setSessions(mentorSessions);
     } catch (err) {

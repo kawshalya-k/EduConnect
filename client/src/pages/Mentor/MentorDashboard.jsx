@@ -63,8 +63,8 @@ export default function MentorDashboard() {
 
       // Fetch sessions separately to compute upcoming & pending requests
       try {
-        const sessionsRes = await fetchMentorSessions(userId);
-        const sessions = sessionsRes.data || [];
+        const rawSessions = sessionsRes.data || [];
+        const sessions = rawSessions.filter((s) => String(s.Mentor_Id) === String(userId));
 
         // Upcoming = Scheduled or Pending and session end time in future
         const upcoming = sessions
