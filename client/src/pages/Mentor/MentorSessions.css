@@ -15,6 +15,7 @@
   gap: 40px;
   width: 100%;
   max-width: 896px;
+  margin: 0 auto;
 }
 
 .sessions-section-wrapper {

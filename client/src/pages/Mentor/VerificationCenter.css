@@ -1,12 +1,12 @@
 .verification-page {
   width: 100%;
-  max-width: 1280px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 32px 40px 64px;
   background: #F8FAFC;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 40px;
 }
 
