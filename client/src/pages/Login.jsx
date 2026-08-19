@@ -187,6 +187,7 @@ const Login = () => {
           <Link to="/privacy-policy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
           <Link to="/terms-of-service" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
           <Link to="/community-standards" className="text-white/60 hover:text-white transition-colors">Community Standards</Link>
+          <Link to="/admin/login" className="text-white/60 hover:text-[#10B981] transition-colors">Admin Portal</Link>
           <a href="#" className="text-white/60 hover:text-white transition-colors">
             Help Center
           </a>

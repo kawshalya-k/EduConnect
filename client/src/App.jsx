@@ -29,7 +29,6 @@ import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import SkillVerifications from './pages/Admin/SkillVerifications';
 import Notifications from './pages/Notifications';
-
 import ScrollToTop from './components/ScrollToTop';
 //Mentor
 import MentorDashboard from './pages/Mentor/MentorDashboard';
@@ -48,6 +47,7 @@ import { useAuth } from './context/AuthContext';
 //common
 import SkillWallet from './pages/SkillWallet';
 import Messages    from './pages/Messages';
+import AdminLogin from './pages/Admin/AdminLogin';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -60,12 +60,19 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function AdminProtectedRoute({ children }) {
+  const adminToken = localStorage.getItem('adminToken');
+  if (!adminToken) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  return children;
+}
+
 function App() {
   const { mode } = useAuth();
   return (
     <div className="App">
       <ScrollToTop />
-
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -102,11 +109,13 @@ function App() {
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         
         {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-        <Route path="/admin/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-        <Route path="/admin/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="/admin/verifications" element={<ProtectedRoute><SkillVerifications /></ProtectedRoute>} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+        <Route path="/admin/users" element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
+        <Route path="/admin/analytics" element={<AdminProtectedRoute><Analytics /></AdminProtectedRoute>} />
+        <Route path="/admin/settings" element={<AdminProtectedRoute><Settings /></AdminProtectedRoute>} />
+        <Route path="/admin/verifications" element={<AdminProtectedRoute><SkillVerifications /></AdminProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         
         {/* Mentor Routes */}

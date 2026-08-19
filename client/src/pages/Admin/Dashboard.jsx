@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getDashboardStats } from '../../services/adminService';
 
 const sidebarItems = [
-  { icon: "📊", label: "Dashboard", path: "/admin/admin-dashboard" },
+  { icon: "📊", label: "Dashboard", path: "/admin/dashboard" },
   { icon: "👥", label: "User Management", path: "/admin/users" },
   { icon: "✅", label: "Skill Verifications", path: "/admin/verifications" },
   { icon: "📈", label: "Analytics", path: "/admin/analytics" },
@@ -31,6 +31,15 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const maxVal = Math.max(...activityData);
 
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const adminName = adminUser.name || 'Super Admin';
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
+  };
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -41,6 +50,14 @@ export default function AdminDashboard() {
       }
     };
     fetchStats();
+  }, []);
+
+  // Admin auth guard
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      navigate('/admin/login');
+    }
   }, []);
 
   const stats = [
@@ -56,17 +73,13 @@ export default function AdminDashboard() {
       {/* Navbar */}
       <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: "#10b981", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>E</span>
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
-          <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "3px 10px", borderRadius: 20, border: "1px solid #a7f3d0" }}>Admin</span>
+          <img src="/src/Assets/EduConnect_Logo.png" alt="EduConnect" style={{ height: 36, objectFit: "contain" }} /><span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span><span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "3px 10px", borderRadius: 20, border: "1px solid #a7f3d0" }}>Admin</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 8, height: 8, background: "#10b981", borderRadius: "50%" }} />
           <span style={{ fontSize: 13, color: "#64748b" }}>System Online</span>
           <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #e2e8f0", marginLeft: 8 }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>Alex Rivera</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>{adminName}</span>
         </div>
       </nav>
 
@@ -90,10 +103,10 @@ export default function AdminDashboard() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #a7f3d0" }} />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>Super Admin</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>{adminName}</p>
                 <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Administrator</p>
               </div>
-              <span style={{ cursor: "pointer", fontSize: 16, color: "#94a3b8" }}>↪</span>
+              <span onClick={handleLogout} title="Logout" style={{ cursor: "pointer", fontSize: 16, color: "#94a3b8" }}>↪</span>
             </div>
           </div>
         </div>

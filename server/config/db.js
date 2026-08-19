@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 
 const connectionUri = process.env.DATABASE_URL || process.env.MYSQL_URL;
 
@@ -260,6 +261,34 @@ async function initDB() {
       console.log('✅ 10 core verification skills are seeded/verified.');
     } catch (e) {
       console.error('Error seeding core skills:', e.message);
+    }
+
+    // Seed default Admin user
+    try {
+      const adminEmail = 'admin@sliit.ac.lk';
+      const [existingAdmin] = await connection.query('SELECT User_Id FROM User WHERE Email = ?', [adminEmail]);
+      let adminUserId;
+
+      if (existingAdmin.length === 0) {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const [insertRes] = await connection.query(
+          `INSERT INTO User (First_Name, Last_Name, Email, Password, University, Role, is_verified, skill_coins) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          ['System', 'Administrator', adminEmail, hashedPassword, 'SLIIT', 'Admin', 1, 9999]
+        );
+        adminUserId = insertRes.insertId;
+        console.log(`✅ Seeded default Admin user: ${adminEmail}`);
+      } else {
+        adminUserId = existingAdmin[0].User_Id;
+      }
+
+      const [adminRecord] = await connection.query('SELECT Admin_Id FROM Admin WHERE User_Id = ?', [adminUserId]);
+      if (adminRecord.length === 0) {
+        await connection.query('INSERT INTO Admin (User_Id, Role) VALUES (?, ?)', [adminUserId, 'Administrator']);
+        console.log(`✅ Linked Admin record for User_Id: ${adminUserId}`);
+      }
+    } catch (e) {
+      console.error('Error seeding default admin:', e.message);
     }
 
     connection.release();
