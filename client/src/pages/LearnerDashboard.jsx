@@ -620,7 +620,6 @@ const LearnerDashboard = () => {
           </div>
         </div>
       </div>
-    </div>
 
       <Footer />
     </div>
