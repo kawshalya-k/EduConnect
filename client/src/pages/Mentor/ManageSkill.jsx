@@ -4,7 +4,6 @@ import {
   Award, 
   Clock, 
   CheckCircle, 
-  Users, 
   Star, 
   ShieldCheck,
   Search,
@@ -33,16 +32,11 @@ export default function ManageSkill() {
   
   const mentorId = user?.mentorId || user?.id;
 
-  const [accepting, setAccepting] = useState(() => {
-    const saved = localStorage.getItem(`mentor_accepting_${mentorId}`);
-    return saved ? JSON.parse(saved) : true;
-  });
-
   const loadData = async () => {
     if (!mentorId) return;
     setLoading(true);
     try {
-      // 1. Fetch skills
+      // 1. Fetch skills (this joins Levelling_Data in backend, providing avg rating & sessions from db)
       const skillsRes = await fetchMentorSkills(mentorId);
       const skillsArray = Array.isArray(skillsRes.data)
         ? skillsRes.data
@@ -54,7 +48,10 @@ export default function ManageSkill() {
           id: skill.Skill_Id || skill.id,
           name: skill.Skill_Name || skill.name,
           level: skill.Mentor_Level || 'Bronze',
-          verified: skill.Verification_Status === 1 || skill.Verification_Status === true || skill.Verification_Status === 'Verified'
+          verified: skill.Verification_Status === 1 || skill.Verification_Status === true || skill.Verification_Status === 'Verified',
+          avgRating: skill.Average_Rating !== undefined && skill.Average_Rating !== null ? Number(skill.Average_Rating) : null,
+          totalSessions: skill.Total_Sessions !== undefined && skill.Total_Sessions !== null ? Number(skill.Total_Sessions) : null,
+          score: skill.Score !== undefined && skill.Score !== null ? Number(skill.Score) : 0
         });
       }
 
@@ -66,7 +63,7 @@ export default function ManageSkill() {
       );
       setSessions(filteredSessions);
 
-      // Filter pending requests
+      // Filter pending requests for this skill
       const pending = filteredSessions.filter(s => s.Status === 'Pending');
       setPendingRequests(pending);
 
@@ -80,12 +77,6 @@ export default function ManageSkill() {
   useEffect(() => {
     loadData();
   }, [skillId, mentorId]);
-
-  const handleToggleAccepting = () => {
-    const newVal = !accepting;
-    setAccepting(newVal);
-    localStorage.setItem(`mentor_accepting_${mentorId}`, JSON.stringify(newVal));
-  };
 
   const handleAccept = async (sessionId) => {
     try {
@@ -111,23 +102,27 @@ export default function ManageSkill() {
 
   // Helper calculations
   const completedSessions = sessions.filter(s => s.Status === 'Completed');
-  const sessionCount = completedSessions.length;
   
-  // Total Earned = completed sessions * session cost
-  const totalEarned = completedSessions.reduce((sum, s) => sum + (s.Cost || 10), 0);
+  // Total Sessions completed for this skill from DB
+  const sessionCount = currentSkill?.totalSessions !== null && currentSkill?.totalSessions !== undefined && currentSkill.totalSessions > 0
+    ? currentSkill.totalSessions
+    : completedSessions.length;
 
-  // Average Rating
-  const reviewedSessions = completedSessions.filter(s => s.Rating != null);
-  const avgRating = reviewedSessions.length > 0
-    ? (reviewedSessions.reduce((sum, s) => sum + s.Rating, 0) / reviewedSessions.length).toFixed(1)
-    : '4.8'; // default fallback mock rating if none exists
+  // Average Rating directly from DB (Levelling_Data)
+  const avgRating = (currentSkill?.avgRating !== null && currentSkill?.avgRating !== undefined && currentSkill.avgRating > 0)
+    ? Number(currentSkill.avgRating).toFixed(1)
+    : (completedSessions.filter(s => s.Rating != null).length > 0
+        ? (completedSessions.filter(s => s.Rating != null).reduce((sum, s) => sum + s.Rating, 0) / completedSessions.filter(s => s.Rating != null).length).toFixed(1)
+        : '4.8'); // Fallback to 4.8 if 0 / null in DB
+
+  // Total Earned in this skill (completed sessions * session cost)
+  const totalEarned = completedSessions.reduce((sum, s) => sum + (s.Cost || 10), 0);
 
   // Level thresholds
   const currentLevel = currentSkill?.level || 'Bronze';
   const levelXP = sessionCount;
   const levelMaxXP = currentLevel.toLowerCase() === 'gold' ? 15 : currentLevel.toLowerCase() === 'silver' ? 15 : 5;
   const pointsToNext = levelMaxXP - levelXP;
-  
   const progressPercent = Math.min(100, (levelXP / levelMaxXP) * 100);
 
   if (loading) {
@@ -172,8 +167,8 @@ export default function ManageSkill() {
 
           <div className="flex flex-col lg:flex-row gap-8 mt-6">
             
-            {/* Column 2: Welcome & Teaching Overview */}
-            <div className="flex-1 space-y-8">
+            {/* Column 2: Welcome & Teaching Overview (2/3 width) */}
+            <div className="w-full lg:w-2/3 space-y-8 flex flex-col">
               
               {/* Welcome Header */}
               <div className="space-y-2">
@@ -300,8 +295,8 @@ export default function ManageSkill() {
 
             </div>
 
-            {/* Column 3: Leveling Widget & Stats (Side Column at the Right) */}
-            <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-6">
+            {/* Column 3: Skill Level & Stats Column (1/3 width) */}
+            <div className="w-full lg:w-1/3 flex flex-col gap-6">
               
               {/* Leveling Widget */}
               <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-2xl p-6 space-y-6">
@@ -345,38 +340,15 @@ export default function ManageSkill() {
                 </div>
               </div>
 
-              {/* Accepting New Learners Availability Switch */}
-              <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-2xl p-6">
-                <div className="flex justify-between items-center">
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-slate-800 text-base">Accepting New Learners</h3>
-                    <p className="text-slate-400 text-xs">
-                      {accepting ? 'Your profile is visible in discovery' : 'Your profile is hidden from search'}
-                    </p>
-                  </div>
-                  
-                  <button 
-                    onClick={handleToggleAccepting}
-                    className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${
-                      accepting ? 'bg-[#10B981]' : 'bg-slate-200'
-                    }`}
-                  >
-                    <span className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all duration-300 shadow-sm ${
-                      accepting ? 'left-7' : 'left-1'
-                    }`} />
-                  </button>
-                </div>
-              </div>
-
               {/* Total Earned Card */}
               <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-2xl p-6 space-y-2">
-                <p className="text-slate-400 text-xs font-bold tracking-wider uppercase">Total Earned</p>
+                <p className="text-slate-400 text-xs font-bold tracking-wider uppercase text-slate-400 font-bold">Total Earned</p>
                 <h4 className="text-2xl font-black text-slate-800">{totalEarned} SC</h4>
               </div>
 
               {/* Avg Rating Card */}
               <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-2xl p-6 space-y-2">
-                <p className="text-slate-400 text-xs font-bold tracking-wider uppercase">Avg Rating</p>
+                <p className="text-slate-400 text-xs font-bold tracking-wider uppercase text-slate-400 font-bold">Avg Rating</p>
                 <div className="flex items-center gap-1.5">
                   <Star className="w-5 h-5 fill-blue-500 text-blue-500" />
                   <h4 className="text-2xl font-black text-slate-800">{avgRating}</h4>
