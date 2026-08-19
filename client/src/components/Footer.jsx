@@ -51,6 +51,7 @@ const Footer = () => {
               { name: "Privacy Policy", path: "/privacy-policy" }, 
               { name: "Terms of Service", path: "/terms-of-service" }, 
               { name: "Community Standards", path: "/community-standards" },
+              { name: "Admin Portal", path: "/admin/login" },
               { name: "Help Center", path: "#" }
             ] 
           }

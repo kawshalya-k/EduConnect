@@ -1,6 +1,8 @@
 const db = require('../config/db');
 const User = require('../models/User');
 const Session = require('../models/Session');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // ── DASHBOARD STATS ──────────────────────────────────────
 exports.getDashboardStats = async (req, res) => {
@@ -182,5 +184,57 @@ exports.getAllUserSkills = async (req, res) => {
   } catch (err) {
     console.error('getAllUserSkills error:', err);
     res.status(500).json({ message: 'Error fetching user skills' });
+  }
+};
+
+// Admin Login
+exports.adminLogin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    // Check if user exists and is an admin
+    const [users] = await db.query(
+      `SELECT u.*, a.Role as AdminRole, a.Admin_Id 
+       FROM User u 
+       JOIN Admin a ON u.User_Id = a.User_Id 
+       WHERE u.Email = ?`,
+      [email]
+    );
+
+    if (!users.length) {
+      return res.status(404).json({ message: 'Admin account not found' });
+    }
+
+    const admin = users[0];
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, admin.Password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Create admin token
+    const token = jwt.sign(
+      { 
+        id: admin.User_Id, 
+        adminId: admin.Admin_Id,
+        role: admin.AdminRole,
+        isAdmin: true 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.json({
+      token,
+      admin: {
+        id: admin.User_Id,
+        name: `${admin.First_Name} ${admin.Last_Name}`,
+        email: admin.Email,
+        role: admin.AdminRole
+      }
+    });
+  } catch (err) {
+    console.error('adminLogin error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
