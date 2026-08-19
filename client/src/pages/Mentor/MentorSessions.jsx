@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiClock, FiVideo, FiPlus, FiAlertCircle, FiTrendingUp } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
@@ -8,6 +9,7 @@ import { fetchMentorSessions } from '../../services/mentorApi';
 import './MentorSessions.css';
 
 export default function Sessions() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +103,7 @@ export default function Sessions() {
                       formatTime={formatTime}
                       formatDate={formatDate}
                       getSessionDateObject={getSessionDateObject}
+                      navigate={navigate}
                     />
                   ) : (
                     <div className="no-active-focus">
@@ -126,6 +129,7 @@ export default function Sessions() {
                           key={session.Session_Id} 
                           session={session} 
                           formatTime={formatTime}
+                          navigate={navigate}
                         />
                       ))
                     ) : (
@@ -161,8 +165,8 @@ export default function Sessions() {
 }
 
 // Active Focus Countdown Card
-function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject }) {
-  const [timeLeft, setTimeLeft] = useState({ minutes: 0, seconds: 0 });
+function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject, navigate }) {
+  const [timeLeft, setTimeLeft] = useState({ value1: '00', label1: 'MIN', value2: '00', label2: 'SEC' });
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
@@ -174,13 +178,37 @@ function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject
       const difference = targetDate - now;
 
       if (difference <= 0) {
-        setTimeLeft({ minutes: 0, seconds: 0 });
+        setTimeLeft({ value1: '00', label1: 'MIN', value2: '00', label2: 'SEC' });
         setIsLive(true);
       } else {
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        setTimeLeft({ minutes, seconds });
         setIsLive(false);
+        const totalSecs = Math.floor(difference / 1000);
+        const totalMins = Math.floor(totalSecs / 60);
+        const totalHours = Math.floor(totalMins / 60);
+        const totalDays = Math.floor(totalHours / 24);
+
+        if (totalDays > 0) {
+          setTimeLeft({
+            value1: String(totalDays).padStart(2, '0'),
+            label1: 'DAYS',
+            value2: String(totalHours % 24).padStart(2, '0'),
+            label2: 'HRS'
+          });
+        } else if (totalHours > 0) {
+          setTimeLeft({
+            value1: String(totalHours).padStart(2, '0'),
+            label1: 'HRS',
+            value2: String(totalMins % 60).padStart(2, '0'),
+            label2: 'MIN'
+          });
+        } else {
+          setTimeLeft({
+            value1: String(totalMins).padStart(2, '0'),
+            label1: 'MIN',
+            value2: String(totalSecs % 60).padStart(2, '0'),
+            label2: 'SEC'
+          });
+        }
       }
     };
 
@@ -190,11 +218,7 @@ function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject
   }, [session]);
 
   const joinCall = () => {
-    if (session.Meeting_Link) {
-      window.open(session.Meeting_Link, '_blank');
-    } else {
-      alert('Meeting link is pending. Please check back shortly!');
-    }
+    navigate(`/session-room?id=${session.Session_Id || session.id}`);
   };
 
   return (
@@ -228,12 +252,12 @@ function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject
             {/* Countdown Blocks */}
             <div className="countdown-blocks-container">
               <div className="countdown-block">
-                <span className="block-number">{timeLeft.minutes.toString().padStart(2, '0')}</span>
-                <span className="block-label">MIN</span>
+                <span className="block-number">{timeLeft.value1}</span>
+                <span className="block-label">{timeLeft.label1}</span>
               </div>
               <div className="countdown-block">
-                <span className="block-number">{timeLeft.seconds.toString().padStart(2, '0')}</span>
-                <span className="block-label">SEC</span>
+                <span className="block-number">{timeLeft.value2}</span>
+                <span className="block-label">{timeLeft.label2}</span>
               </div>
             </div>
 
@@ -250,13 +274,13 @@ function ActiveFocusCard({ session, formatTime, formatDate, getSessionDateObject
 }
 
 // Timeline Entry Component
-function TimelineEntry({ session, formatTime }) {
+function TimelineEntry({ session, formatTime, navigate }) {
   const isPending = session.Status === 'Pending' || !session.Meeting_Link;
   const statusLabel = isPending ? 'LINK PENDING' : 'CONFIRMED';
   const statusClass = isPending ? 'pending' : 'confirmed';
 
   return (
-    <div className="timeline-entry">
+    <div className="timeline-entry" onClick={() => navigate(`/session-room?id=${session.Session_Id || session.id}`)} style={{ cursor: 'pointer' }}>
       {/* Time column */}
       <div className="timeline-time-col">
         <span className="timeline-time-text">{formatTime(session.Time)}</span>
@@ -264,7 +288,7 @@ function TimelineEntry({ session, formatTime }) {
       </div>
 
       {/* Card column */}
-      <div className="timeline-card">
+      <div className="timeline-card hover:bg-slate-50 transition-colors">
         {/* Avatar */}
         <div className="timeline-avatar-wrapper">
           <span>

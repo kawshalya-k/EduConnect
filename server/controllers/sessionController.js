@@ -205,11 +205,20 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// Add meeting link (Mentor)
+// Add meeting link (Mentor or Learner)
 exports.addMeetingLink = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { meeting_link } = req.body;
+    let { meeting_link } = req.body;
+
+    if (!meeting_link) {
+      return res.status(400).json({ message: 'Meeting link is required' });
+    }
+
+    meeting_link = meeting_link.trim();
+    if (meeting_link && !/^https?:\/\//i.test(meeting_link)) {
+      meeting_link = 'https://' + meeting_link;
+    }
 
     try { new URL(meeting_link); } catch {
       return res.status(400).json({ message: 'Invalid meeting link URL' });
@@ -217,23 +226,30 @@ exports.addMeetingLink = async (req, res) => {
 
     await Session.addMeetingLink(sessionId, meeting_link);
 
-    // Notify learner about meeting link
     const session = await Session.getSessionById(sessionId);
     if (session) {
+      // Determine other party to notify
+      const currentUserId = req.user.id;
+      const recipientId = currentUserId === session.Learner_Id ? session.Mentor_Id : session.Learner_Id;
+      const roleName = currentUserId === session.Learner_Id ? 'learner' : 'mentor';
+      const notificationMessage = currentUserId === session.Learner_Id
+        ? 'The learner has updated the meeting link. You can now join the session.'
+        : 'Your mentor has added the meeting link. You can now join the session.';
+
       await Notification.createNotification(
-        session.Learner_Id,
+        recipientId,
         'Meeting Link Ready! 🔗',
-        'Your mentor has added the meeting link. You can now join the session.',
+        notificationMessage,
         'session'
       );
     }
 
-    res.status(200).json({ message: 'Meeting link added successfully!' });
+    res.status(200).json({ message: 'Meeting link added successfully!', meeting_link });
 
- } catch (err) {
+  } catch (err) {
     console.error('addMeetingLink error:', err);
     res.status(500).json({ message: err.message });
- }
+  }
 };
 
 // Get single session
