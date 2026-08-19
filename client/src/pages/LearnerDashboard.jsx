@@ -106,12 +106,14 @@ const LearnerDashboard = () => {
           .map((s) => {
             try {
               let d = null;
-              const dStr = s.Date ? s.Date.split('T')[0] : '';
-              const tStr = s.Time || '00:00:00';
-              if (dStr) {
-                const [yy, mm, dd] = dStr.split('-').map(Number);
+              if (s.Date) {
+                const localDate = new Date(s.Date);
+                const yy = localDate.getFullYear();
+                const mm = localDate.getMonth();
+                const dd = localDate.getDate();
+                const tStr = s.Time || '00:00:00';
                 const [hh, min, sec] = tStr.split(':').map(Number);
-                d = new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
+                d = new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
               }
               return { ...s, _start: d };
             } catch (e) {

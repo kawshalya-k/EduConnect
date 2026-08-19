@@ -58,10 +58,12 @@ export default function Sessions() {
   const getSessionDateObject = (session) => {
     if (!session?.Date || !session?.Time) return null;
     try {
-      const datePart = session.Date.split('T')[0]; // Handle IsoString
-      const [yy, mm, dd] = datePart.split('-').map(Number);
+      const localDate = new Date(session.Date);
+      const yy = localDate.getFullYear();
+      const mm = localDate.getMonth();
+      const dd = localDate.getDate();
       const [hh, min, sec] = session.Time.split(':').map(Number);
-      return new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
+      return new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
     } catch (e) {
       console.error(e);
       return null;

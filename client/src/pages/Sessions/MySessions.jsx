@@ -41,12 +41,14 @@ export default function MySessions() {
         const transformed = learnerSessions.map(s => {
           let sessionStart = null;
           try {
-            const dStr = s.Date ? s.Date.split('T')[0] : '';
-            const tStr = s.Time || '00:00:00';
-            if (dStr) {
-              const [yy, mm, dd] = dStr.split('-').map(Number);
+            if (s.Date) {
+              const localDate = new Date(s.Date);
+              const yy = localDate.getFullYear();
+              const mm = localDate.getMonth();
+              const dd = localDate.getDate();
+              const tStr = s.Time || '00:00:00';
               const [hh, min, sec] = tStr.split(':').map(Number);
-              sessionStart = new Date(yy, mm - 1, dd, hh || 0, min || 0, sec || 0);
+              sessionStart = new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
             }
           } catch (e) {
             sessionStart = null;
