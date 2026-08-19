@@ -7,6 +7,8 @@ import { fetchLeaderboard } from '../services/leaderboardService';
 import { getMySessions } from '../services/sessionService';
 import { useAuth } from '../context/AuthContext';
 import { fetchLearningSkills, addLearningSkill, removeLearningSkill, fetchAllSkills } from '../services/learnerApi';
+import LearnerSidebar from '../components/LearnerSidebar';
+import './Mentor/MentorDashboard.css';
 
 const LearnerDashboard = () => {
   const [topMentors, setTopMentors] = useState([]);
@@ -102,24 +104,34 @@ const LearnerDashboard = () => {
         });
 
         // Compute upcoming session (nearest future session)
-        const now = new Date();
         const future = learnerSessions
           .map((s) => {
             try {
-              const d = s.Date ? new Date(s.Date) : null;
-              if (d && s.Time) {
-                const [hh, mm, ss] = s.Time.split(':').map(Number);
-                d.setHours(hh || 0, mm || 0, ss || 0, 0);
+              let d = null;
+              if (s.Date) {
+                const localDate = new Date(s.Date);
+                const yy = localDate.getFullYear();
+                const mm = localDate.getMonth();
+                const dd = localDate.getDate();
+                const tStr = s.Time || '00:00:00';
+                const [hh, min, sec] = tStr.split(':').map(Number);
+                d = new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
               }
               return { ...s, _start: d };
             } catch (e) {
               return { ...s, _start: null };
             }
           })
-          .filter((s) => s._start && s._start >= now)
+          .filter((s) => {
+            if (s.Status === 'Completed' || s.Status === 'Cancelled') return false;
+            if (!s._start) return false;
+            const durationMs = (s.Duration || 60) * 60 * 1000;
+            const endTime = s._start.getTime() + durationMs;
+            return Date.now() <= endTime;
+          })
           .sort((a, b) => a._start - b._start);
 
-        setUpcomingSession(future.length > 0 ? future[0] : learnerSessions.length > 0 ? learnerSessions[0] : null);
+        setUpcomingSession(future.length > 0 ? future[0] : null);
       } catch (err) {
         console.error('Failed to load learning progress:', err);
         setProgressError('Unable to load learning progress.');
@@ -209,12 +221,13 @@ const LearnerDashboard = () => {
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
-      <main className="flex flex-col items-center pt-8 pb-[293px] px-8 w-full max-w-[1280px] mx-auto z-0">
-        <div className="flex flex-row justify-center items-start gap-8 w-full max-w-[1216px]">
-          
+      <div className="dash-layout">
+        <LearnerSidebar />
+
+        <div className="dash-content">
           {/* Left Column */}
-          <div className="flex flex-col items-start gap-6 w-[800px]">
-            
+          <div className="dash-main">
+
             {/* Skill Wallet Balance Card */}
             <div className="box-border flex flex-row items-center p-6 gap-6 w-full h-[131px] bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
               <div className="flex flex-row justify-center items-center w-16 h-16 bg-[#10B77F]/20 rounded-full">
@@ -246,23 +259,23 @@ const LearnerDashboard = () => {
             {/* Upcoming Session Card */}
             <div className="box-border flex flex-col items-start w-full h-[178px] bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl overflow-hidden">
               <div className="flex flex-row items-start w-[798px] h-[176px]">
-                
+
                 {/* Video Overlay Section */}
                 <div className="flex flex-row justify-center items-center relative w-[266px] h-full min-h-[160px] bg-[#10B77F]/5">
                   <div className="absolute inset-0 bg-[#10B77F]/10 opacity-50 z-0"></div>
-                  
+
                   <div className="flex flex-col items-center p-2 absolute h-8 left-4 right-4 bottom-4 bg-white/80 backdrop-blur-sm rounded-2xl z-10">
                     <span className="font-bold text-xs leading-4 flex items-center text-center tracking-[0.6px] uppercase text-[#10B77F]">
                       Online Session
                     </span>
                   </div>
-                  
+
                   {/* Camera Icon */}
                   <div className="flex flex-col items-start w-[50px] h-[50px] z-20 text-[#10B77F]">
-                     <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                       <path d="M4 6C2.89543 6 2 6.89543 2 8V16C2 17.1046 2.89543 18 4 18H16C17.1046 18 18 17.1046 18 16V8C18 6.89543 17.1046 6 16 6H4Z" />
-                       <path d="M22 8L18 11V13L22 16V8Z" />
-                     </svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                      <path d="M4 6C2.89543 6 2 6.89543 2 8V16C2 17.1046 2.89543 18 4 18H16C17.1046 18 18 17.1046 18 16V8C18 6.89543 17.1046 6 16 6H4Z" />
+                      <path d="M22 8L18 11V13L22 16V8Z" />
+                    </svg>
                   </div>
                 </div>
 
@@ -313,7 +326,7 @@ const LearnerDashboard = () => {
                   AI Match
                 </span>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 {loadingRecommended ? (
                   <>
@@ -322,11 +335,11 @@ const LearnerDashboard = () => {
                   </>
                 ) : recommendedMentors.length > 0 ? (
                   recommendedMentors.map(m => (
-                    <div 
+                    <div
                       key={m.userId}
                       className="flex flex-row items-center p-4 border border-slate-100 hover:border-[#10B77F]/20 rounded-2xl hover:bg-slate-50/50 transition-all gap-4"
                     >
-                      <img 
+                      <img
                         src={m.avatar || '/default-avatar.svg'}
                         alt={m.name}
                         className="w-12 h-12 rounded-full object-cover border border-slate-100 shrink-0"
@@ -338,7 +351,7 @@ const LearnerDashboard = () => {
                           {m.mentorLevel || 'Bronze'}
                         </span>
                       </div>
-                      <Link 
+                      <Link
                         to={`/mentor/${m.userId}`}
                         className="bg-[#10B77F] text-white font-bold text-xs py-2 px-3 rounded-xl hover:bg-[#0ea873] transition-colors shrink-0"
                       >
@@ -359,15 +372,15 @@ const LearnerDashboard = () => {
               <h3 className="font-bold text-lg leading-7 flex items-center text-[#0F172A]">
                 Quick Actions
               </h3>
-              
+
               <div className="flex flex-row items-start gap-4 w-full h-[134px]">
-                
+
                 {/* Find Mentor Button */}
                 <Link to="/find-mentor" className="box-border flex flex-col items-center py-6 px-[80px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[18px] h-[18px]">
-                      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+                      <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
                   <span className="font-bold text-base leading-6 text-center text-[#0F172A]">
@@ -376,11 +389,11 @@ const LearnerDashboard = () => {
                 </Link>
 
                 {/* My Sessions Button */}
-                <Link to="/MySessions" className="box-border flex flex-col items-center py-6 px-[77px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
+                <Link to="/my-sessions" className="box-border flex flex-col items-center py-6 px-[77px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-4">
-                      <path d="M4 4H16C17.1 4 18 4.9 18 6V18C18 19.1 17.1 20 16 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M22 8L18 11V13L22 16V8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M4 4H16C17.1 4 18 4.9 18 6V18C18 19.1 17.1 20 16 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M22 8L18 11V13L22 16V8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <span className="font-bold text-base leading-6 text-center text-[#0F172A]">
@@ -392,8 +405,8 @@ const LearnerDashboard = () => {
                 <Link to="/badges" className="box-border flex flex-col items-center py-6 px-[83px] gap-3 w-[256px] h-full bg-white border border-[#10B77F]/10 rounded-3xl hover:bg-emerald-50/50 transition-colors">
                   <div className="flex flex-row justify-center items-center w-12 h-12 bg-[#10B77F]/10 rounded-full text-[#10B77F]">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[10px] h-[20px]">
-                      <path d="M12 15C15.866 15 19 11.866 19 8C19 4.13401 15.866 1 12 1C8.13401 1 5 4.13401 5 8C5 11.866 8.13401 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8.21 13.89L7 23L12 20L17 23L15.79 13.88" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 15C15.866 15 19 11.866 19 8C19 4.13401 15.866 1 12 1C8.13401 1 5 4.13401 5 8C5 11.866 8.13401 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8.21 13.89L7 23L12 20L17 23L15.79 13.88" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <span className="font-bold text-base leading-6 text-center text-[#0F172A]">
@@ -407,8 +420,8 @@ const LearnerDashboard = () => {
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col items-start gap-6 w-[384px]">
-            
+          <div className="dash-right-col">
+
             {/* Leaderboard Preview */}
             <div className="box-border flex flex-col items-start p-6 gap-6 w-full h-[356px] bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
               <div className="flex flex-row justify-between items-center w-full h-7">
@@ -470,8 +483,8 @@ const LearnerDashboard = () => {
               <div className="flex flex-row items-center gap-2 w-full h-7">
                 <div className="flex flex-col items-start w-5 h-3 text-[#10B77F]">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 -mt-1">
-                    <path d="M22 7L13.5 15.5L8.5 10.5L2 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 7H22V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M22 7L13.5 15.5L8.5 10.5L2 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M16 7H22V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <h3 className="font-bold text-lg leading-7 flex items-center text-[#0F172A]">
@@ -481,33 +494,33 @@ const LearnerDashboard = () => {
 
               <div className="flex flex-col items-start gap-4 w-full h-[152px]">
                 <div className="flex flex-row justify-between items-end w-full h-9">
-                    <span className="font-bold text-[30px] leading-[36px] flex items-center text-[#0F172A]">
-                      {loadingProgress ? '...' : `${learningProgress.percent}%`}
-                    </span>
-                    <span className="font-normal text-sm leading-5 flex items-center text-[#94A3B8] pb-1">
-                      {loadingProgress
-                        ? 'Loading...'
-                        : `${Math.min(learningProgress.completed, learningProgress.goal)} / ${learningProgress.goal} courses`}
-                    </span>
-                  </div>
+                  <span className="font-bold text-[30px] leading-[36px] flex items-center text-[#0F172A]">
+                    {loadingProgress ? '...' : `${learningProgress.percent}%`}
+                  </span>
+                  <span className="font-normal text-sm leading-5 flex items-center text-[#94A3B8] pb-1">
+                    {loadingProgress
+                      ? 'Loading...'
+                      : `${Math.min(learningProgress.completed, learningProgress.goal)} / ${learningProgress.goal} courses`}
+                  </span>
+                </div>
 
-                  {/* Progress Bar */}
-                  <div className="relative w-full h-2.5 bg-[#F1F5F9] rounded-full overflow-hidden">
-                    <div
-                      className="absolute left-0 top-0 bottom-0 bg-[#10B77F] rounded-full"
-                      style={{ width: `${loadingProgress ? 0 : learningProgress.percent}%` }}
-                    />
-                  </div>
+                {/* Progress Bar */}
+                <div className="relative w-full h-2.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                  <div
+                    className="absolute left-0 top-0 bottom-0 bg-[#10B77F] rounded-full"
+                    style={{ width: `${loadingProgress ? 0 : learningProgress.percent}%` }}
+                  />
+                </div>
 
-                  <span className="font-normal text-sm leading-5 flex items-center text-[#64748B]">
-                    {progressError
-                      ? progressError
-                      : loadingProgress
+                <span className="font-normal text-sm leading-5 flex items-center text-[#64748B]">
+                  {progressError
+                    ? progressError
+                    : loadingProgress
                       ? 'Loading learning progress...'
                       : learningProgress.total === 0
-                      ? 'Book your first session to begin learning.'
-                      : 'Keep going! You’re almost at your weekly goal.'}
-                  </span>
+                        ? 'Book your first session to begin learning.'
+                        : 'Keep going! You’re almost at your weekly goal.'}
+                </span>
                 <button className="box-border flex flex-row justify-center items-center py-2 px-0 w-full h-[38px] bg-[#10B77F]/5 border border-[#10B77F]/10 rounded-2xl hover:bg-[#10B77F]/10 transition-colors">
                   <span className="font-bold text-sm leading-5 text-center text-[#10B77F]">
                     View Learning Path
@@ -535,8 +548,8 @@ const LearnerDashboard = () => {
                     <div className="h-20 w-full bg-slate-50 animate-pulse rounded-2xl"></div>
                   ) : wishlistSkills.length > 0 ? (
                     wishlistSkills.map((skill) => (
-                      <div 
-                        key={skill.Skill_Id} 
+                      <div
+                        key={skill.Skill_Id}
                         className="flex flex-row justify-between items-center py-2.5 px-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all border border-slate-100/50"
                       >
                         <span className="text-sm font-semibold text-[#0F172A]">
@@ -606,7 +619,7 @@ const LearnerDashboard = () => {
 
           </div>
         </div>
-      </main>
+      </div>
 
       <Footer />
     </div>

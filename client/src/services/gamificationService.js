@@ -14,3 +14,8 @@ export const getUserBadges = async (userId) => {
   const res = await axiosInstance.get(`/gamification/users/${userId}/badges`);
   return res.data;
 };
+
+export const getBadgeProgress = async (userId) => {
+  const res = await axiosInstance.get(`/gamification/users/${userId}/badges/progress`);
+  return res.data;
+};

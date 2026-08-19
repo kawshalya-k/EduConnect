@@ -101,6 +101,7 @@ export default function SessionBooking() {
       navigate('/booking-confirmed', {
         state: {
           mentor: mentorDetails?.name || "Your Mentor",
+          mentorAvatar: mentorDetails?.avatar || "",
           date: date,
           time: time,
           coinsDeducted: sessionCost,

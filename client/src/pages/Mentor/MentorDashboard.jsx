@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FiStar, FiArrowUp, FiEdit2, FiVideo } from 'react-icons/fi';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiStar, FiArrowUp, FiEdit2, FiVideo, FiCalendar } from 'react-icons/fi';
 import PageLayout from '../../components/Layout/PageLayout';
 import DashboardSidebar from '../../components/Mentorship/MentorSideBar';
 import RoleSwitcher from '../../components/Dashboard/RoleSwitcher';
@@ -18,6 +18,7 @@ import './MentorDashboard.css';
 
 export default function MentorDashboard() {
   const { user, syncWalletBalance } = useAuth();
+  const navigate = useNavigate();
   const [dashData, setDashData] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -63,24 +64,81 @@ export default function MentorDashboard() {
       // Fetch sessions separately to compute upcoming & pending requests
       try {
         const sessionsRes = await fetchMentorSessions(userId);
-        const sessions = sessionsRes.data || [];
+        const rawSessions = sessionsRes.data || sessionsRes || [];
+        const sessions = rawSessions.filter((s) => String(s.Mentor_Id) === String(user?.id));
 
-        // Upcoming = Scheduled or Pending and date >= today
-        const now = new Date();
+        // Upcoming = Scheduled or Pending and session end time in future
         const upcoming = sessions
           .map((s) => {
             let start = null;
             try {
-              start = s.Date ? new Date(s.Date) : null;
-              if (start && s.Time) {
-                const [hh, mm, ss] = (s.Time || '').split(':').map(Number);
-                start.setHours(hh || 0, mm || 0, ss || 0, 0);
+              if (s.Date) {
+                const localDate = new Date(s.Date);
+                const yy = localDate.getFullYear();
+                const mm = localDate.getMonth();
+                const dd = localDate.getDate();
+                const tStr = s.Time || '00:00:00';
+                const [hh, min, sec] = tStr.split(':').map(Number);
+                start = new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
               }
             } catch (e) { start = null; }
             return { ...s, _start: start };
           })
-          .filter((s) => s._start && (s.Status === 'Scheduled' || s.Status === 'Pending') && s._start >= now)
-          .sort((a, b) => a._start - b._start);
+          .filter((s) => {
+            if (s.Status === 'Completed' || s.Status === 'Cancelled') return false;
+            if (!s._start) return false;
+            const durationMs = (s.Duration || 60) * 60 * 1000;
+            const endTime = s._start.getTime() + durationMs;
+            return Date.now() <= endTime;
+          })
+          .sort((a, b) => a._start - b._start)
+          .map((s) => {
+            const now = new Date();
+            const startTime = s._start.getTime();
+            const durationMs = (s.Duration || 60) * 60 * 1000;
+            const endTime = startTime + durationMs;
+            const isNow = now.getTime() >= startTime && now.getTime() < endTime;
+            
+            const timeLabel = (() => {
+              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              const tomorrow = new Date(today);
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              const sessDate = new Date(s._start.getFullYear(), s._start.getMonth(), s._start.getDate());
+              const timeString = s._start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+              
+              if (sessDate.getTime() === today.getTime()) {
+                return `${timeString} (${s.Duration || 60}m)`;
+              } else if (sessDate.getTime() === tomorrow.getTime()) {
+                return `Tomorrow, ${timeString}`;
+              } else {
+                const dateString = s._start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return `${dateString}, ${timeString}`;
+              }
+            })();
+            
+            const startsInLabel = (() => {
+              const diffMs = startTime - now.getTime();
+              if (diffMs <= 0) return '0m';
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffDays >= 1) return `${diffDays}d`;
+              if (diffHours >= 1) return `${diffHours}h`;
+              return `${diffMins}m`;
+            })();
+
+            return {
+              id: s.Session_Id,
+              learnerName: `${s.Learner_First || ''} ${s.Learner_Last || ''}`.trim() || 'Learner',
+              learnerAvatar: s.Learner_Avatar || '/default-avatar.svg',
+              topic: s.Skill_Name || 'Mentoring Session',
+              time: timeLabel,
+              duration: `${s.Duration || 60}m`,
+              isNow,
+              startsIn: startsInLabel
+            };
+          });
 
         const pending = sessions.filter((s) => s.Status === 'Pending');
 
@@ -248,7 +306,10 @@ export default function MentorDashboard() {
             {/* Upcoming Sessions */}
             <div className="dash-section-card">
               <div className="dash-section-header">
-                <h2 className="dash-section-title">Upcoming Sessions</h2>
+                <div className="flex items-center gap-2">
+                  <FiCalendar size={18} className="text-[#10B981]" />
+                  <h2 className="dash-section-title">Upcoming Sessions</h2>
+                </div>
                 <Link to="/mentor-sessions" className="dash-view-all">View All</Link>
               </div>
 
@@ -275,21 +336,21 @@ export default function MentorDashboard() {
                         <p className="session-name">{session.learnerName}</p>
                         <p className="session-topic">{session.topic}</p>
                         <p className="session-time">
-                          🕐 {session.time} ({session.duration})
+                          🕐 {session.time}
                         </p>
                       </div>
                       <div className="session-actions">
                         {session.isNow ? (
-                          <button className="session-join-btn">
+                          <button onClick={() => navigate(`/session-room?id=${session.id}`)} className="session-join-btn">
                             <FiVideo size={14} /> Join Meeting
                           </button>
                         ) : (
                           <span className="session-starts-in">
-                            Starts in {session.startsIn}
+                            starts in {session.startsIn}
                           </span>
                         )}
-                        <button className="session-edit-btn">
-                          <FiEdit2 size={14} />
+                        <button onClick={() => navigate(`/session-room?id=${session.id}`)} className="session-edit-btn">
+                          {session.isNow ? <FiCalendar size={14} /> : <FiEdit2 size={14} />}
                         </button>
                       </div>
                     </div>
@@ -316,18 +377,6 @@ export default function MentorDashboard() {
               <div className="webinar-tag">LIVE WEBINAR</div>
               <h3 className="webinar-title">How to handle complex technical questions</h3>
               <button className="webinar-remind-btn">Remind Me</button>
-            </div>
-
-            {/* Achievement Badges */}
-            <div className="achievement-badges">
-              <div className="achievement-badge">
-                <span className="badge-flame">🔥</span>
-                <span>7 Day Streak</span>
-              </div>
-              <div className="achievement-badge">
-                <span className="badge-star">✨</span>
-                <span>First Class</span>
-              </div>
             </div>
           </div>
         </div>

@@ -3,33 +3,44 @@ import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getBadges, getUserBadges } from '../services/gamificationService';
+import { getBadgeProgress } from '../services/gamificationService';
+import LearnerSidebar from '../components/LearnerSidebar';
+import './Mentor/MentorDashboard.css';
+
+const BADGE_DEFINITIONS = [
+  ['First Session', 'Complete your very first learning session'],
+  ['Fast Learner', 'Finish a full course module in 24 hours'],
+  ['Top Student', 'Reach #1 on the weekly leaderboard'],
+  ['7-Day Streak', 'Study for 7 consecutive days'],
+  ['Collaborator', 'Contribute to 5 community discussions'],
+  ['Course Master', 'Complete 10 full courses at 90% average'],
+  ['Coin Collector', 'Earn over 1000 Skill Coins']
+];
 
 export default function BadgesPage() {
   const { user } = useAuth();
   const [allBadges, setAllBadges] = useState([]);
-  const [userBadges, setUserBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
+    let refreshTimer;
     const loadBadges = async () => {
       if (!user?.id) return;
 
       try {
         setLoading(true);
-        const [badgesData, userBadgesData] = await Promise.all([
-          getBadges(),
-          getUserBadges(user.id)
-        ]);
-
+        const badgesData = await getBadgeProgress(user.id);
         if (badgesData.success) {
-          setAllBadges(badgesData.badges);
-        }
-
-        if (userBadgesData.success) {
-          setUserBadges(userBadgesData.badges);
+          setAllBadges(badgesData.badges.map((badge, index) => {
+            const [defaultName, defaultDescription] = BADGE_DEFINITIONS[index] || [];
+            return {
+              ...badge,
+              name: badge.name || badge.Badge_Name || defaultName,
+              description: badge.description || badge.Description || defaultDescription
+            };
+          }));
         }
       } catch (err) {
         setError('Failed to load badges data');
@@ -40,6 +51,8 @@ export default function BadgesPage() {
     };
 
     loadBadges();
+    refreshTimer = window.setInterval(loadBadges, 15000);
+    return () => window.clearInterval(refreshTimer);
   }, [user?.id]);
 
   const getBadgeIcon = (badgeName) => {
@@ -52,8 +65,8 @@ export default function BadgesPage() {
   };
 
   const getBadgeState = (badge) => {
-    const earnedBadge = userBadges.find(ub => ub.badge_id === badge.badge_id);
-    if (earnedBadge) {
+    const percent = Number(badge.percent || 0);
+    if (badge.completed || percent >= 100) {
       return {
         state: "completed",
         stateLabel: "Completed",
@@ -62,8 +75,8 @@ export default function BadgesPage() {
     }
     return {
       state: "locked",
-      stateLabel: "Locked",
-      percent: 0
+      stateLabel: badge.stateLabel || "Locked",
+      percent
     };
   };
 
@@ -78,9 +91,9 @@ export default function BadgesPage() {
     if (activeTab === "earned") return badgesWithState.filter(b => b.state === "completed");
     if (activeTab === "locked") return badgesWithState.filter(b => b.state === "locked");
     return badgesWithState;
-  }, [allBadges, userBadges, activeTab]);
+  }, [allBadges, activeTab]);
 
-  const earnedCount = userBadges.length;
+  const earnedCount = allBadges.filter(badge => badge.completed).length;
   const lockedCount = allBadges.length - earnedCount;
 
   if (loading) {
@@ -112,76 +125,101 @@ export default function BadgesPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F6F8F7] font-sans relative">
+    <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
-      <main className="flex-grow w-full max-w-[1152px] mx-auto pt-[30px] pb-16 px-6">
-        
-        {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 mb-4">
-          <Link to="/dashboard" className="text-[#64748B] font-normal text-[14px] leading-[20px] hover:underline">Dashboard</Link>
-          <svg viewBox="0 0 24 24" fill="none" className="w-[10px] h-[10px] text-[#64748B] stroke-2 stroke-current">
-            <path d="M9 18L15 12L9 6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="text-[#0F172A] font-medium text-[14px] leading-[20px]">My Badges</span>
-        </div>
+      <div className="dash-layout">
+        <LearnerSidebar />
 
-        {/* Header Section */}
-        <div className="flex justify-between items-end mb-10">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[#0F172A] font-black text-[36px] leading-[40px] tracking-[-0.9px]">Badges & Achievements</h1>
-            <p className="text-[#475569] text-[16px] leading-[24px] max-w-[512px]">
-              Track your learning journey, unlock unique milestones, and showcase your expertise to the community.
-            </p>
+        <div className="dash-content" style={{ display: 'block', width: '100%' }}>
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 mb-4">
+            <Link to="/dashboard" className="text-[#64748B] font-normal text-[14px] leading-[20px] hover:underline">Dashboard</Link>
+            <svg viewBox="0 0 24 24" fill="none" className="w-[10px] h-[10px] text-[#64748B] stroke-2 stroke-current">
+              <path d="M9 18L15 12L9 6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[#0F172A] font-medium text-[14px] leading-[20px]">My Badges</span>
           </div>
 
-          <div className="flex gap-4">
-            <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-14 min-w-[140px]">
-              <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">Badges</p>
-              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">{earnedCount}/{allBadges.length}</p>
+          <main className="flex-grow w-full pb-16">
+            
+            {/* Header Section */}
+            <div className="flex justify-between items-end mb-10">
+              <div className="flex flex-col gap-2">
+                <h1 className="text-[#0F172A] font-black text-[36px] leading-[40px] tracking-[-0.9px]">Badges & Achievements</h1>
+                <p className="text-[#475569] text-[16px] leading-[24px] max-w-[512px]">
+                  Track your learning journey, unlock unique milestones, and showcase your expertise to the community.
+                </p>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-14 min-w-[140px]">
+                  <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">Badges</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[#0F172A] font-black text-[24px] leading-[32px]">{earnedCount}</span>
+                    <span className="text-[#94A3B8] font-semibold text-[14px] leading-[20px]">/ {allBadges.length}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-14 min-w-[140px]">
+                  <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">XP Points</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[#10B981] font-black text-[24px] leading-[32px]">{earnedCount * 100}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-12 min-w-[140px]">
-              <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">XP Points</p>
-              <p className="text-[#10B981] font-bold text-[24px] leading-[32px]">{earnedCount * 100}</p>
+
+            {/* Tabs */}
+            <div className="flex border-b border-[#10B77F]/10 mb-8">
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`py-4 px-8 font-bold text-[14px] leading-[20px] transition-colors border-b-2 ${
+                  activeTab === "all"
+                    ? "border-[#10B981] text-[#10B981]"
+                    : "border-transparent text-[#94A3B8] hover:text-[#475569]"
+                }`}
+              >
+                All Badges ({allBadges.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("earned")}
+                className={`py-4 px-8 font-bold text-[14px] leading-[20px] transition-colors border-b-2 ${
+                  activeTab === "earned"
+                    ? "border-[#10B981] text-[#10B981]"
+                    : "border-transparent text-[#94A3B8] hover:text-[#475569]"
+                }`}
+              >
+                Earned ({earnedCount})
+              </button>
+              <button
+                onClick={() => setActiveTab("locked")}
+                className={`py-4 px-8 font-bold text-[14px] leading-[20px] transition-colors border-b-2 ${
+                  activeTab === "locked"
+                    ? "border-[#10B981] text-[#10B981]"
+                    : "border-transparent text-[#94A3B8] hover:text-[#475569]"
+                }`}
+              >
+                Locked ({lockedCount})
+              </button>
             </div>
-          </div>
+
+            {/* Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {filteredBadges.map((badge) => (
+                <BadgeCard key={badge.badge_id} badge={badge} />
+              ))}
+            </div>
+
+            {filteredBadges.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-[#64748B] text-[16px]">No badges to display</p>
+              </div>
+            )}
+
+          </main>
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-8 border-b border-[#10B77F]/10 mb-[32px]">
-          {[
-            { id: "all", label: "All Badges" },
-            { id: "earned", label: `Earned (${earnedCount})` },
-            { id: "locked", label: `Locked (${lockedCount})` }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-4 px-1 -mb-[1px] ${activeTab === tab.id 
-                ? 'border-b-2 border-[#10B981] text-[#10B981] font-bold text-[14px]' 
-                : 'text-[#64748B] font-medium text-[14px] hover:text-[#0F172A]'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {filteredBadges.map((badge) => (
-            <BadgeCard key={badge.badge_id} badge={badge} />
-          ))}
-        </div>
-
-        {filteredBadges.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-[#64748B] text-[16px]">No badges to display</p>
-          </div>
-        )}
-
-      </main>
-
+      </div>
       <Footer />
     </div>
   );
@@ -193,7 +231,7 @@ function BadgeCard({ badge }) {
 
   let containerClass = "bg-white border shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] p-6 relative h-[262px] flex flex-col";
   if (isCompleted) containerClass += " border-[#10B981]";
-  else if (isLocked) containerClass += " border-[#E2E8F0] opacity-60"; 
+  else if (isLocked) containerClass += " border-[#E2E8F0] opacity-60";
 
   let iconContainerClass = "w-16 h-16 rounded-full flex items-center justify-center mb-6 shrink-0 ";
   if (isCompleted) {
@@ -237,7 +275,7 @@ function BadgeCard({ badge }) {
         </div>
         <div className={`h-[8px] w-full rounded-full overflow-hidden ${trackColorClass}`}>
           <div 
-            className={`h-full rounded-full ${isCompleted ? 'bg-[#10B981]' : 'bg-transparent'}`} 
+            className={`h-full rounded-full ${badge.percent > 0 ? 'bg-[#10B981]' : 'bg-transparent'}`} 
             style={{ width: `${badge.percent}%` }}
           ></div>
         </div>

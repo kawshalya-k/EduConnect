@@ -46,7 +46,7 @@ const addMeetingLink = async (sessionId, link) => {
 const getSessionById = async (sessionId) => {
   const sql = `SELECT s.*,
     u1.First_Name AS Learner_First, u1.Last_Name AS Learner_Last,
-    u2.First_Name AS Mentor_First, u2.Last_Name AS Mentor_Last,
+    u2.First_Name AS Mentor_First, u2.Last_Name AS Mentor_Last, u2.Avatar AS Mentor_Avatar,
     sk.Skill_Name
     FROM Session s
     JOIN User u1 ON s.Learner_Id = u1.User_Id

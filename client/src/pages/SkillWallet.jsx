@@ -1,8 +1,10 @@
 // client/src/pages/MentorWallet.jsx
 
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import PageLayout from '../components/Layout/PageLayout';
 import DashboardSidebar from '../components/Mentorship/MentorSideBar';
+import LearnerSidebar from '../components/LearnerSidebar';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../services/axiosConfig';
 
@@ -41,6 +43,7 @@ function EarningsGraph({ data }) {
 }
 
 export default function MentorWallet() {
+  const location = useLocation();
   const { user, syncWalletBalance } = useAuth();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
@@ -142,10 +145,11 @@ export default function MentorWallet() {
   };
 
   if (loading) {
+    const isMentorRoute = location.pathname.startsWith('/mentor');
     return (
       <PageLayout>
         <div className="dash-layout">
-          <DashboardSidebar user={user} />
+          {isMentorRoute ? <DashboardSidebar user={user} /> : <LearnerSidebar />}
           <div className="dash-content">
             <div className="dash-main" style={{ padding: "28px 32px" }}>
               <p style={{ textAlign: "center", color: "#16a34a", padding: "3rem" }}>Loading wallet...</p>
@@ -156,10 +160,11 @@ export default function MentorWallet() {
     );
   }
 
+  const isMentorRoute = location.pathname.startsWith('/mentor');
   return (
     <PageLayout>
       <div className="dash-layout">
-        <DashboardSidebar user={user} />
+        {isMentorRoute ? <DashboardSidebar user={user} /> : <LearnerSidebar />}
         <div className="dash-content">
           <div className="dash-main" style={{ padding: "28px 32px" }}>
 

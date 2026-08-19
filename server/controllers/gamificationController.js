@@ -66,6 +66,111 @@ const getUserBadges = async (req, res) => {
   }
 };
 
+let transactionColumns = null;
+const getTransactionColumns = async () => {
+  if (transactionColumns) return transactionColumns;
+  const [rows] = await db.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Wallet_Transaction'`
+  );
+  const cols = new Set(rows.map((row) => row.COLUMN_NAME));
+  transactionColumns = {
+    userId: cols.has('user_id') ? 'user_id' : 'User_Id',
+    type: cols.has('type') ? 'type' : 'Transaction_Type',
+    amount: cols.has('amount') ? 'amount' : 'Amount',
+  };
+  return transactionColumns;
+};
+
+const getBadgeProgress = async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const bc = await getBadgeColumns();
+    const tc = await getTransactionColumns();
+    const [badges] = await db.query(`SELECT * FROM Badge ORDER BY \`${bc.badgeId}\``);
+    const [earned] = await db.query(
+      `SELECT \`${bc.ubBadgeId}\` AS badge_id FROM User_Badge WHERE \`${bc.userId}\` = ?`,
+      [userId]
+    );
+    const earnedIds = new Set(earned.map((badge) => Number(badge.badge_id)));
+
+    const [sessionRows] = await db.query(
+      `SELECT Date AS session_date, Created_At AS created_at
+       FROM Session WHERE (Learner_Id = ? OR Mentor_Id = ?) AND Status = 'Completed'
+       ORDER BY Date ASC`,
+      [userId, userId]
+    );
+    let longestStreak = 0;
+    let currentStreak = 0;
+    let previousDate = null;
+    for (const session of sessionRows) {
+      const date = new Date(session.session_date || session.created_at);
+      date.setHours(0, 0, 0, 0);
+      if (previousDate && (date - previousDate) / 86400000 === 1) currentStreak += 1;
+      else if (!previousDate || date.getTime() !== previousDate.getTime()) currentStreak = 1;
+      longestStreak = Math.max(longestStreak, currentStreak);
+      previousDate = date;
+    }
+
+    const [coinRows] = await db.query(
+      `SELECT COALESCE(SUM(CASE WHEN \`${tc.type}\` = 'CREDIT' THEN \`${tc.amount}\` ELSE 0 END), 0) AS earned_coins
+       FROM Wallet_Transaction WHERE \`${tc.userId}\` = ?`,
+      [userId]
+    );
+    const [rankRows] = await db.query(
+      `SELECT user_id FROM (
+        SELECT u.User_Id AS user_id, ROW_NUMBER() OVER (ORDER BY u.skill_coins DESC) AS rank_no
+        FROM User u
+      ) ranked WHERE user_id = ? AND rank_no = 1`,
+      [userId]
+    );
+    const metrics = {
+      session_count: sessionRows.length,
+      fast_learner: 0,
+      leaderboard_top: rankRows.length ? 1 : 0,
+      streak_days: longestStreak,
+      community: 0,
+      courses: 0,
+      coins_earned: Number(coinRows[0]?.earned_coins || 0),
+    };
+
+    const definitions = {
+      'First Session': { description: 'Complete your very first learning session', trigger: 'session_count', threshold: 1 },
+      'Fast Learner': { description: 'Finish a full course module in 24 hours', trigger: 'fast_learner', threshold: 1 },
+      'Top Student': { description: 'Reach #1 on the weekly leaderboard', trigger: 'leaderboard_top', threshold: 1 },
+      '7-Day Streak': { description: 'Study for 7 consecutive days', trigger: 'streak_days', threshold: 7 },
+      Collaborator: { description: 'Contribute to 5 community discussions', trigger: 'community', threshold: 5 },
+      'Course Master': { description: 'Complete 10 full courses at 90% average', trigger: 'courses', threshold: 10 },
+      'Coin Collector': { description: 'Earn over 1000 Skill Coins', trigger: 'coins_earned', threshold: 1000 },
+    };
+
+    const progress = badges.map((badge) => {
+      const name = badge[bc.name];
+      const definition = definitions[name] || { description: badge.Description || '', trigger: 'session_count', threshold: 1 };
+      const trigger = badge.trigger_type || definition.trigger;
+      const threshold = badge.trigger_type ? Number(badge.threshold || definition.threshold) : definition.threshold;
+      const value = Number(metrics[trigger] || 0);
+      const badgeId = Number(badge[bc.badgeId]);
+      const percent = earnedIds.has(badgeId) ? 100 : Math.min(100, Math.round((value / threshold) * 100));
+      return {
+        badge_id: badgeId,
+        name,
+        description: definition.description,
+        progress: value,
+        threshold,
+        percent,
+        completed: percent === 100,
+        stateLabel: percent === 100 ? 'Completed' : `${value}/${threshold}`,
+      };
+    });
+
+    res.set('Cache-Control', 'no-store');
+    res.json({ success: true, badges: progress });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ─────────────────────────────────────────
 // TASK 5: POST award a badge to a user
 // POST /api/gamification/badges/award
@@ -257,6 +362,7 @@ const creditCoins = async (user_id, amount, reason) => {
 module.exports = {
   getAllBadges,
   getUserBadges,
+  getBadgeProgress,
   awardBadge,
   getLeaderboard,
   checkAndAwardBadges,

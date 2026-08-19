@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllSkills } from '../../services/adminService';
 import { AdminAvatarImg } from './AdminProfile';
+import logo from '../../Assets/educonnect-logo.svg';
 
 const sidebarItems = [
   { icon: "📊", label: "Dashboard", path: "/admin/dashboard" },
@@ -63,7 +64,7 @@ export default function SkillVerifications() {
       {/* Navbar */}
       <nav style={{ background: "#fff", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/src/Assets/EduConnect_Logo.png" alt="EduConnect" style={{ height: 36, objectFit: "contain" }} />
+          <img src={logo} alt="EduConnect Logo" style={{ height: 36, objectFit: "contain" }} />
           <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
           <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "3px 10px", borderRadius: 20, border: "1px solid #a7f3d0" }}>Admin</span>
         </div>
