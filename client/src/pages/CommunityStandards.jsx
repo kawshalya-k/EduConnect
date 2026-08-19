@@ -162,26 +162,28 @@ const CommunityStandards = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="bg-[#ECFDF5] border-2 border-dashed border-[#A7F3D0] rounded-[24px] p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-[#0F172A]">Ready to contribute?</h3>
-            <p className="text-slate-600">
-              By clicking below, you agree to uphold these standards in every interaction.
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
-            <button 
-              onClick={() => navigate('/account-success')}
-              className="bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all flex-1 md:flex-none cursor-pointer"
-            >
-              I Understand & Agree
-            </button>
-            <button className="bg-white border border-[#D1FAE5] hover:bg-slate-50 text-slate-700 font-bold py-3 px-8 rounded-xl transition-all flex-1 md:flex-none">
-              Download PDF
-            </button>
-          </div>
-        </section>
+        {isOnboarding && (
+          <section className="bg-[#ECFDF5] border-2 border-dashed border-[#A7F3D0] rounded-[24px] p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-[#0F172A]">Ready to contribute?</h3>
+              <p className="text-slate-600">
+                By clicking below, you agree to uphold these standards in every interaction.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
+              <button 
+                onClick={() => navigate('/account-success')}
+                className="bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-200 transition-all flex-1 md:flex-none cursor-pointer"
+              >
+                I Understand & Agree
+              </button>
+              <button className="bg-white border border-[#D1FAE5] hover:bg-slate-50 text-slate-700 font-bold py-3 px-8 rounded-xl transition-all flex-1 md:flex-none">
+                Download PDF
+              </button>
+            </div>
+          </section>
+        )}
 
       </main>
 

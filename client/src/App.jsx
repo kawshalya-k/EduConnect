@@ -11,6 +11,11 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CommunityStandards from './pages/CommunityStandards';
 import AccountSuccess from './pages/AccountSuccess';
+import HelpCenter from './pages/HelpCenter';
+import ContactSupport from './pages/ContactSupport';
+import MentorGuidelines from './pages/MentorGuidelines';
+import FAQ from './pages/FAQ';
+import AboutUs from './pages/AboutUs';
 import ForgotPassword from './pages/ForgotPassword';
 import CheckInbox from './pages/CheckInbox';
 import SetNewPassword from './pages/SetNewPassword';
@@ -82,6 +87,11 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/community-standards" element={<CommunityStandards />} />
+        <Route path="/help-center" element={<HelpCenter />} />
+        <Route path="/contact-support" element={<ContactSupport />} />
+        <Route path="/mentor-guidelines" element={<MentorGuidelines />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/about-us" element={<AboutUs />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/check-inbox" element={<CheckInbox />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />

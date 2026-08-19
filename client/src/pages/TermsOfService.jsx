@@ -257,25 +257,27 @@ const TermsOfService = () => {
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="border-t border-slate-200 bg-[#F0FDF4] pb-24 pt-10">
-        <div className="max-w-[876px] mx-auto px-10">
-          <div className="bg-[#064E3B] rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden isolate shadow-xl border border-white/5">
-            <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full -z-10"></div>
-            <div className="space-y-2 text-center md:text-left">
-              <h3 className="text-2xl font-bold text-white">Ready to grow your skills?</h3>
-              <p className="text-emerald-100/70 text-sm">
-                By clicking 'I Accept the Terms', you acknowledge that you have read and understood our Terms of Service.
-              </p>
+      {isOnboarding && (
+        <div className="border-t border-slate-200 bg-[#F0FDF4] pb-24 pt-10">
+          <div className="max-w-[876px] mx-auto px-10">
+            <div className="bg-[#064E3B] rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden isolate shadow-xl border border-white/5">
+              <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full -z-10"></div>
+              <div className="space-y-2 text-center md:text-left">
+                <h3 className="text-2xl font-bold text-white">Ready to grow your skills?</h3>
+                <p className="text-emerald-100/70 text-sm">
+                  By clicking 'I Accept the Terms', you acknowledge that you have read and understood our Terms of Service.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate(`/community-standards${isOnboarding ? '?onboarding=true' : ''}`, { state: { onboarding: isOnboarding } })}
+                className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-900/50 transition-all shrink-0 cursor-pointer"
+              >
+                I Accept the Terms
+              </button>
             </div>
-            <button
-              onClick={() => navigate(`/community-standards${isOnboarding ? '?onboarding=true' : ''}`, { state: { onboarding: isOnboarding } })}
-              className="bg-[#10B981] hover:bg-[#059669] text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-emerald-900/50 transition-all shrink-0 cursor-pointer"
-            >
-              I Accept the Terms
-            </button>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-[#022C22] py-8 border-t border-[#064E3B]">

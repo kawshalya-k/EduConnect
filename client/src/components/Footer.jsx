@@ -41,18 +41,18 @@ const Footer = () => {
             links: [
               { name: "Mentor Onboarding", path: "#" }, 
               { name: "Verification Center", path: "#" }, 
-              { name: "Mentor Guidelines", path: "#" }
+              { name: "Mentor Guidelines", path: "/mentor-guidelines" }
             ] 
           },
           { 
             title: "Portal", 
             links: [
-              { name: "About Us", path: "#" }, 
+              { name: "About Us", path: "/about-us" }, 
               { name: "Privacy Policy", path: "/privacy-policy" }, 
               { name: "Terms of Service", path: "/terms-of-service" }, 
-              { name: "Community Standards", path: "/community-standards" },
-              { name: "Admin Portal", path: "/admin/login" },
-              { name: "Help Center", path: "#" }
+              { name: "Community Guidelines", path: "/community-standards" },
+              { name: "Contact Support", path: "/contact-support" },
+              { name: "Help Center", path: "/help-center" }
             ] 
           }
         ].map((column, i) => (
