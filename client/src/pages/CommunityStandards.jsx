@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
+import Footer from '../components/Footer';
 
 const CommunityStandards = () => {
   const navigate = useNavigate();
@@ -187,13 +188,7 @@ const CommunityStandards = () => {
 
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#022C22] py-8 mt-12 w-full">
-        <div className="max-w-[1152px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-emerald-100/50">
-          <p>© 2026 EduConnect. All rights reserved.</p>
-          <a href="#" className="hover:text-emerald-100 transition-colors">Help Center</a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

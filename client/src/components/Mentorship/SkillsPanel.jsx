@@ -20,7 +20,7 @@ export default function SkillsWidget({ skills = [], loading = false }) {
         <div className="skills-list">
           {skills.map((skill) => (
             <Link
-              to={`/verification/skill/${skill.id}/start`}
+              to={skill.verified ? `/verification/skill/${skill.id}/dashboard` : `/verification/skill/${skill.id}/start`}
               key={skill.id}
               className="skill-item"
             >

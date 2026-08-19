@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -18,6 +18,22 @@ import Footer from '../components/Footer';
 
 export default function AboutUs() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    activeStudents: 5000,
+    skills: 120,
+    successRate: 98
+  });
+
+  useEffect(() => {
+    fetch('/api/mentors/platform-stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.error) {
+          setStats(data);
+        }
+      })
+      .catch(err => console.error('Error fetching platform stats:', err));
+  }, []);
 
   return (
     <div className="bg-[#F0FDF4] min-h-screen font-sans text-slate-900 flex flex-col">
@@ -68,10 +84,10 @@ export default function AboutUs() {
       <section className="bg-[#064E3B] text-white py-12 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { stat: '5,000+', label: 'Active Students', icon: Users },
-            { stat: '120+', label: 'Skill Courses', icon: BookOpen },
+            { stat: `${stats.activeStudents.toLocaleString()}+`, label: 'Active Students', icon: Users },
+            { stat: `${stats.skills}+`, label: 'Skill Courses', icon: BookOpen },
             { stat: '15+', label: 'Industry Partners', icon: Handshake },
-            { stat: '98%', label: 'Success Rate', icon: Award }
+            { stat: `${stats.successRate}%`, label: 'Success Rate', icon: Award }
           ].map((item, idx) => {
             const Icon = item.icon;
             return (

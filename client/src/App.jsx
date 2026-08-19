@@ -16,6 +16,7 @@ import ContactSupport from './pages/ContactSupport';
 import MentorGuidelines from './pages/MentorGuidelines';
 import FAQ from './pages/FAQ';
 import AboutUs from './pages/AboutUs';
+import ManageSkill from './pages/Mentor/ManageSkill';
 import ForgotPassword from './pages/ForgotPassword';
 import CheckInbox from './pages/CheckInbox';
 import SetNewPassword from './pages/SetNewPassword';
@@ -134,6 +135,7 @@ function App() {
         <Route path="/verification/add" element={<ProtectedRoute><AddSkill /></ProtectedRoute>} />
         <Route path="/verification/verify" element={<ProtectedRoute><VerifySkill /></ProtectedRoute>} />
         <Route path="/verification/skill/:skillId/start" element={<ProtectedRoute><VerifySkill /></ProtectedRoute>} />
+        <Route path="/verification/skill/:skillId/dashboard" element={<ProtectedRoute><ManageSkill /></ProtectedRoute>} />
         <Route path="/verification/success" element={<ProtectedRoute><SuccessState /></ProtectedRoute>} />
         <Route path="/verification/failed" element={<ProtectedRoute><FailedState /></ProtectedRoute>} />
         

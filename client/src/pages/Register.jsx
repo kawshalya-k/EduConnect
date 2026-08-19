@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import logo from '../Assets/educonnect-logo.svg';
+import Footer from '../components/Footer';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -252,20 +253,7 @@ const Register = () => {
       </div>
       </main>
 
-      {/* Page Footer */}
-      <footer className="w-full bg-[#0F291E] py-8 px-12 flex flex-col md:flex-row justify-between items-center gap-4 mt-auto">
-        <p className="text-white/60 text-sm">
-          © 2026 EduConnect. All rights reserved.
-        </p>
-        <div className="flex gap-6 text-sm">
-          <Link to="/privacy-policy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
-          <Link to="/terms-of-service" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
-          <Link to="/community-standards" className="text-white/60 hover:text-white transition-colors">Community Standards</Link>
-          <a href="#" className="text-white/60 hover:text-white transition-colors">
-            Help Center
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

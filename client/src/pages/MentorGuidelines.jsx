@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Clock, 
-  Zap, 
-  FileText, 
-  Award, 
-  ShieldAlert, 
-  UserCheck, 
-  Lock, 
-  BrainCircuit, 
-  ThumbsUp, 
+import {
+  Clock,
+  Zap,
+  FileText,
+  Award,
+  ShieldAlert,
+  UserCheck,
+  Lock,
+  BrainCircuit,
+  ThumbsUp,
   Sparkles,
   ChevronRight,
   Shield,
@@ -34,7 +34,7 @@ export default function MentorGuidelines() {
       <section className="relative overflow-hidden rounded-3xl bg-[#064E3B] text-white m-6 md:m-10 p-12 md:p-16 isolate shadow-xl">
         {/* Abstract Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#022C22] via-[#064E3B]/60 to-transparent pointer-events-none -z-10" />
-        
+
         <div className="max-w-2xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs font-bold text-[#6EE7B7] tracking-widest uppercase">
             <Shield className="w-3.5 h-3.5" />
@@ -49,18 +49,9 @@ export default function MentorGuidelines() {
         </div>
       </section>
 
-      {/* Breadcrumbs */}
-      <div className="max-w-7xl w-full mx-auto px-6 md:px-10 flex items-center gap-2 text-sm text-slate-500">
-        <Link to="/" className="text-[#059669] hover:text-[#047857] font-semibold transition-colors">Home</Link>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-slate-500">Mentors</span>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-[#10B981] font-bold">Guidelines</span>
-      </div>
-
       {/* Main Container */}
       <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-12 flex flex-col lg:flex-row gap-12 flex-1">
-        
+
         {/* Sticky Sidebar Navigation */}
         <aside className="w-full lg:w-64 shrink-0">
           <div className="sticky top-28 bg-white border border-[#D1FAE5] shadow-lg shadow-slate-100/50 rounded-2xl p-6 space-y-6">
@@ -88,7 +79,7 @@ export default function MentorGuidelines() {
 
         {/* Content Area */}
         <section className="flex-1 space-y-16">
-          
+
           {/* Rules & Expectations Section */}
           <div id="rules" className="scroll-mt-28 space-y-8">
             <div className="flex items-center gap-4">
@@ -162,7 +153,7 @@ export default function MentorGuidelines() {
               <p className="text-[#0F172A] text-lg font-medium italic leading-relaxed">
                 "Integrity is the foundation of every educational relationship. Our code ensures a safe, respectful, and professional environment for all."
               </p>
-              
+
               <div className="space-y-6 border-t border-[#10B981]/15 pt-6">
                 {[
                   {
@@ -229,8 +220,8 @@ export default function MentorGuidelines() {
               ].map((item, idx) => {
                 const Icon = item.icon;
                 return (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="bg-white border border-[#ECFDF5] rounded-3xl p-8 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm hover:shadow-md transition-all duration-300"
                   >
                     <div className="w-20 h-20 bg-[#D1FAE5] rounded-2xl flex items-center justify-center shrink-0 text-[#10B981]">

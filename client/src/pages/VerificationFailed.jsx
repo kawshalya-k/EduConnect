@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 const VerificationFailed = () => {
   return (
@@ -82,20 +83,7 @@ const VerificationFailed = () => {
         </div>
       </main>
 
-      {/* Page Footer */}
-      <footer className="w-full bg-[#022C22] py-8 px-12 flex flex-col md:flex-row justify-between items-center gap-4 mt-auto border-t border-[#064E3B]">
-        <p className="text-[#D1FAE5]/50 text-sm">
-          © 2026 EduConnect. All rights reserved.
-        </p>
-        <div className="flex gap-6 text-sm">
-          <Link to="/privacy-policy" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Privacy Policy</Link>
-          <Link to="/terms-of-service" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Terms of Service</Link>
-          <Link to="/community-standards" className="text-[#D1FAE5]/50 hover:text-white transition-colors">Community Standards</Link>
-          <a href="#" className="text-[#D1FAE5]/50 hover:text-white transition-colors">
-            Help Center
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

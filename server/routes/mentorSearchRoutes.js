@@ -9,6 +9,7 @@ router.get('/ai-search',         searchCtrl.aiSearchMentors);
 router.get('/featured',          searchCtrl.getFeaturedMentors);
 router.get('/skills/categories', searchCtrl.getCategories);
 router.get('/verified-count',    searchCtrl.getVerifiedMentorsCount);
+router.get('/platform-stats',    searchCtrl.getPlatformStats);
 
 // Protected - learner only recommendation API
 router.get('/recommended',       protect, searchCtrl.getRecommendedMentors);
