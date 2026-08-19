@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../services/axiosConfig';
+import logo from '../../Assets/educonnect-logo.svg';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -31,10 +32,10 @@ export default function AdminLogin() {
 
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ width: 56, height: 56, background: "#10b981", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
-            <span style={{ color: "#fff", fontWeight: 900, fontSize: 24 }}>E</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "0.75rem" }}>
+            <img src={logo} alt="EduConnect" style={{ width: 48, height: 48 }} />
           </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "#0a1628" }}>Admin Portal</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#0a1628" }}>Admin Portal</h1>
           <p style={{ margin: "0.5rem 0 0", fontSize: 14, color: "#64748b" }}>EduConnect Administration Panel</p>
         </div>
 
