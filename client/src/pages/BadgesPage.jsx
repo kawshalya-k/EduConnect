@@ -162,10 +162,9 @@ export default function BadgesPage() {
                 </div>
 
                 <div className="bg-white border border-[#10B77F]/10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] py-4 pl-4 pr-14 min-w-[140px]">
-                  <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">Completed</p>
+                  <p className="text-[#94A3B8] font-semibold text-[12px] leading-[16px] tracking-[0.6px] uppercase mb-1">EX Points</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-[#10B981] font-black text-[24px] leading-[32px]">{earnedCount}</span>
-                    <span className="text-[#94A3B8] font-semibold text-[14px] leading-[20px]">Earned</span>
+                    <span className="text-[#10B981] font-black text-[24px] leading-[32px]">{earnedCount * 100}</span>
                   </div>
                 </div>
               </div>
