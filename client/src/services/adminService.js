@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const adminAxios = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://educonnect-production-c0d9.up.railway.app/api' : 'http://localhost:5000/api'),
 });
 
 adminAxios.interceptors.request.use((config) => {
@@ -60,4 +60,36 @@ export const deleteSkill = async (skillId) => {
 export const getAllUserSkills = async () => {
   const res = await adminAxios.get('/admin/user-skills');
   return res.data;
+};
+
+export const getAdminProfile = async () => {
+  const res = await adminAxios.get('/admin/profile');
+  return res.data;
+};
+
+export const updateAdminProfile = async (profileData) => {
+  const res = await adminAxios.put('/admin/profile', profileData);
+  return res.data;
+};
+
+export const changeAdminPassword = async (passwords) => {
+  const res = await adminAxios.put('/admin/profile/password', passwords);
+  return res.data;
+};
+
+export const uploadAdminAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const baseURL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://educonnect-production-c0d9.up.railway.app/api' : 'http://localhost:5000/api');
+  const token = localStorage.getItem('adminToken');
+  const res = await fetch(`${baseURL}/admin/profile/avatar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Upload failed');
+  }
+  return res.json(); // { avatarUrl }
 };

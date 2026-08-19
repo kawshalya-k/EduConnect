@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllSkills } from '../../services/adminService';
+import { AdminAvatarImg } from './AdminProfile';
 
 const sidebarItems = [
   { icon: "📊", label: "Dashboard", path: "/admin/dashboard" },
@@ -16,6 +17,26 @@ export default function SkillVerifications() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const adminAvatar = (() => { const u = adminUser.avatar; if (!u) return null; if (u.startsWith('http')) return u; const b = import.meta.env.PROD ? 'https://educonnect-production-c0d9.up.railway.app' : 'http://localhost:5000'; return `${b}${u}`; })();
+  const adminInitials = (adminUser.name || 'AD').slice(0,2).toUpperCase();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/admin/login');
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
@@ -46,9 +67,47 @@ export default function SkillVerifications() {
           <span style={{ fontWeight: 800, fontSize: 18, color: "#0a1628" }}>EduConnect</span>
           <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "3px 10px", borderRadius: 20, border: "1px solid #a7f3d0" }}>Admin</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 36, height: 36, borderRadius: "50%", border: "2px solid #e2e8f0" }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>{adminUser.name || 'Admin'}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Admin Dropdown */}
+          <div style={{ position: "relative" }} ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(o => !o)}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 10, transition: "background 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
+              onMouseLeave={e => e.currentTarget.style.background = "none"}
+            >
+              <AdminAvatarImg url={adminAvatar} initials={adminInitials} size={36} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#0a1628" }}>{adminUser.name || 'Admin'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {dropdownOpen && (
+              <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 200, background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", border: "1px solid #e2e8f0", overflow: "hidden", zIndex: 100 }}>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>{adminUser.name || 'Admin'}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 11, color: "#94a3b8" }}>{adminUser.role || 'Administrator'}</p>
+                </div>
+                <button
+                  onClick={() => { setDropdownOpen(false); navigate('/admin/profile'); }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "11px 16px", background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#0a1628", textAlign: "left", transition: "background 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
+                >
+                  <span style={{ fontSize: 15 }}>👤</span> Admin Profile
+                </button>
+                <div style={{ height: 1, background: "#f1f5f9", margin: "0 12px" }} />
+                <button
+                  onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "11px 16px", background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#ef4444", textAlign: "left", transition: "background 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
+                >
+                  <span style={{ fontSize: 15 }}>↪</span> Log Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -68,7 +127,7 @@ export default function SkillVerifications() {
           </div>
           <div style={{ padding: "1rem", margin: "0 1rem 1rem", background: "#f8fafc", borderRadius: 14, border: "1px solid #e2e8f0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <img src="https://i.pravatar.cc/40?img=33" alt="admin" style={{ width: 38, height: 38, borderRadius: "50%", border: "2px solid #a7f3d0" }} />
+              <AdminAvatarImg url={adminAvatar} initials={adminInitials} size={38} border="2px solid #a7f3d0" />
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0a1628" }}>{adminUser.name || 'Super Admin'}</p>
                 <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{adminUser.role || 'Administrator'}</p>

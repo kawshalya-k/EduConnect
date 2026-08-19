@@ -4,6 +4,7 @@ const adminController = require('../controllers/adminController');
 const auth = require('../middleware/auth');
 const skillCtrl    = require('../controllers/skillVerificationController');
 const adminAuth = require('../middleware/adminAuth');
+const uploadAvatar = require('../utils/uploadAvatar');
 
 // Public — Admin Login
 router.post('/login', adminController.adminLogin);
@@ -29,6 +30,12 @@ router.get('/skills', adminAuth, adminController.getAllSkills);
 router.post('/skills', adminAuth, adminController.addSkill);
 router.delete('/skills/:skillId', adminAuth, adminController.deleteSkill);
 router.get('/user-skills', adminAuth, adminController.getAllUserSkills);
+
+// Admin Profile
+router.get('/profile', adminAuth, adminController.getAdminProfile);
+router.put('/profile', adminAuth, adminController.updateAdminProfile);
+router.put('/profile/password', adminAuth, adminController.changeAdminPassword);
+router.post('/profile/avatar', adminAuth, uploadAvatar.single('avatar'), adminController.uploadAdminAvatar);
 
 // Mentor Management
 router.get('/', skillCtrl.getPendingVerifications);          // GET all pending
