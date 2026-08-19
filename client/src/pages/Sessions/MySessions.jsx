@@ -4,25 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import axiosInstance from '../../services/axiosConfig';
 import DashboardNavbar from '../../components/Dashboard/DashboardNavbar';
 import Footer from '../../components/Footer';
-
-
-
-const SidebarItem = ({ icon, label, active, onClick }) => (
-  <div
-    onClick={onClick}
-    className={`flex flex-row items-center p-3 gap-3 w-full h-11 rounded-3xl cursor-pointer transition-colors ${active
-      ? 'bg-[#10B77F] shadow-[0_10px_15px_-3px_rgba(16,183,127,0.2),0_4px_6px_-4px_rgba(16,183,127,0.2)]'
-      : 'hover:bg-[#10B77F]/5'
-      }`}
-  >
-    <div className={`w-5 h-5 flex items-center justify-center ${active ? 'text-white' : 'text-[#475569]'}`}>
-      {icon}
-    </div>
-    <span className={`font-sans font-medium text-sm leading-5 ${active ? 'text-white' : 'text-[#475569]'}`}>
-      {label}
-    </span>
-  </div>
-);
+import LearnerSidebar from '../../components/LearnerSidebar';
+import '../Mentor/MentorDashboard.css';
 
 export default function MySessions() {
   const { user } = useAuth();
@@ -37,52 +20,56 @@ export default function MySessions() {
       try {
         const res = await axiosInstance.get('/sessions/my');
         const rawData = res.data;
-        const learnerSessions = (rawData || []).filter(s => String(s.Learner_Id) === String(user.id));
-        const transformed = learnerSessions.map(s => {
-          let sessionStart = null;
-          try {
-            if (s.Date) {
-              const localDate = new Date(s.Date);
-              const yy = localDate.getFullYear();
-              const mm = localDate.getMonth();
-              const dd = localDate.getDate();
-              const tStr = s.Time || '00:00:00';
-              const [hh, min, sec] = tStr.split(':').map(Number);
-              sessionStart = new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
-            }
-          } catch (e) {
-            sessionStart = null;
+
+        const mapped = rawData.map(s => {
+          const start = new Date(s.Date);
+          const yy = start.getFullYear();
+          const mm = start.getMonth();
+          const dd = start.getDate();
+          const tStr = s.Time || '00:00:00';
+          const [hh, min, sec] = tStr.split(':').map(Number);
+          const localStart = new Date(yy, mm, dd, hh || 0, min || 0, sec || 0);
+
+          const duration = s.Duration || 60;
+          const localEnd = new Date(localStart.getTime() + duration * 60 * 1000);
+
+          const now = new Date();
+          const isPast = now > localEnd;
+
+          let displayStatus = s.Status;
+          if (isPast && s.Status !== 'Cancelled') {
+            displayStatus = 'Completed';
           }
-
-          const durationMs = (s.Duration || 60) * 60 * 1000;
-          const endTime = sessionStart ? sessionStart.getTime() + durationMs : 0;
-          const isPast = endTime ? Date.now() > endTime : false;
-
-          const dateLabel = sessionStart 
-            ? sessionStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-            : 'TBD';
-
-          const timeLabel = sessionStart
-            ? sessionStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            : 'TBD';
 
           return {
             id: s.Session_Id,
-            mentor: `${s.Mentor_First || ''} ${s.Mentor_Last || ''}`.trim(),
+            mentor: s.Mentor_Name || 'Mentor',
+            mentorId: s.Mentor_Id,
+            skill: s.Skill_Name || 'General Mentorship',
+            date: localStart.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            }) + ' • ' + localStart.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            rawStatus: s.Status,
+            status: displayStatus.toUpperCase(),
             image: s.Mentor_Avatar || '/default-avatar.svg',
-            skill: s.Skill_Name || 'Mentoring',
-            topic: s.Skill_Name || 'Session',
-            date: dateLabel,
-            time: timeLabel,
-            status: s.Status || 'Scheduled',
-            meetingType: s.Meeting_Link ? 'Online' : 'In-Person',
+            meetingLink: s.Meeting_Link || '',
             isPast,
-            rawStatus: s.Status
+            rawDate: s.Date,
+            rawTime: s.Time,
+            _start: localStart,
+            _end: localEnd
           };
         });
-        setSessions(transformed);
+
+        setSessions(mapped);
       } catch (err) {
-        console.error('Failed to fetch sessions:', err);
+        console.error('Error fetching sessions:', err);
       } finally {
         setLoading(false);
       }
@@ -91,70 +78,34 @@ export default function MySessions() {
     fetchSessions();
   }, [user?.id]);
 
-  const statusColors = {
-    SCHEDULED: "#22c55e",
-    COMPLETED: "#3b82f6",
-    CANCELLED: "#ef4444",
-  };
-
   if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "#16a34a" }}>Loading sessions...</div>;
   return (
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7]">
       <DashboardNavbar />
 
-      <div className="flex flex-col items-start w-full max-w-[1280px] mx-auto z-0 flex-1">
-        {/* Breadcrumbs */}
-        <div className="flex flex-row items-center pt-[30px] pb-[10px] pl-[80px] gap-2 w-full h-[60px]">
-          <span className="font-sans font-normal text-sm leading-5 text-[#64748B]">Dashboard</span>
-          <svg viewBox="0 0 4 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[3.7px] h-1.5 text-[#64748B]">
-            <path d="M1 1L3 3L1 5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="font-sans font-medium text-sm leading-5 text-[#0F172A]">My Sessions</span>
-        </div>
+      <div className="dash-layout">
+        <LearnerSidebar />
 
-        {/* Content Container */}
-        <div className="flex flex-row items-start w-full h-full">
-
-          {/* Sidebar */}
-          <aside className="hidden md:flex flex-col items-start p-6 gap-6 w-[256px] bg-white border-r border-[#10B77F]/10 min-h-[1154px]">
-            <div className="flex flex-col items-start gap-1 w-full">
-              <SidebarItem
-                icon={<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[18px] h-[18px]"><path d="M3 13H10V3H3V13ZM3 21H10V15H3V21ZM12 21H21V11H12V21ZM12 3V9H21V3H12Z" fill="currentColor" /></svg>}
-                label="Dashboard"
-                active={false}
-                onClick={() => navigate('/dashboard')}
-              />
-              <SidebarItem
-                icon={<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[18px] h-[18px]"><path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor" /></svg>}
-                label="Mentors"
-                active={false}
-                onClick={() => navigate('/find-mentor')}
-              />
-              <SidebarItem
-                icon={<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[18px] h-[18px]"><path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" fill="currentColor" /></svg>}
-                label="My Sessions"
-                active={true}
-                onClick={() => { }}
-              />
-              <SidebarItem
-                icon={<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[18px] h-[18px]"><path d="M12 15L17.29 18.27L15.87 12.24L20.61 8.24L14.45 7.73L12 2L9.55 7.73L3.39 8.24L8.13 12.24L6.71 18.27L12 15Z" fill="currentColor" /></svg>}
-                label="Badges and Achievements"
-                active={false}
-                onClick={() => navigate('/badges')}
-              />
-            </div>
-          </aside>
+        <div className="dash-content" style={{ display: 'block', width: '100%' }}>
+          {/* Breadcrumbs */}
+          <div className="flex flex-row items-center pt-2 pb-4 gap-2 w-full">
+            <Link to="/dashboard" className="font-sans font-normal text-sm leading-5 text-[#64748B] hover:underline">Dashboard</Link>
+            <svg viewBox="0 0 4 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[3.7px] h-1.5 text-[#64748B]">
+              <path d="M1 1L3 3L1 5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="font-sans font-medium text-sm leading-5 text-[#0F172A]">My Sessions</span>
+          </div>
 
           {/* Main Content */}
-          <main className="flex flex-col items-start p-8 gap-8 w-full max-w-[1024px]">
+          <main className="flex flex-col items-start gap-8 w-full">
             {/* Title & Desc */}
-            <div className="flex flex-col items-start gap-2 w-full max-w-[960px]">
+            <div className="flex flex-col items-start gap-2 w-full">
               <h1 className="font-sans font-bold text-[30px] leading-9 text-[#0F172A]">My Sessions</h1>
               <p className="font-sans font-normal text-base text-[#64748B]">Manage your learning journey and upcoming meetings.</p>
             </div>
 
             {/* Tabs */}
-            <div className="flex flex-row items-start w-full max-w-[960px] border-b border-[#10B77F]/10 h-[55px]">
+            <div className="flex flex-row items-start w-full border-b border-[#10B77F]/10 h-[55px]">
               <button
                 className={`box-border flex flex-col justify-center items-center py-4 px-8 h-[54px] transition-colors ${activeTab === 'upcoming' ? 'border-b-2 border-[#10B77F] text-[#10B77F]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
                 onClick={() => setActiveTab('upcoming')}

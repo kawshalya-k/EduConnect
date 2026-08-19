@@ -7,6 +7,8 @@ import { fetchLeaderboard } from '../services/leaderboardService';
 import { getMySessions } from '../services/sessionService';
 import { useAuth } from '../context/AuthContext';
 import { fetchLearningSkills, addLearningSkill, removeLearningSkill, fetchAllSkills } from '../services/learnerApi';
+import LearnerSidebar from '../components/LearnerSidebar';
+import './Mentor/MentorDashboard.css';
 
 const LearnerDashboard = () => {
   const [topMentors, setTopMentors] = useState([]);
@@ -219,11 +221,12 @@ const LearnerDashboard = () => {
     <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
       <DashboardNavbar />
 
-      <main className="flex flex-col items-center pt-8 pb-[293px] px-8 w-full max-w-[1280px] mx-auto z-0">
-        <div className="flex flex-row justify-center items-start gap-8 w-full max-w-[1216px]">
-          
+      <div className="dash-layout">
+        <LearnerSidebar />
+
+        <div className="dash-content">
           {/* Left Column */}
-          <div className="flex flex-col items-start gap-6 w-[800px]">
+          <div className="dash-main">
             
             {/* Skill Wallet Balance Card */}
             <div className="box-border flex flex-row items-center p-6 gap-6 w-full h-[131px] bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
@@ -417,7 +420,7 @@ const LearnerDashboard = () => {
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col items-start gap-6 w-[384px]">
+          <div className="dash-right-col">
             
             {/* Leaderboard Preview */}
             <div className="box-border flex flex-col items-start p-6 gap-6 w-full h-[356px] bg-white border border-[#10B77F]/5 shadow-sm rounded-3xl">
@@ -616,7 +619,8 @@ const LearnerDashboard = () => {
 
           </div>
         </div>
-      </main>
+      </div>
+    </div>
 
       <Footer />
     </div>

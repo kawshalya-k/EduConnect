@@ -9,7 +9,7 @@ export default function BookingConfirmed() {
   const bookingData = location.state || {};
   const session = {
     mentor: bookingData.mentor || "Your Mentor",
-    mentorImg: "https://i.pravatar.cc/80?img=47",
+    mentorImg: bookingData.mentorAvatar || "",
     date: bookingData.date && bookingData.time ? `${bookingData.date} • ${bookingData.time}` : "Date not set",
     type: "Online Session",
     coinsDeducted: bookingData.coinsDeducted || "0",
@@ -118,8 +118,12 @@ export default function BookingConfirmed() {
                 <div className="flex flex-col gap-4">
                   {/* Mentor */}
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 border-2 border-[#10B77F]/20 rounded-full overflow-hidden shrink-0">
-                      <img src={session.mentorImg} alt="mentor" className="w-full h-full object-cover" />
+                    <div className="w-12 h-12 border-2 border-[#10B77F]/20 rounded-full overflow-hidden shrink-0 flex items-center justify-center font-bold text-[#10B77F] bg-[#10B77F]/10">
+                      {session.mentorImg ? (
+                        <img src={session.mentorImg} alt="mentor" className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{session.mentor?.slice(0, 1)}</span>
+                      )}
                     </div>
                     <div>
                       <p className="text-[#64748B] text-sm leading-5">Mentor</p>
