@@ -4,6 +4,7 @@ import RoleSwitcher from './RoleSwitcher';
 import WalletWidget from '../Gamification/WalletWidget';
 import logo from '../../Assets/educonnect-logo.svg';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 
 const NAV_LINKS = {
   mentor: [
@@ -26,6 +27,24 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
   
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await api.get('/notifications/unread-count');
+        setUnreadCount(res.data?.count || 0);
+      } catch {
+        // silently ignore — non-critical
+      }
+    };
+    fetchUnread();
+    // re-poll every 60s while the navbar is mounted
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -106,11 +125,25 @@ const DashboardNavbar = ({ logoOnlyIfLoggedOut = false, logoOnly = false }) => {
                 <WalletWidget />
 
                 {/* Notifications */}
-                <Link to="/notifications" className="w-6 h-6 relative cursor-pointer flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
-                    <path d="M12 2C10.3431 2 9 3.34315 9 5V5.5C9 7.98528 7.32135 10.1534 4.89803 10.7592C4.19561 10.9348 3.55395 11.2338 3.01839 11.6353C2.38318 12.1114 2 12.8711 2 13.6667V14C2 15.6569 3.34315 17 5 17H19C20.6569 17 22 15.6569 22 14V13.6667C22 12.8711 21.6168 12.1114 20.9816 11.6353C20.446 11.2338 19.8044 10.9348 19.102 10.7592C16.6786 10.1534 15 7.98528 15 5.5V5C15 3.34315 13.6569 2 12 2Z" stroke="#10B981" strokeWidth="2" strokeLinejoin="round"/>
-                    <path d="M9 17V18C9 19.6569 10.3431 21 12 21C13.6569 21 15 19.6569 15 18V17" stroke="#10B981" strokeWidth="2" strokeLinejoin="round"/>
+                <Link
+                  to="/notifications"
+                  className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-150
+                    ${currentPath === '/notifications'
+                      ? 'bg-[#10B981]/10 text-[#10B981]'
+                      : 'text-[#64748B] hover:bg-slate-100 hover:text-[#0F172A]'
+                    }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[19px] h-[19px]">
+                    <path d="M12 2C10.3431 2 9 3.34315 9 5V5.5C9 7.98528 7.32135 10.1534 4.89803 10.7592C4.19561 10.9348 3.55395 11.2338 3.01839 11.6353C2.38318 12.1114 2 12.8711 2 13.6667V14C2 15.6569 3.34315 17 5 17H19C20.6569 17 22 15.6569 22 14V13.6667C22 12.8711 21.6168 12.1114 20.9816 11.6353C20.446 11.2338 19.8044 10.9348 19.102 10.7592C16.6786 10.1534 15 7.98528 15 5.5V5C15 3.34315 13.6569 2 12 2Z"
+                      stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                    <path d="M9 17V18C9 19.6569 10.3431 21 12 21C13.6569 21 15 19.6569 15 18V17"
+                      stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
                   </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-[3px] leading-none shadow-sm">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
 
                 {/* Profile Dropdown */}
