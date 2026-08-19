@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS Badge (
 );
 
 INSERT INTO Badge (name, description, icon_url, trigger_type, threshold) VALUES
-('First Session',  'Complete your very first learning session', NULL, 'session_count',   1),
+('First Session',  'Completed your very first learning session', NULL, 'session_count',   1),
 ('Fast Learner',   'Finished a full course module in 24 hours',  NULL, 'session_count',   5),
 ('Top Student',    'Reached #1 on the weekly leaderboard',       NULL, 'leaderboard_top', 1),
 ('7-Day Streak',   'Studied for 7 consecutive days',             NULL, 'streak_days',     7),

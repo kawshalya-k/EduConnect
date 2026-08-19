@@ -339,6 +339,25 @@ exports.verifySkill = async (req, res) => {
                 );
             }
 
+            // Give Bronze Mentor badge
+            let [badges] = await db.query('SELECT Badge_Id FROM Badge WHERE Badge_Name = ?', ['Bronze Mentor']);
+            let badgeId;
+            if (badges.length === 0) {
+                const [result] = await db.query(
+                    'INSERT INTO Badge (Badge_Name, Criteria, Description) VALUES (?, ?, ?)',
+                    ['Bronze Mentor', 'Verify first skill', 'Awarded for successfully verifying a skill']
+                );
+                badgeId = result.insertId;
+            } else {
+                badgeId = badges[0].Badge_Id;
+            }
+
+            // Insert User_Badge ignoring duplicates
+            await db.query(
+                'INSERT IGNORE INTO User_Badge (user_id, badge_id) VALUES (?, ?)',
+                [User_Id, badgeId]
+            );
+
             // Create notification for the user
             const Notification = require('../models/Notification');
             Notification.createNotification(

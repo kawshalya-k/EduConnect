@@ -20,7 +20,7 @@ export default function BadgesPage() {
       try {
         setLoading(true);
         const [badgesData, userBadgesData] = await Promise.all([
-          getBadges(user.id),
+          getBadges(),
           getUserBadges(user.id)
         ]);
 
@@ -53,19 +53,11 @@ export default function BadgesPage() {
 
   const getBadgeState = (badge) => {
     const earnedBadge = userBadges.find(ub => ub.badge_id === badge.badge_id);
-    const percent = earnedBadge ? 100 : Math.max(0, Math.min(100, Number(badge.progress) || 0));
     if (earnedBadge) {
       return {
         state: "completed",
         stateLabel: "Completed",
-        percent
-      };
-    }
-    if (percent > 0) {
-      return {
-        state: "in-progress",
-        stateLabel: "In Progress",
-        percent
+        percent: 100
       };
     }
     return {
@@ -88,7 +80,7 @@ export default function BadgesPage() {
     return badgesWithState;
   }, [allBadges, userBadges, activeTab]);
 
-  const earnedCount = allBadges.filter(badge => userBadges.some(ub => ub.badge_id === badge.badge_id)).length;
+  const earnedCount = userBadges.length;
   const lockedCount = allBadges.length - earnedCount;
 
   if (loading) {
@@ -197,25 +189,21 @@ export default function BadgesPage() {
 
 function BadgeCard({ badge }) {
   const isCompleted = badge.state === "completed";
-  const isInProgress = badge.state === "in-progress";
   const isLocked = badge.state === "locked";
 
   let containerClass = "bg-white border shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-[24px] p-6 relative h-[262px] flex flex-col";
   if (isCompleted) containerClass += " border-[#10B981]";
-  else if (isInProgress) containerClass += " border-[#F59E0B]";
   else if (isLocked) containerClass += " border-[#E2E8F0] opacity-60"; 
 
   let iconContainerClass = "w-16 h-16 rounded-full flex items-center justify-center mb-6 shrink-0 ";
   if (isCompleted) {
     iconContainerClass += "bg-[#10B77F]/10 text-[#10B981]";
-  } else if (isInProgress) {
-    iconContainerClass += "bg-[#FEF3C7] text-[#D97706]";
   } else {
     iconContainerClass += "bg-gradient-to-t from-[#F1F5F9] to-white text-[#94A3B8]";
   }
 
-  let labelColorClass = isCompleted ? "text-[#10B981]" : isInProgress ? "text-[#D97706]" : "text-[#94A3B8]";
-  let trackColorClass = isCompleted ? "bg-[#10B981]/10" : isInProgress ? "bg-[#FEF3C7]" : "bg-[#F1F5F9]";
+  let labelColorClass = isCompleted ? "text-[#10B981]" : "text-[#94A3B8]";
+  let trackColorClass = isCompleted ? "bg-[#10B981]/10" : "bg-[#F1F5F9]";
 
   return (
     <div className={containerClass}>
@@ -233,7 +221,7 @@ function BadgeCard({ badge }) {
 
       <div className="flex items-center gap-1.5 mb-1">
         <h3 className="text-[#0F172A] font-bold text-[16px] leading-[24px]">{badge.name}</h3>
-        {isLocked && (
+        {!isCompleted && (
           <svg viewBox="0 0 24 24" fill="none" className="w-[14px] h-[14px] text-[#94A3B8] stroke-2 stroke-current shrink-0">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path>
           </svg>
@@ -249,7 +237,7 @@ function BadgeCard({ badge }) {
         </div>
         <div className={`h-[8px] w-full rounded-full overflow-hidden ${trackColorClass}`}>
           <div 
-            className={`h-full rounded-full ${isCompleted ? 'bg-[#10B981]' : isInProgress ? 'bg-[#F59E0B]' : 'bg-transparent'}`}
+            className={`h-full rounded-full ${isCompleted ? 'bg-[#10B981]' : 'bg-transparent'}`} 
             style={{ width: `${badge.percent}%` }}
           ></div>
         </div>

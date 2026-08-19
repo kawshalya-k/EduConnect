@@ -5,10 +5,8 @@ export const getLeaderboard = async () => {
   return res.data;
 };
 
-export const getBadges = async (userId) => {
-  const res = await axiosInstance.get('/gamification/badges', {
-    params: { user_id: userId },
-  });
+export const getBadges = async () => {
+  const res = await axiosInstance.get('/gamification/badges');
   return res.data;
 };
 

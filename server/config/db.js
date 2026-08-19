@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 
@@ -145,48 +144,6 @@ async function initDB() {
       FOREIGN KEY (User_Id) REFERENCES User(User_Id) ON DELETE CASCADE,
       FOREIGN KEY (Badge_Id) REFERENCES Badge(Badge_Id) ON DELETE CASCADE
     )`);
-
-    const badges = [
-      ['First Session', 'Complete your very first learning session'],
-      ['Fast Learner', 'Finish a full course module in 24 hours'],
-      ['Top Student', 'Reach #1 on the weekly leaderboard'],
-      ['7-Day Streak', 'Study for 7 consecutive days'],
-      ['Collaborator', 'Contribute to 5 community discussions'],
-      ['Course Master', 'Complete 10 full courses at 90% average'],
-      ['Coin Collector', 'Earn over 1000 Skill Coins']
-    ];
-    const [badgeColumns] = await connection.query('SHOW COLUMNS FROM Badge');
-    const badgeColumnNames = new Set(badgeColumns.map(({ Field }) => Field));
-    const usesModernBadgeSchema = badgeColumnNames.has('name');
-    const badgeIdColumn = usesModernBadgeSchema ? 'badge_id' : 'Badge_Id';
-    const badgeNameColumn = usesModernBadgeSchema ? 'name' : 'Badge_Name';
-
-    for (const [name, description] of badges) {
-      const [existingBadge] = await connection.query(
-        `SELECT \`${badgeIdColumn}\` FROM Badge WHERE \`${badgeNameColumn}\` = ?`,
-        [name]
-      );
-      if (existingBadge.length > 0) {
-        await connection.query(
-          `UPDATE Badge SET Description = ? WHERE \`${badgeIdColumn}\` = ?`,
-          [description, existingBadge[0][badgeIdColumn]]
-        );
-      } else if (usesModernBadgeSchema) {
-        await connection.query(
-          'INSERT INTO Badge (name, description, trigger_type, threshold) VALUES (?, ?, ?, ?)',
-          [name, description, 'manual', 1]
-        );
-      } else {
-        await connection.query(
-          'INSERT INTO Badge (Badge_Name, Criteria, Description) VALUES (?, ?, ?)',
-          [name, description, description]
-        );
-      }
-    }
-    await connection.query(
-      `DELETE FROM Badge WHERE \`${badgeNameColumn}\` NOT IN (?, ?, ?, ?, ?, ?, ?)`,
-      badges.map(([name]) => name)
-    );
 
     await connection.query(`CREATE TABLE IF NOT EXISTS Wallet_Transaction (
       Transaction_Id INT AUTO_INCREMENT PRIMARY KEY,
