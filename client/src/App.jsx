@@ -130,7 +130,7 @@ function App() {
         {/* Shared/Other Protected Routes */}
         <Route path="/mentor-sessions" element={<ProtectedRoute><MentorSessions /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-        <Route path="/wallet"   element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/wallet"   element={<ProtectedRoute><SkillWallet /></ProtectedRoute>} />
         <Route path="/mentor-wallet" element={<ProtectedRoute><SkillWallet /></ProtectedRoute>} />
         
         {/* Catch-all redirect to landing page */}

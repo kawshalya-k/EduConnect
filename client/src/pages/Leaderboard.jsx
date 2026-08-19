@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { getLeaderboard } from '../services/gamificationService';
 import { useAuth } from '../context/AuthContext';
 import LearnerSidebar from '../components/LearnerSidebar';
+import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
+import DashboardSidebar from '../components/Mentorship/MentorSideBar';
+import Footer from '../components/Footer';
+import './Mentor/MentorDashboard.css';
 
 
 const StarIcon = () => (
@@ -15,7 +19,7 @@ const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user: authUser } = useAuth();
+  const { user: authUser, mode } = useAuth();
 
   useEffect(() => {
     const loadLeaderboard = async () => {
@@ -86,40 +90,52 @@ const Leaderboard = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-1">
-        <aside className="w-64 bg-white border-r border-gray-100 p-4 hidden lg:flex flex-col">
-          <div className="animate-pulse space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-10 bg-gray-100 rounded"></div>
-            ))}
+      <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
+        <DashboardNavbar />
+        <div className="dash-layout">
+          {mode === 'mentor' ? <DashboardSidebar user={authUser} /> : <LearnerSidebar />}
+          <div className="dash-content" style={{ display: 'block', width: '100%' }}>
+            <div className="animate-pulse space-y-4 pt-[30px] px-6">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-64 bg-gray-100 rounded"></div>
+              <div className="h-96 bg-gray-100 rounded"></div>
+            </div>
           </div>
-        </aside>
-        <main className="flex-1 p-8" style={{ backgroundColor: '#fcfdfe' }}>
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-64 bg-gray-100 rounded"></div>
-            <div className="h-96 bg-gray-100 rounded"></div>
-          </div>
-        </main>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-red-500 text-center">{error}</div>
+      <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
+        <DashboardNavbar />
+        <div className="dash-layout">
+          {mode === 'mentor' ? <DashboardSidebar user={authUser} /> : <LearnerSidebar />}
+          <div className="dash-content" style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="text-red-500 text-center">{error}</div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   if (leaderboardData.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 text-lg">No leaderboard data available yet</p>
-          <p className="text-gray-400 text-sm mt-2">Complete sessions to appear on the leaderboard</p>
+      <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
+        <DashboardNavbar />
+        <div className="dash-layout">
+          {mode === 'mentor' ? <DashboardSidebar user={authUser} /> : <LearnerSidebar />}
+          <div className="dash-content" style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="text-center">
+              <p className="text-gray-500 text-lg">No leaderboard data available yet</p>
+              <p className="text-gray-400 text-sm mt-2">Complete sessions to appear on the leaderboard</p>
+            </div>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -345,9 +361,17 @@ const Leaderboard = () => {
   );
 
   return (
-    <div className="flex flex-1">
-      <LearnerSidebar />
-      {renderMainContent()}
+    <div className="flex flex-col relative w-full min-h-screen bg-[#F6F8F7] font-sans">
+      <DashboardNavbar />
+
+      <div className="dash-layout">
+        {mode === 'mentor' ? <DashboardSidebar user={authUser} /> : <LearnerSidebar />}
+
+        <div className="dash-content" style={{ display: 'block', width: '100%' }}>
+          {renderMainContent()}
+        </div>
+      </div>
+      <Footer />
     </div>
   );
 };
