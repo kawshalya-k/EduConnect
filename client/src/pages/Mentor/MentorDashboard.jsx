@@ -289,7 +289,7 @@ export default function MentorDashboard() {
                   ) : (
                     <div className="rating-card-value-row">
                       <span className="rating-card-value">
-                        {avgRating != null ? avgRating.toFixed(1) : '—'}
+                        {avgRating != null && !isNaN(Number(avgRating)) ? Number(avgRating).toFixed(1) : '—'}
                       </span>
                       {ratingChange != null && (
                         <span className="rating-change positive">

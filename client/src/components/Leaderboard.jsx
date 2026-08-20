@@ -129,9 +129,11 @@ const Leaderboard = () => {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, j) => (
-                        <Star key={j} className={`w-3 h-3 ${j < Math.round(m.rating) ? 'fill-[#10B981] text-[#10B981]' : 'fill-slate-200 text-slate-200'}`} />
+                        <Star key={j} className={`w-3 h-3 ${j < Math.round(Number(m.rating) || 0) ? 'fill-[#10B981] text-[#10B981]' : 'fill-slate-200 text-slate-200'}`} />
                       ))}
-                      <span className="text-xs font-bold text-slate-700 ml-1">{m.rating.toFixed(1)}</span>
+                      <span className="text-xs font-bold text-slate-700 ml-1">
+                        {m.rating != null && !isNaN(Number(m.rating)) ? Number(m.rating).toFixed(1) : '5.0'}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
