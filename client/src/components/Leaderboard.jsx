@@ -5,7 +5,15 @@ import { Star, CheckCircle2 } from 'lucide-react';
 import axiosInstance from '../services/axiosConfig';
 
 const getLevelBadge = (level) => {
-  switch(level) {
+  const normalizedLevel = String(level || 'BRONZE').trim().toUpperCase().replace(' MENTOR', '');
+  const levelAliases = {
+    EXPERT: 'GOLD',
+    INTERMEDIATE: 'SILVER',
+    BEGINNER: 'BRONZE'
+  };
+  const displayLevel = levelAliases[normalizedLevel] || normalizedLevel;
+
+  switch(displayLevel) {
     case 'GOLD':
       return <span className="bg-amber-100 text-amber-700 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wide">GOLD</span>;
     case 'SILVER':
@@ -13,7 +21,7 @@ const getLevelBadge = (level) => {
     case 'BRONZE':
       return <span className="bg-orange-100 text-orange-800 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wide">BRONZE</span>;
     default:
-      return null;
+      return <span className="bg-slate-100 text-slate-600 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wide">{displayLevel}</span>;
   }
 };
 
@@ -32,7 +40,7 @@ const Leaderboard = () => {
           rank: `#${index + 1}`,
           name: `${mentor.First_Name} ${mentor.Last_Name}`,
           faculty: mentor.University || "University",
-          level: mentor.Mentor_Level ? mentor.Mentor_Level.toUpperCase().replace(' MENTOR', '') : 'BRONZE',
+          level: mentor.Mentor_Level || mentor.mentor_level || 'BRONZE',
           rating: parseFloat(mentor.Average_Rating) || 5.0,
           status: "Verified",
           session_count: mentor.Total_Sessions || 0,

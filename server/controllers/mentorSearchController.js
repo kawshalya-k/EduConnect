@@ -65,22 +65,27 @@ exports.searchMentors = async (req, res) => {
     }
     
     const activeLevel = level || levels;
+    const canonicalLevel = `CASE
+      WHEN UPPER(COALESCE(ld.Mentor_Level, us.Mentor_Level)) IN ('GOLD', 'GOLD MENTOR') THEN 'Gold'
+      WHEN UPPER(COALESCE(ld.Mentor_Level, us.Mentor_Level)) IN ('SILVER', 'SILVER MENTOR') THEN 'Silver'
+      ELSE 'Bronze'
+    END`;
+    let queryLevels = [];
     if (activeLevel) {
-        const queryLevels = [];
         activeLevel.split(',').forEach(l => {
             const clean = l.trim().toLowerCase();
             if (clean === 'gold') {
-                queryLevels.push('Gold', 'Expert', 'GOLD MENTOR');
+          queryLevels.push('Gold');
             } else if (clean === 'silver') {
-                queryLevels.push('Silver', 'Intermediate');
+          queryLevels.push('Silver');
             } else if (clean === 'bronze') {
-                queryLevels.push('Bronze', 'Beginner');
+          queryLevels.push('Bronze');
             } else {
                 queryLevels.push(clean.charAt(0).toUpperCase() + clean.slice(1));
             }
         });
         const placeholders = queryLevels.map(() => '?').join(',');
-        conditions.push(`us.Mentor_Level IN (${placeholders})`);
+      conditions.push(`${canonicalLevel} IN (${placeholders})`);
         params.push(...queryLevels);
     }
     if (university) {
@@ -99,7 +104,7 @@ exports.searchMentors = async (req, res) => {
         rating:   'MAX(COALESCE(ld.Average_Rating, 0)) DESC',
         sessions: 'SUM(COALESCE(ld.Total_Sessions, 0)) DESC',
         newest:   'MAX(u.Created_At) DESC',
-        level:    'FIELD(MAX(us.Mentor_Level), "Gold", "Silver", "Bronze")'
+        level:    `FIELD(MAX(${canonicalLevel}), "Gold", "Silver", "Bronze")`
     };
     const orderBy = sortMap[sort] || sortMap['rating'];
 
@@ -134,9 +139,12 @@ exports.searchMentors = async (req, res) => {
         let paginatedMentors = [];
         if (mentorIds.length > 0) {
             const placeholders = mentorIds.map(() => '?').join(',');
+            const levelFilter = activeLevel
+              ? ` AND ${canonicalLevel} IN (${queryLevels.map(() => '?').join(',')})`
+              : '';
             const [rows] = await db.query(
                 `SELECT u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio, u.Avatar,
-                        s.Skill_Name, s.Category, us.Mentor_Level,
+                  s.Skill_Name, s.Category, ${canonicalLevel} AS Mentor_Level,
                         COALESCE(ld.Average_Rating, 0) AS Average_Rating,
                         COALESCE(ld.Total_Sessions, 0) AS Total_Sessions
                  FROM User u
@@ -145,8 +153,9 @@ exports.searchMentors = async (req, res) => {
                  LEFT JOIN Levelling_Data ld ON ld.Mentor_Id = u.User_Id AND ld.Skill_Id = us.Skill_Id
                  WHERE u.User_Id IN (${placeholders}) 
                    AND us.Role = 'Mentor' 
-                   AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')`,
-                mentorIds
+                   AND (us.Verification_Status = 'Verified' OR us.Verification_Status = 1 OR us.Verification_Status = '1')${levelFilter}
+                 ORDER BY FIELD(${canonicalLevel}, 'Gold', 'Silver', 'Bronze') DESC`,
+                [...mentorIds, ...queryLevels]
             );
 
             // Group by User_Id to combine multiple skills and avoid duplicate mentor cards

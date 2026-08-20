@@ -27,7 +27,7 @@ const MentorCard = ({ mentor, onBooking, layout = 'list' }) => {
   const mentorId = mentor.id || mentor.userId || mentor.User_Id;
   const mentorName = mentor.name || `${mentor.First_Name || ''} ${mentor.Last_Name || ''}`.trim() || 'Peer Mentor';
   const mentorAvatar = mentor.avatar || mentor.Avatar || '/default-avatar.svg';
-  const mentorLevel = mentor.level || mentor.Mentor_Level || 'Bronze';
+  const mentorLevel = mentor.level || mentor.Mentor_Level || mentor.mentorLevel || mentor.mentor_level || 'Bronze';
   const mentorRole = mentor.role || mentor.title || mentor.Bio || 'Mentor';
   const mentorUniversity = mentor.university || mentor.University;
   const mentorRating = mentor.rating || mentor.Average_Rating || 5.0;
