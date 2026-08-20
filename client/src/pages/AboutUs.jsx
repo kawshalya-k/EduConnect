@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   BookOpen, 
-  Handshake, 
   Award, 
   Target, 
   Eye, 
@@ -15,24 +14,28 @@ import {
 } from 'lucide-react';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import Footer from '../components/Footer';
+import axiosInstance from '../services/axiosConfig';
 
 export default function AboutUs() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    activeStudents: 5000,
-    skills: 120,
-    successRate: 98
+    activeStudents: 0,
+    skills: 0,
+    successRate: 100
   });
 
   useEffect(() => {
-    fetch('/api/mentors/platform-stats')
-      .then(res => res.json())
-      .then(data => {
-        if (data && !data.error) {
-          setStats(data);
+    const fetchStats = async () => {
+      try {
+        const res = await axiosInstance.get('/mentors/platform-stats');
+        if (res.data && !res.data.error) {
+          setStats(res.data);
         }
-      })
-      .catch(err => console.error('Error fetching platform stats:', err));
+      } catch (err) {
+        console.error('Error fetching platform stats:', err);
+      }
+    };
+    fetchStats();
   }, []);
 
   return (
@@ -82,12 +85,11 @@ export default function AboutUs() {
 
       {/* Impact Stats Banner */}
       <section className="bg-[#064E3B] text-white py-12 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           {[
-            { stat: `${stats.activeStudents.toLocaleString()}+`, label: 'Active Students', icon: Users },
-            { stat: `${stats.skills}+`, label: 'Skill Courses', icon: BookOpen },
-            { stat: '15+', label: 'Industry Partners', icon: Handshake },
-            { stat: `${stats.successRate}%`, label: 'Success Rate', icon: Award }
+            { stat: `${(stats.activeStudents || 0).toLocaleString()}+`, label: 'Active Students', icon: Users },
+            { stat: `${stats.skills || 0}+`, label: 'Skill Courses', icon: BookOpen },
+            { stat: `${stats.successRate ?? 100}%`, label: 'Success Rate', icon: Award }
           ].map((item, idx) => {
             const Icon = item.icon;
             return (

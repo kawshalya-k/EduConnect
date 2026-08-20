@@ -465,7 +465,7 @@ exports.getVerifiedMentorsCount = async (req, res) => {
 exports.getPlatformStats = async (req, res) => {
   try {
     const [[studentsRow]] = await db.query(
-      `SELECT COUNT(*) AS count FROM User WHERE Role = 'Student'`
+      `SELECT COUNT(*) AS count FROM User WHERE Status = 'Active' OR Status IS NULL`
     );
     const [[skillsRow]] = await db.query(
       `SELECT COUNT(*) AS count FROM Skill`
@@ -479,11 +479,17 @@ exports.getPlatformStats = async (req, res) => {
 
     const completed = completedRow ? (completedRow.count || 0) : 0;
     const scheduled = scheduledRow ? (scheduledRow.count || 0) : 0;
-    const total = completed + scheduled;
 
-    const successRate = total > 0 ? Math.round((completed / total) * 100) : 98;
-    const activeStudents = studentsRow ? (studentsRow.count > 0 ? studentsRow.count : 5000) : 5000;
-    const skillsCount = skillsRow ? (skillsRow.count > 0 ? skillsRow.count : 120) : 120;
+    // Success rate calculate as completed sessions / scheduled sessions
+    let successRate = 100;
+    if (scheduled > 0) {
+      successRate = Math.min(100, Math.round((completed / scheduled) * 100));
+    } else if (completed > 0) {
+      successRate = 100;
+    }
+
+    const activeStudents = studentsRow ? (studentsRow.count || 0) : 0;
+    const skillsCount = skillsRow ? (skillsRow.count || 0) : 0;
 
     res.json({
       activeStudents,
