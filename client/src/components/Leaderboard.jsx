@@ -6,12 +6,9 @@ import axiosInstance from '../services/axiosConfig';
 
 const getLevelBadge = (level) => {
   const normalizedLevel = String(level || 'BRONZE').trim().toUpperCase().replace(' MENTOR', '');
-  const levelAliases = {
-    EXPERT: 'GOLD',
-    INTERMEDIATE: 'SILVER',
-    BEGINNER: 'BRONZE'
-  };
-  const displayLevel = levelAliases[normalizedLevel] || normalizedLevel;
+  const displayLevel = ['GOLD', 'SILVER', 'BRONZE'].includes(normalizedLevel)
+    ? normalizedLevel
+    : 'BRONZE';
 
   switch(displayLevel) {
     case 'GOLD':

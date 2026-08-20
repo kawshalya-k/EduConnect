@@ -206,7 +206,11 @@ exports.getFeaturedMentors = async (req, res) => {
             `SELECT
                 u.User_Id, u.First_Name, u.Last_Name, u.University, u.Bio,
                 s.Skill_Name, s.Category,
-                us.Mentor_Level,
+                CASE
+                  WHEN UPPER(ld.Mentor_Level) IN ('GOLD', 'GOLD MENTOR') THEN 'Gold'
+                  WHEN UPPER(ld.Mentor_Level) IN ('SILVER', 'SILVER MENTOR') THEN 'Silver'
+                  ELSE 'Bronze'
+                END AS Mentor_Level,
                 COALESCE(ld.Average_Rating, 0) AS Average_Rating,
                 COALESCE(ld.Total_Sessions, 0) AS Total_Sessions
              FROM Levelling_Data ld
