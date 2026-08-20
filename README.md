@@ -94,7 +94,7 @@ The system follows a modular architecture with separation of concerns:
 - Express.js
 
 ### Database
-- MySQL / MongoDB
+- MySQL 
 
 ### AI & Search
 - Google Gemini API
