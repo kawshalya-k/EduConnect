@@ -109,13 +109,18 @@ exports.updateStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    await Session.updateSessionStatus(sessionId, status);
-
-    // Get session details for notifications & transactions
+    // Get current session before updating
     const session = await Session.getSessionById(sessionId);
     if (!session) {
       return res.status(404).json({ message: 'Session not found' });
     }
+
+    // Idempotency guard: Don't re-process if status is already the same or session is already finalized
+    if (session.Status === status || session.Status === 'Completed' || (session.Status === 'Cancelled' && status !== 'Scheduled')) {
+      return res.status(200).json({ message: `Session is already ${session.Status}` });
+    }
+
+    await Session.updateSessionStatus(sessionId, status);
 
     if (status === 'Scheduled') {
       await Notification.createNotification(

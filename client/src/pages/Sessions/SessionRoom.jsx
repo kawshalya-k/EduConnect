@@ -43,6 +43,8 @@ export default function SessionRoom() {
     }
   };
 
+  const statusUpdatingRef = useRef(false);
+
   useEffect(() => {
     const timer = setInterval(() => {
       if (!sessionDetails) return;
@@ -60,21 +62,21 @@ export default function SessionRoom() {
         setTimeLeft(Math.max(0, Math.floor((startTime - nowTime) / 1000)));
       } else if (nowTime >= startTime && nowTime < endTime) {
         setTimeLeft(Math.max(0, Math.floor((endTime - nowTime) / 1000)));
-        if (sessionDetails.Status !== 'In-Session' && sessionDetails.Status !== 'Completed' && sessionDetails.Status !== 'Cancelled') {
+        if (sessionDetails.Status !== 'In-Session' && sessionDetails.Status !== 'Completed' && sessionDetails.Status !== 'Cancelled' && !statusUpdatingRef.current) {
+          statusUpdatingRef.current = true;
+          setSessionDetails(prev => ({ ...prev, Status: 'In-Session' }));
           axiosInstance.put(`/sessions/${sessionDetails.Session_Id}/status`, { status: 'In-Session' })
-            .then(() => {
-              setSessionDetails(prev => ({ ...prev, Status: 'In-Session' }));
-            })
-            .catch(err => console.error("Error setting session to In-Session:", err));
+            .catch(err => console.error("Error setting session to In-Session:", err))
+            .finally(() => { statusUpdatingRef.current = false; });
         }
       } else {
         setTimeLeft(0);
-        if (sessionDetails.Status !== 'Completed' && sessionDetails.Status !== 'Cancelled') {
+        if (sessionDetails.Status !== 'Completed' && sessionDetails.Status !== 'Cancelled' && !statusUpdatingRef.current) {
+          statusUpdatingRef.current = true;
+          setSessionDetails(prev => ({ ...prev, Status: 'Completed' }));
           axiosInstance.put(`/sessions/${sessionDetails.Session_Id}/status`, { status: 'Completed' })
-            .then(() => {
-              setSessionDetails(prev => ({ ...prev, Status: 'Completed' }));
-            })
-            .catch(err => console.error("Error setting session to Completed:", err));
+            .catch(err => console.error("Error setting session to Completed:", err))
+            .finally(() => { statusUpdatingRef.current = false; });
         }
       }
     }, 1000);
